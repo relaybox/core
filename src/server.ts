@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import uWS from 'uWebSockets.js';
+import { App, HttpResponse, HttpRequest, WebSocket } from 'uWebSockets.js';
 import { getLogger } from './util/logger';
 import {
   handleClientHeartbeat,
@@ -19,14 +19,13 @@ const SERVER_PORT = process.env.SERVER_PORT || 5004;
 const SERVER_INSTANCE_ID = Number(SERVER_PORT);
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 
-const app = uWS
-  ./*SSL*/ App()
-  .get('/', (res: uWS.HttpResponse, req: uWS.HttpRequest) => {
+const app = App()
+  .get('/', (res: HttpResponse, req: HttpRequest) => {
     res.end(process.uptime().toString());
   })
-  .get('/healthcheck', (res: uWS.HttpResponse, req: uWS.HttpRequest) => {
-    res.end(process.uptime().toString());
-  })
+  // .get('/healthcheck', (res: HttpResponse, req: HttpRequest) => {
+  //   res.end(process.uptime().toString());
+  // })
   .ws('/*', {
     idleTimeout: WS_IDLE_TIMEOUT_MS,
     sendPingsAutomatically: true,
@@ -34,10 +33,10 @@ const app = uWS
     upgrade: handleConnectionUpgrade,
     open: handleSocketOpen,
     pong: handleClientHeartbeat,
-    message: (socket: uWS.WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
+    message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
       handleSocketMessage(socket, message, isBinary, app);
     },
-    close: (socket: uWS.WebSocket<Session>, code: number, message: ArrayBuffer) => {
+    close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
       handleDisconnect(socket, code, message, SERVER_INSTANCE_ID);
     }
   });

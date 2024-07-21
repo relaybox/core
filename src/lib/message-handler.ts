@@ -1,16 +1,16 @@
-import uWS from 'uWebSockets.js';
 import { getLogger } from '../util/logger';
 import { Logger } from 'winston';
 import { ReducedSession } from '../types/session.types';
 import { LatencyLog } from '../types/request.types';
+import { TemplatedApp } from 'uWebSockets.js';
 
 export default class MessageHandler {
-  private app: uWS.TemplatedApp;
+  private app: TemplatedApp;
   private enqueueDeliveryMetrics: Function;
 
   private logger: Logger = getLogger('message-handler');
 
-  constructor(app: uWS.TemplatedApp, enqueueDeliveryMetrics: Function) {
+  constructor(app: TemplatedApp, enqueueDeliveryMetrics: Function) {
     this.app = app;
     this.enqueueDeliveryMetrics = enqueueDeliveryMetrics;
 

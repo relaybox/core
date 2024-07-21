@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { SocketAckHandler } from '../../types/socket.types';
 import { Session } from '../../types/session.types';
@@ -19,11 +18,12 @@ import { KeyNamespace } from '../../types/state.types';
 import { permissionsGuard } from '../guards/guards.service';
 import { DsPermission } from '../../types/permissions.types';
 import AmqpManager from '../../lib/amqp-manager';
+import { WebSocket } from 'uWebSockets.js';
 
 export async function clientRoomJoin(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -55,7 +55,7 @@ export async function clientRoomJoin(
 export async function clientRoomLeave(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -103,7 +103,7 @@ export async function clientRoomLeave(
 export async function clientPublish(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string

@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { SocketAckHandler } from '../../types/socket.types';
 import { Session } from '../../types/session.types';
@@ -13,11 +12,12 @@ import {
   unbindSubscription
 } from './subscription.service';
 import { KeyNamespace } from '../../types/state.types';
+import { WebSocket } from 'uWebSockets.js';
 
 export async function clientRoomSubscriptionBind(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler
 ): Promise<void> {
@@ -59,7 +59,7 @@ export async function clientRoomSubscriptionBind(
 export async function clientRoomSubscriptionUnbind(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler
 ): Promise<void> {

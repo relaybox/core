@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { getLogger } from '../../util/logger';
 import { ReducedSession, Session } from '../../types/session.types';
 import { restoreRoomSubscriptions } from '../subscription/subscription.service';
@@ -11,6 +10,7 @@ import { RedisClient } from '../../lib/redis';
 import { joinRoom } from '../room/room.service';
 import { getCachedRooms } from '../room/room.repository';
 import { SocketConnectionEventType, SocketUserData } from '../../types/socket.types';
+import { WebSocket } from 'uWebSockets.js';
 
 const logger = getLogger('session');
 
@@ -40,7 +40,7 @@ export async function initializeSession(connectionAuthParams: ConnectionAuth): P
 export async function restoreSession(
   redisClient: RedisClient,
   session: Session,
-  socket: uWS.WebSocket<Session>
+  socket: WebSocket<Session>
 ): Promise<void> {
   try {
     const { uid, connectionId } = session;
@@ -203,7 +203,7 @@ async function clearDelayedSessionJob(id: string) {
   }
 }
 
-export function setSessionActive(session: Session, socket: uWS.WebSocket<Session>): Promise<Job> {
+export function setSessionActive(session: Session, socket: WebSocket<Session>): Promise<Job> {
   logger.info(`Setting session active, ${session.connectionId}`, { session });
 
   const { permissions, ...rest } = session;
@@ -219,10 +219,7 @@ export function setSessionActive(session: Session, socket: uWS.WebSocket<Session
   return sessionQueue.add(SessionJobName.SESSION_ACTIVE, jobData, defaultJobConfig);
 }
 
-export function getReducedSession(
-  session: Session,
-  socket?: uWS.WebSocket<Session>
-): ReducedSession {
+export function getReducedSession(session: Session, socket?: WebSocket<Session>): ReducedSession {
   const { appPid, keyId, uid, connectionId, clientId } = session;
 
   const socketId = socket?.getUserData()?.socketId || session.socketId;
@@ -241,7 +238,7 @@ export function getReducedSession(
 
 export function recordConnnectionEvent(
   session: Session,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   connectionEventType: SocketConnectionEventType
 ): Promise<Job> {
   logger.info(`Recording socket connection event, ${connectionEventType}`, {

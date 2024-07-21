@@ -1,9 +1,8 @@
-// import { Socket } from 'socket.io';
-import uWS from 'uWebSockets.js';
 import { RedisClient } from '../../lib/redis';
 import { getRoomByConnectionId, setRoomJoin, setRoomLeave } from './room.repository';
 import { Session } from '../../types/session.types';
 import { getLogger } from '../../util/logger';
+import { WebSocket } from 'uWebSockets.js';
 
 const logger = getLogger('room');
 
@@ -11,7 +10,7 @@ export async function joinRoom(
   redisClient: RedisClient,
   session: Session,
   nspRoomId: string,
-  socket: uWS.WebSocket<Session>
+  socket: WebSocket<Session>
 ): Promise<void> {
   const { uid, connectionId } = session;
 
@@ -30,7 +29,7 @@ export async function leaveRoom(
   redisClient: RedisClient,
   session: Session,
   nspRoomId: string,
-  socket: uWS.WebSocket<Session>
+  socket: WebSocket<Session>
 ): Promise<void> {
   const { uid, connectionId } = session;
 

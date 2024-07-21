@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { Job } from 'bullmq';
 import {
   clearSessionMetrics,
@@ -39,6 +38,13 @@ import { clientMetricsSubscribe, clientMetricsUnsubscribe } from '../metrics/met
 import { DsErrorResponse } from '../../types/request.types';
 import { eventEmitter } from '../../lib/event-bus';
 import { getQueryParamRealValue } from '../../util/helpers';
+import {
+  HttpRequest,
+  HttpResponse,
+  TemplatedApp,
+  us_socket_context_t,
+  WebSocket
+} from 'uWebSockets.js';
 
 const logger = getLogger('websocket');
 const redisClient = getRedisClient();
@@ -64,9 +70,9 @@ const eventHandlersMap = {
 };
 
 export function handleConnectionUpgrade(
-  res: uWS.HttpResponse,
-  req: uWS.HttpRequest,
-  context: uWS.us_socket_context_t
+  res: HttpResponse,
+  req: HttpRequest,
+  context: us_socket_context_t
 ): void {
   const upgradeAborted = {
     aborted: false
@@ -119,7 +125,7 @@ export function handleConnectionUpgrade(
   });
 }
 
-export async function handleSocketOpen(socket: uWS.WebSocket<Session>): Promise<void> {
+export async function handleSocketOpen(socket: WebSocket<Session>): Promise<void> {
   try {
     const verifiedSession = socket.getUserData();
     const { uid, connectionId, clientId } = verifiedSession;
@@ -146,7 +152,7 @@ export async function handleSocketOpen(socket: uWS.WebSocket<Session>): Promise<
   }
 }
 
-export function emit(socket: uWS.WebSocket<Session>, type: ServerEvent, body: any): void {
+export function emit(socket: WebSocket<Session>, type: ServerEvent, body: any): void {
   const data = JSON.stringify({
     type,
     body
@@ -156,10 +162,10 @@ export function emit(socket: uWS.WebSocket<Session>, type: ServerEvent, body: an
 }
 
 export async function handleSocketMessage(
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   message: ArrayBuffer,
   isBinary: boolean,
-  app: uWS.TemplatedApp
+  app: TemplatedApp
 ): Promise<void> {
   const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
 
@@ -172,7 +178,7 @@ export async function handleSocketMessage(
   }
 }
 
-export function ackHandler(socket: uWS.WebSocket<Session>, ackId: string) {
+export function ackHandler(socket: WebSocket<Session>, ackId: string) {
   return function (data: any, err?: DsErrorResponse) {
     try {
       emit(socket, ServerEvent.MESSAGE_ACKNOWLEDGED, { ackId, data, err });
@@ -183,7 +189,7 @@ export function ackHandler(socket: uWS.WebSocket<Session>, ackId: string) {
 }
 
 export async function handleDisconnect(
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   code: number,
   message: ArrayBuffer,
   serverInstanceId: number
@@ -208,7 +214,7 @@ export async function handleDisconnect(
 }
 
 export async function handleSubscription(
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   topic: ArrayBuffer,
   newCount: number,
   oldCount: number
@@ -234,7 +240,7 @@ export async function handleSubscription(
   }
 }
 
-export async function handleClientHeartbeat(socket: uWS.WebSocket<Session>): Promise<void> {
+export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise<void> {
   const session = socket.getUserData();
 
   logger.info(`Client heartbeat recieved via "pong" response, ${session.connectionId}`, {

@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { getLogger } from '../util/logger';
 import { Logger } from 'winston';
 import ConfigManager, { AmqpConfig } from './config-manager';
@@ -8,6 +7,7 @@ import MessageHandler from './message-handler';
 import ChannelManager from './channel-manager';
 import PublisherManager from './publisher-manager';
 import DispatchHandler from './dispatch-handler';
+import { TemplatedApp } from 'uWebSockets.js';
 
 export default class AmqpManager {
   private static instance: AmqpManager;
@@ -23,7 +23,7 @@ export default class AmqpManager {
 
   private logger: Logger = getLogger('amqp-manager');
 
-  constructor(app: uWS.TemplatedApp, config: AmqpConfig) {
+  constructor(app: TemplatedApp, config: AmqpConfig) {
     this.instanceId = config.instanceId;
     this.connectionString = ConfigManager.get('RABBIT_MQ_CONNECTION_STRING');
     this.connectionManager = ConnectionManager.getInstance();
@@ -33,7 +33,7 @@ export default class AmqpManager {
     this.publisherManager = new PublisherManager();
   }
 
-  public static getInstance(app?: uWS.TemplatedApp, config?: AmqpConfig): AmqpManager {
+  public static getInstance(app?: TemplatedApp, config?: AmqpConfig): AmqpManager {
     if (AmqpManager.instance) {
       return AmqpManager.instance;
     }

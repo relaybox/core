@@ -1,4 +1,4 @@
-import uWS from 'uWebSockets.js';
+import { WebSocket } from 'uWebSockets.js';
 import { KeyNamespace, KeyPrefix } from '../../types/state.types';
 import { getLogger } from '../../util/logger';
 import {
@@ -25,7 +25,7 @@ export async function bindSubscription(
   nspRoomId: string,
   subscription: string,
   keyNamespace: KeyNamespace,
-  socket: uWS.WebSocket<Session>
+  socket: WebSocket<Session>
 ): Promise<void> {
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
@@ -46,7 +46,7 @@ export async function unbindSubscription(
   nspRoomId: string,
   subscription: string,
   keyNamespace: KeyNamespace,
-  socket?: uWS.WebSocket<Session>
+  socket?: WebSocket<Session>
 ): Promise<void> {
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
@@ -69,7 +69,7 @@ export async function unbindAllSubscriptions(
   connectionId: string,
   nspRoomId: string,
   keyNamespace: KeyNamespace,
-  socket?: uWS.WebSocket<Session>
+  socket?: WebSocket<Session>
 ): Promise<void> {
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
@@ -100,7 +100,7 @@ export async function restoreRoomSubscriptions(
   connectionId: string,
   nspRoomId: string,
   keyNamespace: KeyNamespace,
-  socket: uWS.WebSocket<Session>
+  socket: WebSocket<Session>
 ): Promise<void> {
   logger.info(`Restoring subscriptions for ${connectionId}`, { keyNamespace, nspRoomId });
 

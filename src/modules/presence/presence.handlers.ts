@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { RedisClient } from '../../lib/redis';
 import { DsPermission } from '../../types/permissions.types';
@@ -29,11 +28,12 @@ import {
 import { getLatencyLog, publishMetric, unpublishMetric } from '../metrics/metrics.service';
 import { MetricType } from '../../types/metric.types';
 import { setSessionActive } from '../session/session.service';
+import { WebSocket } from 'uWebSockets.js';
 
 export async function clientPresenceSubscribe(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -80,7 +80,7 @@ export async function clientPresenceSubscribe(
 export async function clientPresenceUnsubscribe(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -124,7 +124,7 @@ export async function clientPresenceUnsubscribe(
 export async function clientPresenceUnsubscribeAll(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -156,7 +156,7 @@ export async function clientPresenceUnsubscribeAll(
 export async function clientPresenceJoin(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -199,7 +199,7 @@ export async function clientPresenceJoin(
 export async function clientPresenceLeave(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -238,7 +238,7 @@ export async function clientPresenceLeave(
 export async function clientPresenceUpdate(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -288,7 +288,7 @@ export async function clientPresenceUpdate(
 export async function clientPresenceGet(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -313,7 +313,7 @@ export async function clientPresenceGet(
 export async function clientPresenceCount(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string

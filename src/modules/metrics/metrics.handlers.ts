@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { RedisClient } from '../../lib/redis';
 import { Session } from '../../types/session.types';
@@ -9,11 +8,12 @@ import { permissionsGuard } from '../guards/guards.service';
 import { DsPermission } from '../../types/permissions.types';
 import { bindSubscription, unbindSubscription } from '../subscription/subscription.service';
 import { KeyNamespace } from '../../types/state.types';
+import { WebSocket } from 'uWebSockets.js';
 
 export async function clientMetricsSubscribe(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
@@ -54,7 +54,7 @@ export async function clientMetricsSubscribe(
 export async function clientMetricsUnsubscribe(
   logger: Logger,
   redisClient: RedisClient,
-  socket: uWS.WebSocket<Session>,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string

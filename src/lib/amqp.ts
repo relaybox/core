@@ -1,4 +1,3 @@
-import uWS from 'uWebSockets.js';
 import { v4 as uuid } from 'uuid';
 import {
   Connection,
@@ -16,6 +15,7 @@ import { ReducedSession } from '../types/session.types';
 import { LatencyLog } from 'src/types/request.types';
 import { eventEmitter } from './event-bus';
 import { SocketSubscriptionEvent } from '../types/socket.types';
+import { TemplatedApp } from 'uWebSockets.js';
 
 const AMQP_DEFAULT_EXCHANGE_NAME = 'ds.rooms';
 const AMQP_QUEUE_COUNT = Number(process.env.RABBIT_MQ_QUEUE_COUNT || 5);
@@ -48,7 +48,7 @@ interface Message {
 }
 
 export class AmqpManager {
-  private app: uWS.TemplatedApp;
+  private app: TemplatedApp;
   private logger: Logger;
   private amqpConnection;
   private connectionString = process.env.RABBIT_MQ_CONNECTION_STRING;
@@ -60,7 +60,7 @@ export class AmqpManager {
   private instanceId: string | number;
   private enqueueDeliveryMetrics: (...args: any) => Promise<Job>;
 
-  constructor(app: uWS.TemplatedApp, opts: AmqpConfig) {
+  constructor(app: TemplatedApp, opts: AmqpConfig) {
     this.logger = getLogger(`amqp`);
 
     this.app = app;

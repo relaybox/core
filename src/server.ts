@@ -23,9 +23,6 @@ const app = App()
   .get('/', (res: HttpResponse, req: HttpRequest) => {
     res.end(process.uptime().toString());
   })
-  // .get('/healthcheck', (res: HttpResponse, req: HttpRequest) => {
-  //   res.end(process.uptime().toString());
-  // })
   .ws('/*', {
     idleTimeout: WS_IDLE_TIMEOUT_MS,
     sendPingsAutomatically: true,

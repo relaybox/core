@@ -63,6 +63,6 @@ jobs:
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-service-ECSService-QF7FvKSEfWo9
-          cluster: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-25OYfqfJpoJzASG
+          cluster: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-25OYfqfJpoJz
           wait-for-service-stability: false
           force-new-deployment: true

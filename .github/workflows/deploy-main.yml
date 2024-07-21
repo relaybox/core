@@ -43,26 +43,26 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # - uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   id: task-def
-      #   with:
-      #     task-definition: ./ecs/${{vars.STAGE}}/task-definition.json
-      #     container-name: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{ vars.STAGE }}
-      #     image: ${{ steps.build-image.outputs.image }}
-      #     environment-variables: |
-      #       AWS_REGION=${{vars.AWS_REGION}}
-      #       RABBIT_MQ_CONNECTION_STRING=${{ vars.RABBIT_MQ_CONNECTION_STRING }}
-      #       RABBIT_MQ_QUEUE_AUTO_DELETE=${{ vars.RABBIT_MQ_QUEUE_AUTO_DELETE }}
-      #       RABBIT_MQ_QUEUE_COUNT=${{ vars.RABBIT_MQ_QUEUE_COUNT }}
-      #       REDIS_HOST=${{ vars.REDIS_HOST }}
-      #       REDIS_PORT=${{ vars.REDIS_PORT }}
-      #       RELAYBOX_AUTH_SERVICE_URL=${{ vars.RELAYBOX_AUTH_SERVICE_URL }}
-      #       WS_IDLE_TIMEOUT_MS=${{ vars.WS_IDLE_TIMEOUT_MS }}
+      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: task-def
+        with:
+          task-definition: ./ecs/${{vars.STAGE}}/task-definition.json
+          container-name: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{ vars.STAGE }}
+          image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            AWS_REGION=${{vars.AWS_REGION}}
+            RABBIT_MQ_CONNECTION_STRING=${{ vars.RABBIT_MQ_CONNECTION_STRING }}
+            RABBIT_MQ_QUEUE_AUTO_DELETE=${{ vars.RABBIT_MQ_QUEUE_AUTO_DELETE }}
+            RABBIT_MQ_QUEUE_COUNT=${{ vars.RABBIT_MQ_QUEUE_COUNT }}
+            REDIS_HOST=${{ vars.REDIS_HOST }}
+            REDIS_PORT=${{ vars.REDIS_PORT }}
+            RELAYBOX_AUTH_SERVICE_URL=${{ vars.RELAYBOX_AUTH_SERVICE_URL }}
+            WS_IDLE_TIMEOUT_MS=${{ vars.WS_IDLE_TIMEOUT_MS }}
 
-      # - uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      #   with:
-      #     task-definition: ${{ steps.task-def.outputs.task-definition }}
-      #     service: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-service-ECSService-rAhBYokgrM8D
-      #     cluster: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-25OYfqfJpoJzASG
-      #     wait-for-service-stability: false
-      #     force-new-deployment: true
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-service-ECSService-rAhBYokgrM8D
+          cluster: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-25OYfqfJpoJzASG
+          wait-for-service-stability: false
+          force-new-deployment: true

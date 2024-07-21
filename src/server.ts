@@ -20,8 +20,11 @@ const SERVER_INSTANCE_ID = Number(SERVER_PORT);
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 
 const app = uWS
-  .App()
+  ./*SSL*/ App()
   .get('/', (res: uWS.HttpResponse, req: uWS.HttpRequest) => {
+    res.end(process.uptime().toString());
+  })
+  .get('/healthcheck', (res: uWS.HttpResponse, req: uWS.HttpRequest) => {
     res.end(process.uptime().toString());
   })
   .ws('/*', {

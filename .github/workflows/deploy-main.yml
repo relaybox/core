@@ -62,7 +62,7 @@ jobs:
       - uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-service-ECSService-rAhBYokgrM8D
+          service: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-service-ECSService-QF7FvKSEfWo9
           cluster: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-25OYfqfJpoJzASG
           wait-for-service-stability: false
           force-new-deployment: true

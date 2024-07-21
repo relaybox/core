@@ -4,7 +4,7 @@ import { request } from '../../util/request';
 
 const logger = getLogger('auth');
 
-const DS_AUTH_SERVICE_URL = process.env.DS_AUTH_SERVICE_URL;
+const RELAYBOX_AUTH_SERVICE_URL = process.env.RELAYBOX_AUTH_SERVICE_URL;
 
 export async function verifyAuthToken(token: string, connectionId?: string): Promise<Session> {
   if (!token) {
@@ -16,7 +16,7 @@ export async function verifyAuthToken(token: string, connectionId?: string): Pro
   const headers = getAuthHeaders(token, connectionId);
 
   try {
-    const { data } = await request<Session>(`${DS_AUTH_SERVICE_URL}/validate-token`, {
+    const { data } = await request<Session>(`${RELAYBOX_AUTH_SERVICE_URL}/validate-token`, {
       method: 'GET',
       headers
     });
@@ -42,7 +42,7 @@ export async function verifyApiKey(
   try {
     const headers = getAuthHeaders(apiKey, connectionId, clientId);
 
-    const { data } = await request<Session>(`${DS_AUTH_SERVICE_URL}/validate-api-key`, {
+    const { data } = await request<Session>(`${RELAYBOX_AUTH_SERVICE_URL}/validate-api-key`, {
       method: 'GET',
       headers
     });

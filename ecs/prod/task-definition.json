@@ -1,0 +1,25 @@
+{
+  "family": "relaybox-prod-uws",
+  "taskRoleArn": "arn:aws:iam::905418171520:role/livetabs-prod-ecs-roles-ECSTaskRole-hru7miQceI2K",
+  "containerDefinitions": [
+    {
+      "name": "relaybox-prod-uws",
+      "essential": true,
+      "memoryReservation": "256",
+      "portMappings": [
+        {
+          "containerPort": 4004
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/aws/ecs/relaybox-prod-uws",
+          "awslogs-region": "eu-west-2",
+          "awslogs-stream-prefix": "/aws/ecs"
+        }
+      }
+    }
+  ]
+}

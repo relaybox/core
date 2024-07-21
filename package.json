@@ -32,6 +32,7 @@
     "json-colorizer": "^3.0.1",
     "nodemon": "^3.1.0",
     "typescript": "^5.4.5",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.44.0",
     "vitest": "^1.6.0"
   }
 }

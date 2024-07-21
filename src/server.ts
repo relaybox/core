@@ -15,7 +15,7 @@ import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
 import AmqpManager from './lib/amqp-manager';
 
 const logger = getLogger('uws-socket-server');
-const SERVER_PORT = process.env.SERVER_PORT || 5004;
+const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const SERVER_INSTANCE_ID = Number(SERVER_PORT);
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 

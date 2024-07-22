@@ -8,7 +8,9 @@
       "memoryReservation": "256",
       "portMappings": [
         {
-          "containerPort": 4004
+          "containerPort": 4004,
+          "hostPort": 0,
+          "protocol": "tcp"
         }
       ],
       "logConfiguration": {

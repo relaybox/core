@@ -15,9 +15,11 @@ import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
 import AmqpManager from './lib/amqp-manager';
 
 const logger = getLogger('uws-socket-server');
+
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const SERVER_INSTANCE_ID = Number(SERVER_PORT);
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
+const LISTEN_EXCLUSIVE_PORT = 1;
 
 const app = App()
   .get('/', (res: HttpResponse, req: HttpRequest) => {
@@ -46,7 +48,7 @@ const amqpManager = AmqpManager.getInstance(app, {
 amqpManager.connect().then((_) => {
   const port = Number(SERVER_PORT);
 
-  app.listen(port, 1, (socket) => {
+  app.listen(port, LISTEN_EXCLUSIVE_PORT, (socket) => {
     if (socket) {
       logger.info(`Server listening on port ${port}`);
     } else {

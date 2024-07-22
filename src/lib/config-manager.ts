@@ -5,7 +5,7 @@ export enum ExchangeType {
 }
 
 export interface AmqpConfig {
-  instanceId: number;
+  instanceId: string;
   exchange?: string;
   exchangeType?: ExchangeType;
   enqueueDeliveryMetrics: (...args: any) => Promise<Job>;

@@ -17,10 +17,9 @@ import os from 'os';
 
 const logger = getLogger('uws-socket-server');
 
-console.log('HOSTNAME:', os.hostname());
-
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
-const SERVER_INSTANCE_ID = Number(SERVER_PORT);
+// const SERVER_INSTANCE_ID = Number(SERVER_PORT);
+const CONTAINER_HOSTNAME = os.hostname();
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
 
@@ -39,12 +38,12 @@ const app = App()
       handleSocketMessage(socket, message, isBinary, app);
     },
     close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
-      handleDisconnect(socket, code, message, SERVER_INSTANCE_ID);
+      handleDisconnect(socket, code, message, CONTAINER_HOSTNAME);
     }
   });
 
 const amqpManager = AmqpManager.getInstance(app, {
-  instanceId: SERVER_INSTANCE_ID,
+  instanceId: CONTAINER_HOSTNAME,
   enqueueDeliveryMetrics
 });
 
@@ -53,9 +52,9 @@ amqpManager.connect().then((_) => {
 
   app.listen(port, LISTEN_EXCLUSIVE_PORT, (socket) => {
     if (socket) {
-      logger.info(`Server listening on port ${port}`);
+      logger.info(`Server listening on port ${CONTAINER_HOSTNAME}:${port}`);
     } else {
-      logger.error(`Failed to listen on port ${port}`);
+      logger.error(`Failed to listen on port ${CONTAINER_HOSTNAME}:${port}`);
     }
   });
 });

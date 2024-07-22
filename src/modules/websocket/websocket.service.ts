@@ -192,7 +192,7 @@ export async function handleDisconnect(
   socket: WebSocket<Session>,
   code: number,
   message: ArrayBuffer,
-  serverInstanceId: number
+  serverInstanceId: string
 ): Promise<Job | void> {
   const session = socket.getUserData();
   const decodedMessage = decoder.decode(message);

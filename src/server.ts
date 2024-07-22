@@ -13,8 +13,11 @@ import {
 import { Session } from './types/session.types';
 import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
 import AmqpManager from './lib/amqp-manager';
+import os from 'os';
 
 const logger = getLogger('uws-socket-server');
+
+console.log('HOSTNAME', os.hostname());
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const SERVER_INSTANCE_ID = Number(SERVER_PORT);

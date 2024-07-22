@@ -20,6 +20,7 @@
     "rabbitmq-client": "^4.6.0",
     "redis": "^4.6.14",
     "uuid": "^10.0.0",
+    "uWebSockets.js": "github:livecloud-labs/uWebSockets.js#v20.44.0",
     "winston": "^3.13.0"
   },
   "devDependencies": {

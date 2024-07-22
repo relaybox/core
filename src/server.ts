@@ -46,8 +46,8 @@ const amqpManager = AmqpManager.getInstance(app, {
 amqpManager.connect().then((_) => {
   const port = Number(SERVER_PORT);
 
-  app.listen(port, (token) => {
-    if (token) {
+  app.listen(port, 1, (socket) => {
+    if (socket) {
       logger.info(`Server listening on port ${port}`);
     } else {
       logger.error(`Failed to listen on port ${port}`);

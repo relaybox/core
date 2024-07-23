@@ -13,4 +13,4 @@ RUN npm i --verbose
 
 EXPOSE 4004
 
-CMD ["node", "http.js"]
+CMD ["node", "index.js"]

@@ -1,6 +1,6 @@
 {
   "family": "relaybox-uws-prod",
-  "taskRoleArn": "arn:aws:iam::905418171520:role/livetabs-prod-ecs-roles-ECSTaskRole-hru7miQceI2K",
+  "taskRoleArn": "arn:aws:iam::637423225170:role/relaybox-prod-ecs-roles-ECSTaskRole-Fl3Ty8kj1qEO",
   "containerDefinitions": [
     {
       "name": "relaybox-uws-prod",

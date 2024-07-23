@@ -3,7 +3,7 @@ name: Deploy development
 on:
   push:
     branches:
-      - main
+      - none
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}

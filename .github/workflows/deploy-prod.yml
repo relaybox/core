@@ -2,13 +2,15 @@ name: Deploy production
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - main
+    # tags:
+    #   - '*'
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
-  APP_NAME: livetabs
-  SERVICE_NAME: socket-server
+  APP_NAME: relaybox
+  SERVICE_NAME: uws
 
 jobs:
   deploy:
@@ -25,7 +27,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
           audience: sts.amazonaws.com
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ env.APP_NAME }}-${{ env.SERVICE_NAME }}-${{ vars.DEPLOYMENT_STAGE }}-CIDeployerRole
+          role-to-assume: ${{ vars.AWS_CI_DEPLOYER_ROLE_ARN }}
 
       - uses: aws-actions/amazon-ecr-login@v2
         id: login-ecr
@@ -43,29 +45,26 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - uses: aws-actions/amazon-ecs-render-task-definition@v1
-        id: task-def
-        with:
-          task-definition: ./ecs/${{vars.DEPLOYMENT_STAGE}}/task-definition.json
-          container-name: ${{ env.APP_NAME }}-${{ vars.DEPLOYMENT_STAGE }}-${{ env.SERVICE_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
-          environment-variables: |
-            AWS_REGION=${{vars.AWS_REGION}}
-            LIVETABS_API_URL=${{ vars.LIVETABS_API_URL }}
-            RABBIT_MQ_CONNECTION_STRING=${{ vars.RABBIT_MQ_CONNECTION_STRING }}
-            REDIS_HOST=${{ vars.REDIS_HOST }}
-            REDIS_PORT=${{ vars.REDIS_PORT }}
-            REQUEST_ORIGIN=${{ vars.REQUEST_ORIGIN }}
-            SERVER_PORT=${{ vars.SERVER_PORT }}
-            SESSION_SECRET=${{ vars.SERVER_PORT }}
-            SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-            SYSTEM_EVENTS_QUEUE_URL=${{ vars.SYSTEM_EVENTS_QUEUE_URL }}
-            SYSTEM_NOTIFICATIONS_TOPIC_ARN=${{ vars.SYSTEM_NOTIFICATIONS_TOPIC_ARN }}
+      # - uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   id: task-def
+      #   with:
+      #     task-definition: ./ecs/${{vars.STAGE}}/task-definition.json
+      #     container-name: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{ vars.STAGE }}
+      #     image: ${{ steps.build-image.outputs.image }}
+      #     environment-variables: |
+      #       AWS_REGION=${{vars.AWS_REGION}}
+      #       RABBIT_MQ_CONNECTION_STRING=${{ vars.RABBIT_MQ_CONNECTION_STRING }}
+      #       RABBIT_MQ_QUEUE_AUTO_DELETE=${{ vars.RABBIT_MQ_QUEUE_AUTO_DELETE }}
+      #       RABBIT_MQ_QUEUE_COUNT=${{ vars.RABBIT_MQ_QUEUE_COUNT }}
+      #       REDIS_HOST=${{ vars.REDIS_HOST }}
+      #       REDIS_PORT=${{ vars.REDIS_PORT }}
+      #       RELAYBOX_AUTH_SERVICE_URL=${{ vars.RELAYBOX_AUTH_SERVICE_URL }}
+      #       WS_IDLE_TIMEOUT_MS=${{ vars.WS_IDLE_TIMEOUT_MS }}
 
-      - uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.APP_NAME }}-${{vars.DEPLOYMENT_STAGE}}-ecs-service-ECSService-FXSPpSshxhPF
-          cluster: ${{ env.APP_NAME }}-${{vars.DEPLOYMENT_STAGE}}-ecs-cluster-ECSCluster-eIg4yanJ7FFJ
-          wait-for-service-stability: false
-          force-new-deployment: true
+      # - uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.task-def.outputs.task-definition }}
+      #     service: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-service-ECSService-UGkqsrIpIdea
+      #     cluster: ${{env.APP_NAME}}-${{ env.SERVICE_NAME }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-25OYfqfJpoJz
+      #     wait-for-service-stability: false
+      #     force-new-deployment: true

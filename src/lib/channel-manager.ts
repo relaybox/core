@@ -12,6 +12,10 @@ export default class ChannelManager {
   private channel: Channel;
   private instanceId: string | number;
   private queueCount: number;
+  private connection: Connection;
+  private reconnectAttempts: number = 0;
+  private maxReconnectAttempts: number = 5;
+  private reconnectDelay: number = 5000; // 5 seconds
 
   private logger: Logger = getLogger('channel-manager');
 
@@ -25,8 +29,26 @@ export default class ChannelManager {
   }
 
   public async createChannel(connection: Connection): Promise<void> {
+    this.connection = connection;
     this.channel = await connection.acquire();
     this.logger.info(`Channel initialized`);
+
+    this.channel.on('close', this.handleClose.bind(this));
+  }
+
+  handleClose() {
+    this.logger.warn(`Channel closed`);
+    this.scheduleChannelReconnect();
+  }
+
+  private scheduleChannelReconnect(): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      this.logger.info(`Reconnecting in ${this.reconnectDelay / 1000} seconds...`);
+      setTimeout(() => this.createChannel(this.connection), this.reconnectDelay);
+    } else {
+      this.logger.error('Max reconnect attempts reached. Failed to acquire channel');
+    }
   }
 
   private async bindRoom(room: string): Promise<void> {

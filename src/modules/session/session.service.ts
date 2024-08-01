@@ -204,7 +204,7 @@ async function clearDelayedSessionJob(id: string) {
 }
 
 export function setSessionActive(session: Session, socket: WebSocket<Session>): Promise<Job> {
-  logger.info(`Setting session active, ${session.connectionId}`, { session });
+  // logger.info(`Setting session active, ${session.connectionId}`, { session });
 
   const { permissions, ...rest } = session;
 

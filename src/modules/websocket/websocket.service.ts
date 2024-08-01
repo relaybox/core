@@ -243,9 +243,9 @@ export async function handleSubscription(
 export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise<void> {
   const session = socket.getUserData();
 
-  logger.info(`Client heartbeat recieved via "pong" response, ${session.connectionId}`, {
-    session
-  });
+  // logger.info(`Client heartbeat recieved via "pong" response, ${session.connectionId}`, {
+  //   session
+  // });
 
   try {
     await setSessionActive(session, socket);

@@ -167,14 +167,18 @@ export async function handleSocketMessage(
   isBinary: boolean,
   app: TemplatedApp
 ): Promise<void> {
-  const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
+  try {
+    const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
 
-  const handler = eventHandlersMap[type as ClientEvent];
+    const handler = eventHandlersMap[type as ClientEvent];
 
-  if (handler) {
-    handler(logger, redisClient, socket, body, ackHandler(socket, ackId), createdAt);
-  } else {
-    logger.error(`Event ${type} not recognized`, { type, ackId });
+    if (handler) {
+      handler(logger, redisClient, socket, body, ackHandler(socket, ackId), createdAt);
+    } else {
+      logger.error(`Event ${type} not recognized`, { type, ackId });
+    }
+  } catch (err: any) {
+    logger.error(`Failed to handle socket message`, { err });
   }
 }
 

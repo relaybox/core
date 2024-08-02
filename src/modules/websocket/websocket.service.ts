@@ -51,6 +51,8 @@ const redisClient = getRedisClient();
 
 const decoder = new TextDecoder('utf-8');
 
+const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
+
 const eventHandlersMap = {
   [ClientEvent.ROOM_JOIN]: clientRoomJoin,
   [ClientEvent.ROOM_LEAVE]: clientRoomLeave,
@@ -170,6 +172,10 @@ export async function handleSocketMessage(
   try {
     const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
 
+    if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {
+      handleByteLengthError(socket, ackId);
+    }
+
     const handler = eventHandlersMap[type as ClientEvent];
 
     if (handler) {
@@ -190,6 +196,17 @@ export function ackHandler(socket: WebSocket<Session>, ackId: string) {
       logger.error(`Failed to send message acknowledgment`, { err });
     }
   };
+}
+
+export function handleByteLengthError(socket: WebSocket<Session>, ackId: string) {
+  const res = ackHandler(socket, ackId);
+  const message = `Message size exceeds maximum allowed size (${MESSAGE_MAX_BYTE_LENGTH})`;
+
+  if (res) {
+    res(null, { message });
+  }
+
+  throw new Error(message);
 }
 
 export async function handleDisconnect(

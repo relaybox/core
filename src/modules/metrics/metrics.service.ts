@@ -137,7 +137,7 @@ export function enqueueDeliveryMetrics(
   listener: string,
   recipientCount?: number
 ): Promise<Job> {
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date().toISOString(); // Populates pg "dispatchedAt" column
 
   const deliveryData = {
     nspRoomId,

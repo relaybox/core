@@ -15,7 +15,7 @@ export default class ChannelManager {
   private connection: Connection;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
-  private reconnectDelay: number = 5000; // 5 seconds (ms)
+  private reconnectDelay: number = 5000; // 5 seconds
 
   private logger: Logger = getLogger('channel-manager');
 

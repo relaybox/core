@@ -20,7 +20,7 @@ import os from 'os';
 const logger = getLogger('uws-socket-server');
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
-const CONTAINER_HOSTNAME = os.hostname();
+const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
 

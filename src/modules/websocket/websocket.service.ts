@@ -37,7 +37,7 @@ import {
 import { clientMetricsSubscribe, clientMetricsUnsubscribe } from '../metrics/metrics.handlers';
 import { DsErrorResponse } from '../../types/request.types';
 import { eventEmitter } from '../../lib/event-bus';
-import { getQueryParamRealValue } from '../../util/helpers';
+import { getQueryParamRealValue, isEventSubscription } from '../../util/helpers';
 import {
   HttpRequest,
   HttpResponse,
@@ -242,6 +242,10 @@ export async function handleSubscription(
 ): Promise<void> {
   const decodedTopic = decoder.decode(topic);
 
+  // if (isEventSubscription(decodedTopic)) {
+  //   return;
+  // }
+
   const [appPid, namespace, ext] = decodedTopic.split(':');
 
   // Only emit create event for top level room subscriptions
@@ -249,6 +253,8 @@ export async function handleSubscription(
   if (ext !== undefined) {
     return;
   }
+
+  console.log('SUBSCRIPTION:', decodedTopic);
 
   logger.info(`Emitting subscription create for "${appPid}:${namespace}"`);
 
@@ -264,6 +270,7 @@ export async function handleSubscription(
 export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise<void> {
   const session = socket.getUserData();
 
+  // TOO MUCH LOGGING OUTPUT
   // logger.info(`Client heartbeat recieved via "pong" response, ${session.connectionId}`, {
   //   session
   // });

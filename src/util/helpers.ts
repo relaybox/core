@@ -20,3 +20,7 @@ export function getQueryParamRealValue(queryParam: string | undefined): string |
 
   return queryParam;
 }
+
+export function isEventSubscription(topic: string): boolean {
+  return topic.includes('::') || topic.includes(':$:');
+}

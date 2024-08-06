@@ -99,9 +99,29 @@ export default class ChannelManager {
     return ((hash % this.queueCount) + this.queueCount) % this.queueCount;
   }
 
+  private getSubKey(room: string): number {
+    let hash = 0;
+    let chr: number;
+
+    for (let i = 0; i < room.length; i++) {
+      chr = room.charCodeAt(i);
+      hash = (hash << 5) - hash + chr;
+      hash |= 0;
+    }
+
+    return ((hash % this.queueCount) + this.queueCount) % this.queueCount;
+  }
+
   private getBindingKey(room: string): string {
     const [appPid, namespace] = room.split(':');
+    const subKey = this.getSubKey(namespace);
 
-    return `${appPid}.${namespace}.#`;
+    console.log(`BINDING:`, `${appPid}.${subKey}`);
+
+    return `${appPid}.${subKey}`;
+
+    // const [appPid, namespace] = room.split(':');
+
+    // return `${appPid}.${namespace}.#`;
   }
 }

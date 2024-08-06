@@ -1,5 +1,5 @@
 import { RedisClient } from '../../lib/redis';
-import { getRoomByConnectionId, setRoomJoin, setRoomLeave } from './room.repository';
+import { setRoomJoin, setRoomLeave } from './room.repository';
 import { Session } from '../../types/session.types';
 import { getLogger } from '../../util/logger';
 import { WebSocket } from 'uWebSockets.js';

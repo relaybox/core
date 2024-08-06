@@ -14,12 +14,14 @@ interface Dispatcher {
 export default class DispatchHandler {
   private exchange: string;
   private publisher: Publisher;
+  private queueCount: number;
 
   private logger: Logger = getLogger('dispatch-handler');
 
   constructor(publisher: Publisher) {
     this.publisher = publisher;
     this.exchange = ConfigManager.AMQP_DEFAULT_EXCHANGE_NAME;
+    this.queueCount = ConfigManager.getInt('RABBIT_MQ_QUEUE_COUNT');
   }
 
   to(nspRoomId: string): Dispatcher {
@@ -72,7 +74,28 @@ export default class DispatchHandler {
     };
   }
 
+  private getSubKey(namespace: string): number {
+    let hash = 0;
+    let chr: number;
+
+    for (let i = 0; i < namespace.length; i++) {
+      chr = namespace.charCodeAt(i);
+      hash = (hash << 5) - hash + chr;
+      hash |= 0;
+    }
+
+    return ((hash % this.queueCount) + this.queueCount) % this.queueCount;
+  }
+
   private getRoutingKey(subscription: string): string {
-    return subscription.replace(/:/g, '.');
+    const [appPid, namespace] = subscription.split(':');
+    const subKey = this.getSubKey(namespace);
+
+    console.log(`DISPACTHING:`, `${appPid}.${subKey}`);
+
+    return `${appPid}.${subKey}`;
+
+    // PREV...
+    // return subscription.replace(/:/g, '.');
   }
 }

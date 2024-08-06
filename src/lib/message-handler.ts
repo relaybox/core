@@ -60,10 +60,8 @@ export default class MessageHandler {
     forEvent?: string
   ) {
     this.logger.info(`Emitting log metrics`, { event });
-
     const messageEventData = this.formatMessageEventData(event, data);
     this.app.publish(event, messageEventData);
-
     this.handleDeliveryMetrics(nspRoomId, event, data, requestId, session, latencyLog, forEvent);
   }
 

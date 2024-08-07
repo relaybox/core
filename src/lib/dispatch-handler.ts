@@ -6,7 +6,8 @@ import { Envelope, Publisher } from 'rabbitmq-client';
 import { v4 as uuid } from 'uuid';
 import ConfigManager from './config-manager';
 import { Message } from '../types/data.types';
-import { getHashedRoomBindingId } from '../util/helpers';
+// import { getHashedRoomBindingId } from '../util/helpers';
+import ChannelManager from './channel-manager';
 
 interface Dispatcher {
   dispatch: (event: string, data: any, session: ReducedSession, latancyLog: LatencyLog) => void;
@@ -42,11 +43,10 @@ export default class DispatchHandler {
     session: ReducedSession,
     latencyLog: LatencyLog
   ): void {
-    const hashedRoomBindingId = getHashedRoomBindingId(nspRoomId);
+    const routingKey = ChannelManager.getRoutingKey(nspRoomId);
     const envelope: Envelope = {
       exchange: this.exchange,
-      routingKey: this.getRoutingKey(hashedRoomBindingId)
-      // routingKey: getHashedRoomBindingId(nspRoomId)
+      routingKey
     };
 
     const message = this.buildMessage(nspRoomId, event, data, session, latencyLog);
@@ -75,9 +75,5 @@ export default class DispatchHandler {
       requestId,
       global
     };
-  }
-
-  private getRoutingKey(room: string): string {
-    return room;
   }
 }

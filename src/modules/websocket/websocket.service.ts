@@ -45,6 +45,7 @@ import {
   us_socket_context_t,
   WebSocket
 } from 'uWebSockets.js';
+import ChannelManager from '../../lib/channel-manager';
 
 const logger = getLogger('websocket');
 const redisClient = getRedisClient();
@@ -242,17 +243,16 @@ export async function handleSubscription(
 ): Promise<void> {
   const decodedTopic = decoder.decode(topic);
 
-  const [appPid, namespace, ext] = decodedTopic.split(':');
+  const [routingKeyPrefix, appPid, hashedNamespace] = decodedTopic.split(':');
 
   // Only emit create event for top level room subscriptions
   // Binding keys not created for lower levels
-  if (ext !== undefined) {
+  if (routingKeyPrefix !== ChannelManager.AMQP_ROUTING_KEY_PREFIX) {
     return;
   }
 
-  logger.info(`Emitting subscription create for "${appPid}:${namespace}"`);
-  console.log(`OLD COUNT`, oldCount);
-  console.log(`NEW COUNT`, newCount);
+  logger.info(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
+  console.log(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
 
   if (oldCount === 0 && newCount > 0) {
     eventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, decodedTopic);

@@ -2,14 +2,9 @@ import { Logger } from 'winston';
 import { SocketAckHandler } from '../../types/socket.types';
 import { Session } from '../../types/session.types';
 import { RedisClient } from '../../lib/redis';
-import {
-  getHashedRoomBindingId,
-  getNspEvent,
-  getNspRoomId,
-  getRoomBindingId
-} from '../../util/helpers';
+import { getNspEvent, getNspRoomId } from '../../util/helpers';
 import { joinRoom, leaveRoom } from './room.service';
-import { getReducedSession, setSessionActive } from '../session/session.service';
+import { getReducedSession } from '../session/session.service';
 import {
   getLatencyLog,
   pushRoomJoinMetrics,
@@ -24,6 +19,7 @@ import { permissionsGuard } from '../guards/guards.service';
 import { DsPermission } from '../../types/permissions.types';
 import AmqpManager from '../../lib/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
+import ChannelManager from '../../lib/channel-manager';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -41,15 +37,13 @@ export async function clientRoomJoin(
 
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
-    const roomBindingId = getRoomBindingId(nspRoomId);
-    const hashedRoomBindingId = getHashedRoomBindingId(nspRoomId);
+    const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
 
-    console.log('HASHED BINDING:', hashedRoomBindingId);
+    console.log('HASHED BINDING:', nspRoomRoutingKey);
 
     await Promise.all([
       joinRoom(redisClient, session, nspRoomId, socket),
-      joinRoom(redisClient, session, roomBindingId, socket),
-      joinRoom(redisClient, session, hashedRoomBindingId, socket),
+      joinRoom(redisClient, session, nspRoomRoutingKey, socket),
       pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId)
     ]);
 
@@ -77,14 +71,12 @@ export async function clientRoomLeave(
 
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
-    const roomBindingId = getRoomBindingId(nspRoomId);
-    const hashedRoomBindingId = getHashedRoomBindingId(nspRoomId);
+    const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
     const presenceSubsciption = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
 
     await Promise.all([
       leaveRoom(redisClient, session, nspRoomId, socket),
-      leaveRoom(redisClient, session, roomBindingId, socket),
-      leaveRoom(redisClient, session, hashedRoomBindingId, socket),
+      leaveRoom(redisClient, session, nspRoomRoutingKey, socket),
       removeActiveMember(uid, nspRoomId, presenceSubsciption, session),
       unbindAllSubscriptions(
         redisClient,

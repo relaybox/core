@@ -16,6 +16,7 @@ export default class ChannelManager {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000; // 5 seconds
+  static AMQP_ROUTING_KEY_PREFIX = '$$';
 
   private logger: Logger = getLogger('channel-manager');
 
@@ -51,33 +52,31 @@ export default class ChannelManager {
     }
   }
 
-  private async bindRoom(room: string): Promise<void> {
+  private async bindRoom(roomId: string): Promise<void> {
     try {
-      const routingKey = this.getBindingKey(room);
-      const queueName = this.getQueueName(routingKey);
+      const queueName = this.getQueueName(roomId);
 
       await this.channel.queueBind({
         exchange: this.exchange,
         queue: queueName,
-        routingKey
+        routingKey: roomId
       });
     } catch (err) {
-      this.logger.error(`Unable to bind queue`, { room, err });
+      this.logger.error(`Unable to bind queue`, { roomId, err });
     }
   }
 
-  private async unbindRoom(room: string): Promise<void> {
+  private async unbindRoom(roomId: string): Promise<void> {
     try {
-      const routingKey = this.getBindingKey(room);
-      const queueName = this.getQueueName(routingKey);
+      const queueName = this.getQueueName(roomId);
 
       await this.channel.queueUnbind({
         exchange: this.exchange,
         queue: queueName,
-        routingKey
+        routingKey: roomId
       });
     } catch (err) {
-      this.logger.error(`Unable to unbind queue`, { room, err });
+      this.logger.error(`Unable to unbind queue`, { roomId, err });
     }
   }
 
@@ -99,7 +98,25 @@ export default class ChannelManager {
     return ((hash % this.queueCount) + this.queueCount) % this.queueCount;
   }
 
-  private getBindingKey(room: string): string {
-    return room;
+  static getRoutingKey(nspRoomId: string): string {
+    const [appPid, namespace] = nspRoomId.split(':');
+    const hashedNamespace = this.gethashedNamespace(namespace);
+
+    return `${ChannelManager.AMQP_ROUTING_KEY_PREFIX}:${appPid}:${hashedNamespace}`;
+  }
+
+  static gethashedNamespace(namespace: string): number {
+    const queueCount = ConfigManager.getInt('RABBIT_MQ_QUEUE_COUNT');
+
+    let hash = 0;
+    let chr: number;
+
+    for (let i = 0; i < namespace.length; i++) {
+      chr = namespace.charCodeAt(i);
+      hash = (hash << 5) - hash + chr;
+      hash |= 0;
+    }
+
+    return ((hash % queueCount) + queueCount) % queueCount;
   }
 }

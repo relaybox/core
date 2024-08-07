@@ -6,6 +6,7 @@ import { Envelope, Publisher } from 'rabbitmq-client';
 import { v4 as uuid } from 'uuid';
 import ConfigManager from './config-manager';
 import { Message } from '../types/data.types';
+import { getHashedRoomBindingId } from '../util/helpers';
 
 interface Dispatcher {
   dispatch: (event: string, data: any, session: ReducedSession, latancyLog: LatencyLog) => void;
@@ -41,9 +42,11 @@ export default class DispatchHandler {
     session: ReducedSession,
     latencyLog: LatencyLog
   ): void {
+    const hashedRoomBindingId = getHashedRoomBindingId(nspRoomId);
     const envelope: Envelope = {
       exchange: this.exchange,
-      routingKey: this.getRoutingKey(event)
+      routingKey: this.getRoutingKey(hashedRoomBindingId)
+      // routingKey: getHashedRoomBindingId(nspRoomId)
     };
 
     const message = this.buildMessage(nspRoomId, event, data, session, latencyLog);
@@ -74,28 +77,7 @@ export default class DispatchHandler {
     };
   }
 
-  private getSubKey(namespace: string): number {
-    let hash = 0;
-    let chr: number;
-
-    for (let i = 0; i < namespace.length; i++) {
-      chr = namespace.charCodeAt(i);
-      hash = (hash << 5) - hash + chr;
-      hash |= 0;
-    }
-
-    return ((hash % this.queueCount) + this.queueCount) % this.queueCount;
-  }
-
-  private getRoutingKey(subscription: string): string {
-    const [appPid, namespace] = subscription.split(':');
-    const subKey = this.getSubKey(namespace);
-
-    console.log(`DISPACTHING:`, `${appPid}.${subKey}`);
-
-    return `${appPid}.${subKey}`;
-
-    // PREV...
-    // return subscription.replace(/:/g, '.');
+  private getRoutingKey(room: string): string {
+    return room;
   }
 }

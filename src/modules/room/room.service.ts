@@ -16,6 +16,8 @@ export async function joinRoom(
 
   logger.info(`Joining room ${nspRoomId}`, { uid, connectionId });
 
+  console.log('JOINING ROOM:', nspRoomId);
+
   try {
     await setRoomJoin(redisClient, connectionId, nspRoomId);
     socket.subscribe(nspRoomId);

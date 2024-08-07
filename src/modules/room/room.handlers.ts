@@ -2,7 +2,12 @@ import { Logger } from 'winston';
 import { SocketAckHandler } from '../../types/socket.types';
 import { Session } from '../../types/session.types';
 import { RedisClient } from '../../lib/redis';
-import { getNspEvent, getNspRoomId, getRoomBindingId } from '../../util/helpers';
+import {
+  getHashedRoomBindingId,
+  getNspEvent,
+  getNspRoomId,
+  getRoomBindingId
+} from '../../util/helpers';
 import { joinRoom, leaveRoom } from './room.service';
 import { getReducedSession, setSessionActive } from '../session/session.service';
 import {
@@ -37,11 +42,14 @@ export async function clientRoomJoin(
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const roomBindingId = getRoomBindingId(nspRoomId);
+    const hashedRoomBindingId = getHashedRoomBindingId(nspRoomId);
+
+    console.log('HASHED BINDING:', hashedRoomBindingId);
 
     await Promise.all([
       joinRoom(redisClient, session, nspRoomId, socket),
       joinRoom(redisClient, session, roomBindingId, socket),
-      // setSessionActive(session, socket),
+      joinRoom(redisClient, session, hashedRoomBindingId, socket),
       pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId)
     ]);
 
@@ -70,11 +78,13 @@ export async function clientRoomLeave(
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const roomBindingId = getRoomBindingId(nspRoomId);
+    const hashedRoomBindingId = getHashedRoomBindingId(nspRoomId);
     const presenceSubsciption = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
 
     await Promise.all([
       leaveRoom(redisClient, session, nspRoomId, socket),
       leaveRoom(redisClient, session, roomBindingId, socket),
+      leaveRoom(redisClient, session, hashedRoomBindingId, socket),
       removeActiveMember(uid, nspRoomId, presenceSubsciption, session),
       unbindAllSubscriptions(
         redisClient,

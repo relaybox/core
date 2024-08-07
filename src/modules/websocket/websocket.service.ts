@@ -37,7 +37,7 @@ import {
 import { clientMetricsSubscribe, clientMetricsUnsubscribe } from '../metrics/metrics.handlers';
 import { DsErrorResponse } from '../../types/request.types';
 import { eventEmitter } from '../../lib/event-bus';
-import { getQueryParamRealValue, isEventSubscription } from '../../util/helpers';
+import { getQueryParamRealValue } from '../../util/helpers';
 import {
   HttpRequest,
   HttpResponse,
@@ -242,10 +242,6 @@ export async function handleSubscription(
 ): Promise<void> {
   const decodedTopic = decoder.decode(topic);
 
-  // if (isEventSubscription(decodedTopic)) {
-  //   return;
-  // }
-
   const [appPid, namespace, ext] = decodedTopic.split(':');
 
   // Only emit create event for top level room subscriptions
@@ -254,9 +250,9 @@ export async function handleSubscription(
     return;
   }
 
-  console.log('SUBSCRIPTION:', decodedTopic);
-
   logger.info(`Emitting subscription create for "${appPid}:${namespace}"`);
+  console.log(`OLD COUNT`, oldCount);
+  console.log(`NEW COUNT`, newCount);
 
   if (oldCount === 0 && newCount > 0) {
     eventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, decodedTopic);

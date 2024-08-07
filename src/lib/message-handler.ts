@@ -59,7 +59,6 @@ export default class MessageHandler {
     latencyLog: any,
     forEvent?: string
   ) {
-    console.log('RECEIVED EVENT:', event);
     this.logger.info(`Emitting log metrics`, { event });
     const messageEventData = this.formatMessageEventData(event, data);
     this.app.publish(event, messageEventData);

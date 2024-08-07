@@ -252,7 +252,6 @@ export async function handleSubscription(
   }
 
   logger.info(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
-  console.log(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
 
   if (oldCount === 0 && newCount > 0) {
     eventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, decodedTopic);

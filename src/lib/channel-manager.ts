@@ -99,9 +99,8 @@ export default class ChannelManager {
   }
 
   static getRoutingKey(nspRoomId: string): string {
-    const [appPid, ...rest] = nspRoomId.split(':');
-    const originalRoomId = rest.join(':');
-    const hashedNamespace = this.gethashedNamespace(originalRoomId);
+    const [appPid, roomId] = nspRoomId.split(/:(.+)/);
+    const hashedNamespace = this.gethashedNamespace(roomId);
 
     return `${ChannelManager.AMQP_ROUTING_KEY_PREFIX}:${appPid}:${hashedNamespace}`;
   }

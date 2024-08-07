@@ -100,12 +100,12 @@ export default class ChannelManager {
 
   static getRoutingKey(nspRoomId: string): string {
     const [appPid, roomId] = nspRoomId.split(/:(.+)/);
-    const hashedNamespace = this.gethashedNamespace(roomId);
+    const hashedRoomId = this.gethashedRoomId(roomId);
 
-    return `${ChannelManager.AMQP_ROUTING_KEY_PREFIX}:${appPid}:${hashedNamespace}`;
+    return `${ChannelManager.AMQP_ROUTING_KEY_PREFIX}:${appPid}:${hashedRoomId}`;
   }
 
-  static gethashedNamespace(namespace: string): number {
+  static gethashedRoomId(namespace: string): number {
     const queueCount = ConfigManager.getInt('RABBIT_MQ_QUEUE_COUNT') || 20;
 
     let hash = 0;

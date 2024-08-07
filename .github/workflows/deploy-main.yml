@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/20240806_scalable_binding_keys
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}

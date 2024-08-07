@@ -39,8 +39,6 @@ export async function clientRoomJoin(
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
 
-    console.log('HASHED BINDING:', nspRoomRoutingKey);
-
     await Promise.all([
       joinRoom(redisClient, session, nspRoomId, socket),
       joinRoom(redisClient, session, nspRoomRoutingKey, socket),
@@ -66,8 +64,6 @@ export async function clientRoomLeave(
 
   const { roomId } = data;
   const { uid, connectionId } = session;
-
-  logger.info('Leaving room', { session, data });
 
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);

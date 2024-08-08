@@ -15,7 +15,7 @@ import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
 import AmqpManager from './lib/amqp-manager';
 import os from 'os';
 
-// Force deploy 1.4
+// Force deploy 1.5
 
 const logger = getLogger('uws-socket-server');
 

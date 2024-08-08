@@ -5,7 +5,7 @@
     {
       "name": "relaybox-uws-prod",
       "essential": true,
-      "memoryReservation": "512",
+      "memoryReservation": "256",
       "portMappings": [
         {
           "containerPort": 4004,

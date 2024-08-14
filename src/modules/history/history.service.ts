@@ -5,6 +5,8 @@ import { KeyPrefix } from '../../types/state.types';
 
 const logger = getLogger('history');
 
+const HISTORY_PARTITION_RANGE_MS = 60 * 60 * 1000;
+
 function getKey(nspRoomId: string, timestamp: number): string {
   const date = new Date(timestamp);
   const hours = date.getUTCHours();
@@ -46,6 +48,15 @@ export async function addMessageToChannelHistory(
   }
 }
 
+function getNextPageToken(messages: any[], limit: number, currentKey: string): string | null {
+  if (messages.length === limit) {
+    const lastMessageTimestamp = messages[messages.length - 1].timestamp;
+    return generateToken(currentKey, lastMessageTimestamp as number);
+  }
+
+  return null;
+}
+
 export async function getChannelHistoryMessages(
   redisClient: RedisClient,
   nspRoomId: string,
@@ -55,12 +66,12 @@ export async function getChannelHistoryMessages(
 ): Promise<{ messages: any[]; nextPageToken?: string | null }> {
   logger.info(`Getting channel history messages`, { nspRoomId, seconds, limit, token });
 
-  let messages: Record<string, unknown>[] = [];
-  let currentKey;
-  let lastScore;
-  let endTime = Date.now();
-  let nextTime;
-  let startTime = endTime - seconds * 1000;
+  let messages: Record<string, unknown>[] = [],
+    currentKey,
+    lastScore,
+    endTime = Date.now(),
+    nextTime,
+    startTime = endTime - seconds * 1000;
 
   if (token) {
     const parsedToken = parseToken(token);
@@ -76,108 +87,28 @@ export async function getChannelHistoryMessages(
       currentKey,
       startTime,
       lastScore || endTime,
-      limit
+      limit - messages.length
     );
 
     if (currentMessages.length) {
-      console.log(currentMessages);
       messages = messages.concat(currentMessages.map((message) => JSON.parse(message.value)));
       lastScore = currentMessages[currentMessages.length - 1].score;
-      endTime = lastScore;
-      nextTime = lastScore - 60 * 60 * 1000;
+      nextTime = lastScore - HISTORY_PARTITION_RANGE_MS;
     } else {
-      nextTime = (nextTime || endTime) - 60 * 60 * 1000;
+      nextTime = (nextTime || endTime) - HISTORY_PARTITION_RANGE_MS;
     }
 
     if (nextTime < startTime || messages.length >= limit) {
-      console.log('break');
       break;
     }
 
     currentKey = getKey(nspRoomId, nextTime);
-
-    console.log({ currentKey, lastScore, startTime, endTime, limit });
   }
 
-  let nextPageToken = null;
+  const nextPageToken = getNextPageToken(messages, limit, currentKey);
 
-  if (messages.length === limit) {
-    const lastMessageTimestamp = messages[messages.length - 1].timestamp;
-    nextPageToken = generateToken(currentKey, lastMessageTimestamp as number);
-  }
-
-  return { messages, nextPageToken };
+  return {
+    messages,
+    nextPageToken
+  };
 }
-
-// export async function getChannelHistoryMessages(
-//   redisClient: RedisClient,
-//   nspRoomId: string,
-//   seconds: number,
-//   limit = 100,
-//   token?: string | null
-// ): Promise<{ messages: any[]; nextPageToken: string | null }> {
-//   logger.info(`Getting channel history messages`, { nspRoomId, seconds, limit, token });
-
-//   let messages: Record<string, unknown>[] = [];
-//   let currentKey;
-//   let lastScore;
-//   let endTime = Date.now();
-//   let startTime = endTime - seconds * 1000;
-
-//   if (token) {
-//     const parsedToken = parseToken(token);
-//     currentKey = parsedToken.key;
-//     lastScore = parsedToken.lastScore;
-//   } else {
-//     currentKey = getKey(nspRoomId, startTime);
-//     lastScore = startTime;
-//   }
-
-//   console.log(currentKey, lastScore, startTime, endTime, limit);
-
-//   try {
-//     let currentMessages = await historyRepository.getChannelHistoryMessages(
-//       redisClient,
-//       currentKey,
-//       lastScore,
-//       endTime,
-//       limit
-//     );
-
-//     messages = messages.concat(currentMessages.map((message) => JSON.parse(message)));
-
-//     while (messages.length < limit && startTime < lastScore) {
-//       endTime = startTime;
-//       startTime -= 60 * 60 * 1000;
-//       currentKey = getKey(nspRoomId, startTime);
-//       lastScore = startTime;
-
-//       console.log(currentKey, lastScore, startTime, endTime, limit);
-
-//       if (await redisClient.exists(currentKey)) {
-//         currentMessages = await historyRepository.getChannelHistoryMessages(
-//           redisClient,
-//           currentKey,
-//           lastScore,
-//           endTime,
-//           limit - messages.length
-//         );
-
-//         messages = messages.concat(currentMessages.map((message) => JSON.parse(message)));
-//       }
-//     }
-
-//     let nextPageToken = null;
-
-//     if (messages.length === limit) {
-//       const lastMessageTimestamp = messages[messages.length - 1].timestamp;
-//       nextPageToken = generateToken(currentKey, lastMessageTimestamp as number);
-//     }
-
-//     return { messages, nextPageToken };
-//   } catch (err) {
-//     console.log(err);
-//     logger.error(`Failed to get channel history messages`, { err });
-//     throw err;
-//   }
-// }

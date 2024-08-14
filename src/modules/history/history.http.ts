@@ -19,8 +19,8 @@ export async function getChannelHistoryMessages(res: HttpResponse, req: HttpRequ
     const data = await historyService.getChannelHistoryMessages(
       redisClient,
       nspRoomId,
-      seconds,
-      2,
+      seconds || 24 * 60 * 60,
+      100,
       nextPageToken
     );
 

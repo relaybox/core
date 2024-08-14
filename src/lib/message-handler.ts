@@ -44,8 +44,10 @@ export default class MessageHandler {
 
     const messageEventData = {
       type: event,
-      ...data
+      body: data
     };
+
+    console.log(messageEventData);
 
     return JSON.stringify(messageEventData);
   }

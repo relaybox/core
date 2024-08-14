@@ -1,6 +1,9 @@
 import { getRedisClient } from '../../lib/redis';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import * as historyService from './history.service';
+import { getLogger } from '../../util/logger';
+
+const logger = getLogger('history-http');
 
 export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest) {
   const nspRoomId = req.getParameter(0);
@@ -34,6 +37,8 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
       });
     }
   } catch (err: any) {
+    logger.error(`Failed to get room history messages`, { err });
+
     res.cork(() => {
       res.writeStatus('500 Internal Server Error');
       res.writeHeader('Content-Type', 'application/json');

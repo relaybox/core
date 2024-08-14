@@ -81,34 +81,39 @@ export async function getRoomHistoryMessages(
     currentKey = getKey(nspRoomId, endTime);
   }
 
-  while (true) {
-    const currentMessages = await historyRepository.getRoomHistoryMessages(
-      redisClient,
-      currentKey,
-      startTime,
-      lastScore || endTime,
-      limit - messages.length
-    );
+  try {
+    while (true) {
+      const currentMessages = await historyRepository.getRoomHistoryMessages(
+        redisClient,
+        currentKey,
+        startTime,
+        lastScore || endTime,
+        limit - messages.length
+      );
 
-    if (currentMessages.length) {
-      messages = messages.concat(currentMessages.map((message) => JSON.parse(message.value)));
-      lastScore = currentMessages[currentMessages.length - 1].score;
-      nextTime = lastScore - HISTORY_PARTITION_RANGE_MS;
-    } else {
-      nextTime = (nextTime || endTime) - HISTORY_PARTITION_RANGE_MS;
+      if (currentMessages.length) {
+        messages = messages.concat(currentMessages.map((message) => JSON.parse(message.value)));
+        lastScore = currentMessages[currentMessages.length - 1].score;
+        nextTime = lastScore - HISTORY_PARTITION_RANGE_MS;
+      } else {
+        nextTime = (nextTime || endTime) - HISTORY_PARTITION_RANGE_MS;
+      }
+
+      if (nextTime < startTime || messages.length >= limit) {
+        break;
+      }
+
+      currentKey = getKey(nspRoomId, nextTime);
     }
 
-    if (nextTime < startTime || messages.length >= limit) {
-      break;
-    }
+    const nextPageToken = getNextPageToken(messages, limit, currentKey);
 
-    currentKey = getKey(nspRoomId, nextTime);
+    return {
+      messages,
+      nextPageToken
+    };
+  } catch (err) {
+    logger.error(`Failed to get room history messages`, { err });
+    throw err;
   }
-
-  const nextPageToken = getNextPageToken(messages, limit, currentKey);
-
-  return {
-    messages,
-    nextPageToken
-  };
 }

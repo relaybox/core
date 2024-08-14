@@ -5,7 +5,8 @@ export enum KeyPrefix {
   METRICS = 'metrics',
   SESSION = 'session',
   CONNECTION = 'connection',
-  HEARTBEAT = 'heartbeat'
+  HEARTBEAT = 'heartbeat',
+  HISTORY = 'history'
 }
 
 export enum KeySuffix {

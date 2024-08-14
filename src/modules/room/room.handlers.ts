@@ -20,6 +20,7 @@ import { DsPermission } from '../../types/permissions.types';
 import AmqpManager from '../../lib/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
 import ChannelManager from '../../lib/channel-manager';
+import { addMessageToChannelHistory } from '../history/history.service';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -120,11 +121,25 @@ export async function clientPublish(
     permissionsGuard(roomId, DsPermission.PUBLISH, session.permissions);
     const reducedSession = getReducedSession(session);
 
+    const sender = {
+      clientId: reducedSession.clientId?.split(':')[1] || null,
+      connectionId: reducedSession.connectionId
+    };
+
+    const extendedMessageData = {
+      body: messageData,
+      sender,
+      timestamp: new Date().getTime(),
+      type: nspEvent
+    };
+
     const amqpManager = AmqpManager.getInstance();
 
     amqpManager.dispatchHandler
       .to(nspRoomId)
-      .dispatch(nspEvent, messageData, reducedSession, latencyLog);
+      .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
+
+    await addMessageToChannelHistory(redisClient, nspRoomId, extendedMessageData);
 
     res(messageData);
   } catch (err: any) {

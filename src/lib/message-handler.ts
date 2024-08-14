@@ -44,7 +44,7 @@ export default class MessageHandler {
 
     const messageEventData = {
       type: event,
-      body: data
+      ...data
     };
 
     return JSON.stringify(messageEventData);

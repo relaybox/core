@@ -1,6 +1,6 @@
 import { RedisClient } from '../../lib/redis';
 
-export function addMessageToChannelHistory(
+export function addMessageToRoomHistory(
   redisClient: RedisClient,
   key: string,
   timestamp: any,
@@ -12,7 +12,7 @@ export function addMessageToChannelHistory(
   });
 }
 
-export function getChannelHistoryMessages(
+export function getRoomHistoryMessages(
   redisClient: RedisClient,
   key: string,
   lastScore: number,

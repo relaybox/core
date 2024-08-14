@@ -24,7 +24,16 @@ function generateToken(key: string, lastScore: number) {
   return Buffer.from(JSON.stringify({ key, lastScore })).toString('base64');
 }
 
-export async function addMessageToChannelHistory(
+function getNextPageToken(messages: any[], limit: number, currentKey: string): string | null {
+  if (messages.length === limit) {
+    const lastMessageTimestamp = messages[messages.length - 1].timestamp;
+    return generateToken(currentKey, lastMessageTimestamp as number);
+  }
+
+  return null;
+}
+
+export async function addMessageToRoomHistory(
   redisClient: RedisClient,
   nspRoomid: string,
   messageData: any
@@ -35,7 +44,7 @@ export async function addMessageToChannelHistory(
   logger.info(`Adding message to history`, { key, timestamp });
 
   try {
-    await historyRepository.addMessageToChannelHistory(redisClient, key, timestamp, messageData);
+    await historyRepository.addMessageToRoomHistory(redisClient, key, timestamp, messageData);
 
     const ttl = await redisClient.ttl(key);
 
@@ -48,23 +57,14 @@ export async function addMessageToChannelHistory(
   }
 }
 
-function getNextPageToken(messages: any[], limit: number, currentKey: string): string | null {
-  if (messages.length === limit) {
-    const lastMessageTimestamp = messages[messages.length - 1].timestamp;
-    return generateToken(currentKey, lastMessageTimestamp as number);
-  }
-
-  return null;
-}
-
-export async function getChannelHistoryMessages(
+export async function getRoomHistoryMessages(
   redisClient: RedisClient,
   nspRoomId: string,
   seconds: number,
   limit = 100,
   token?: string | null
 ): Promise<{ messages: any[]; nextPageToken?: string | null }> {
-  logger.info(`Getting channel history messages`, { nspRoomId, seconds, limit, token });
+  logger.info(`Getting Room history messages`, { nspRoomId, seconds, limit, token });
 
   let messages: Record<string, unknown>[] = [],
     currentKey,
@@ -82,7 +82,7 @@ export async function getChannelHistoryMessages(
   }
 
   while (true) {
-    const currentMessages = await historyRepository.getChannelHistoryMessages(
+    const currentMessages = await historyRepository.getRoomHistoryMessages(
       redisClient,
       currentKey,
       startTime,

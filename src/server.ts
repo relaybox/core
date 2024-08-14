@@ -14,7 +14,7 @@ import { Session } from './types/session.types';
 import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
 import AmqpManager from './lib/amqp-manager';
 import os from 'os';
-import { getChannelHistoryMessages } from './modules/history/history.http';
+import { getRoomHistoryMessages } from './modules/history/history.http';
 
 // Force deploy 1.5
 
@@ -29,7 +29,7 @@ const app = App()
   .get('/', (res: HttpResponse, req: HttpRequest) => {
     res.end(process.uptime().toString());
   })
-  .get('/history/:nspRoomId/messages', getChannelHistoryMessages)
+  .get('/rooms/:nspRoomId/messages', getRoomHistoryMessages)
   .ws('/*', {
     idleTimeout: WS_IDLE_TIMEOUT_MS,
     sendPingsAutomatically: true,

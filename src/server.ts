@@ -15,8 +15,7 @@ import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
 import AmqpManager from './lib/amqp-manager';
 import os from 'os';
 import { getRoomHistoryMessages } from './modules/history/history.http';
-
-// Force deploy 1.5
+import { getCorsResponse } from './util/http';
 
 const logger = getLogger('uws-socket-server');
 
@@ -26,10 +25,10 @@ const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
 
 const app = App()
-  // .options('/*', (res: HttpResponse, req: HttpRequest) => {
-  //   res.writeStatus('200 OK');
-  //   res.end();
-  // })
+  .options('/*', (res: HttpResponse, req: HttpRequest) => {
+    const corsReponse = getCorsResponse(res);
+    corsReponse.end();
+  })
   .get('/', (res: HttpResponse, req: HttpRequest) => {
     res.end(process.uptime().toString());
   })

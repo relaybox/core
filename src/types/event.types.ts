@@ -14,6 +14,7 @@ export enum ClientEvent {
   ROOM_PRESENCE_COUNT = 'ds:client:room:presence:count',
   ROOM_METRICS_SUBSCRIBE = 'ds:client:room:metrics:subscribe',
   ROOM_METRICS_UNSUBSCRIBE = 'ds:client:room:metrics:unsubscribe',
+  ROOM_HISTORY_GET = 'ds:client:room:history:get',
   PUBLISH = 'ds:client:publish'
 }
 

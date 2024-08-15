@@ -2,11 +2,10 @@ import { getRedisClient } from '../../lib/redis';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import * as historyService from './history.service';
 import { getLogger } from '../../util/logger';
+import { getJsonResponse } from '../../util/http';
+import { HISTORY_MAX_LIMIT, HISTORY_MAX_RANGE_MS } from './history.service';
 
 const logger = getLogger('history-http');
-
-const HISTORY_MAX_RANGE_MS = 60 * 60 * 1000;
-const HISTORY_MAX_LIMIT = 100;
 
 export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest) {
   const nspRoomId = req.getParameter(0);
@@ -17,16 +16,16 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
   let aborted = false;
 
   if (seconds > HISTORY_MAX_RANGE_MS) {
-    res.writeStatus('400 Bad Request');
-    res.writeHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ status: 400, message: 'Invalid seconds parameter' }));
+    getJsonResponse(res, '400 Bad Request').end(
+      JSON.stringify({ status: 400, message: 'Invalid seconds parameter' })
+    );
     return;
   }
 
   if (limit > HISTORY_MAX_LIMIT) {
-    res.writeStatus('400 Bad Request');
-    res.writeHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ status: 400, message: 'Invalid limit parameter' }));
+    getJsonResponse(res, '400 Bad Request').end(
+      JSON.stringify({ status: 400, message: 'Invalid limit parameter' })
+    );
     return;
   }
 
@@ -47,9 +46,7 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
 
     if (!aborted) {
       res.cork(() => {
-        res.writeStatus('200 ok');
-        res.writeHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ status: 200, data }));
+        getJsonResponse(res, '200 ok').end(JSON.stringify({ status: 200, data }));
       });
     }
   } catch (err: any) {
@@ -57,9 +54,9 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
 
     if (!aborted) {
       res.cork(() => {
-        res.writeStatus('500 Internal Server Error');
-        res.writeHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ status: 500, message: err.message }));
+        getJsonResponse(res, '500 Internal Server Error').end(
+          JSON.stringify({ status: 500, message: err.message })
+        );
       });
     }
   }

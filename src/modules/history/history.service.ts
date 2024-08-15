@@ -2,6 +2,8 @@ import { RedisClient } from 'src/lib/redis';
 import * as historyRepository from './history.repository';
 import { getLogger } from '../../util/logger';
 import { KeyPrefix } from '../../types/state.types';
+import { Job } from 'bullmq';
+import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue';
 
 const logger = getLogger('history');
 
@@ -35,11 +37,11 @@ function getNextPageToken(messages: any[], limit: number, currentKey: string): s
 
 export async function addMessageToRoomHistory(
   redisClient: RedisClient,
-  nspRoomid: string,
+  nspRoomId: string,
   messageData: any
 ): Promise<void> {
   const timestamp = Date.now();
-  const key = getKey(nspRoomid, timestamp);
+  const key = getKey(nspRoomId, timestamp);
 
   logger.info(`Adding message to history`, { key, timestamp });
 
@@ -49,7 +51,7 @@ export async function addMessageToRoomHistory(
     const ttl = await redisClient.ttl(key);
 
     if (ttl < 0) {
-      await redisClient.expire(key, 24 * 60 * 60);
+      await setRoomHistoryKeyTtl(nspRoomId, key);
     }
   } catch (err) {
     logger.error(`Failed to add message to history`, { err });
@@ -115,5 +117,25 @@ export async function getRoomHistoryMessages(
   } catch (err) {
     logger.error(`Failed to get room history messages`, { err });
     throw err;
+  }
+}
+
+export function setRoomHistoryKeyTtl(nspRoomId: string, key: string): Promise<Job> | void {
+  logger.info('Adding history ttl job to history queue', { nspRoomId, key });
+
+  try {
+    const jobData = {
+      nspRoomId,
+      key
+    };
+
+    const jobConfig = {
+      jobId: key,
+      ...defaultJobConfig
+    };
+
+    return historyQueue.add(HistoryJobName.HISTORY_TTL, jobData, jobConfig);
+  } catch (err) {
+    logger.error(`Failed to add history ttl job to history queue`, { err });
   }
 }

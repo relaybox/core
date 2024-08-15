@@ -19,22 +19,20 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
   if (seconds > HISTORY_MAX_RANGE_MS) {
     res.writeStatus('400 Bad Request');
     res.writeHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ message: 'Invalid seconds parameter' }));
+    res.end(JSON.stringify({ status: 400, message: 'Invalid seconds parameter' }));
     return;
   }
 
   if (limit > HISTORY_MAX_LIMIT) {
     res.writeStatus('400 Bad Request');
     res.writeHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ message: 'Invalid limit parameter' }));
+    res.end(JSON.stringify({ status: 400, message: 'Invalid limit parameter' }));
     return;
   }
 
   try {
     res.onAborted(() => {
       aborted = true;
-      res.writeStatus('500 Internal Server Error');
-      res.end(JSON.stringify({ message: 'Request aborted' }));
     });
 
     const redisClient = getRedisClient();
@@ -49,17 +47,20 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
 
     if (!aborted) {
       res.cork(() => {
+        res.writeStatus('200 ok');
         res.writeHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(data));
+        res.end(JSON.stringify({ status: 200, data }));
       });
     }
   } catch (err: any) {
     logger.error(`Failed to get room history messages`, { err });
 
-    res.cork(() => {
-      res.writeStatus('500 Internal Server Error');
-      res.writeHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ message: err.message }));
-    });
+    if (!aborted) {
+      res.cork(() => {
+        res.writeStatus('500 Internal Server Error');
+        res.writeHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ status: 500, message: err.message }));
+      });
+    }
   }
 }

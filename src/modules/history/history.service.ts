@@ -26,10 +26,14 @@ function generateToken(key: string, lastScore: number) {
   return Buffer.from(JSON.stringify({ key, lastScore })).toString('base64');
 }
 
-function getNextPageToken(messages: any[], limit: number, currentKey: string): string | null {
-  if (messages.length === limit) {
-    const lastMessageTimestamp = messages[messages.length - 1].timestamp;
-    return generateToken(currentKey, lastMessageTimestamp as number);
+function getNextPageToken(
+  messages: any[],
+  lastScore: number,
+  limit: number,
+  currentKey: string
+): string | null {
+  if (messages.length === limit && lastScore) {
+    return generateToken(currentKey, lastScore - 1);
   }
 
   return null;
@@ -108,7 +112,7 @@ export async function getRoomHistoryMessages(
       currentKey = getKey(nspRoomId, nextTime);
     }
 
-    const nextPageToken = getNextPageToken(messages, limit, currentKey);
+    const nextPageToken = getNextPageToken(messages, lastScore, limit, currentKey);
 
     return {
       messages,

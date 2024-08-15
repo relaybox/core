@@ -26,6 +26,10 @@ const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
 
 const app = App()
+  // .options('/*', (res: HttpResponse, req: HttpRequest) => {
+  //   res.writeStatus('200 OK');
+  //   res.end();
+  // })
   .get('/', (res: HttpResponse, req: HttpRequest) => {
     res.end(process.uptime().toString());
   })

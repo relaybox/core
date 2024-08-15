@@ -5,13 +5,30 @@ import { getLogger } from '../../util/logger';
 
 const logger = getLogger('history-http');
 
+const HISTORY_MAX_RANGE_MS = 60 * 60 * 1000;
+const HISTORY_MAX_LIMIT = 100;
+
 export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest) {
   const nspRoomId = req.getParameter(0);
   const nextPageToken = req.getQuery('nextPageToken') || null;
-  const seconds = Number(req.getQuery('seconds')) || 24 * 60 * 60;
-  const limit = Number(req.getQuery('limit')) || 100;
+  const seconds = Number(req.getQuery('seconds')) || HISTORY_MAX_RANGE_MS;
+  const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
 
   let aborted = false;
+
+  if (seconds > HISTORY_MAX_RANGE_MS) {
+    res.writeStatus('400 Bad Request');
+    res.writeHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ message: 'Invalid seconds parameter' }));
+    return;
+  }
+
+  if (limit > HISTORY_MAX_LIMIT) {
+    res.writeStatus('400 Bad Request');
+    res.writeHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ message: 'Invalid limit parameter' }));
+    return;
+  }
 
   try {
     res.onAborted(() => {

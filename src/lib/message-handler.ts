@@ -47,7 +47,7 @@ export default class MessageHandler {
       body: data
     };
 
-    console.log(messageEventData);
+    // console.log(messageEventData);
 
     return JSON.stringify(messageEventData);
   }

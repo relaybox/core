@@ -5,6 +5,9 @@ import { WebSocket } from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { getRoomHistoryMessages, HISTORY_MAX_LIMIT, HISTORY_MAX_RANGE_MS } from './history.service';
 import { formatErrorResponse } from '../../util/format';
+import { permissionsGuard } from '../guards/guards.service';
+import { DsPermission } from '../../types/permissions.types';
+import { extractRoomId } from '../../util/helpers';
 
 export async function clientRoomHistoryGet(
   logger: Logger,
@@ -13,9 +16,13 @@ export async function clientRoomHistoryGet(
   data: any,
   res: SocketAckHandler
 ): Promise<void> {
+  const session = socket.getUserData();
   const { nspRoomId, seconds, limit, nextPageToken } = data;
+  const roomId = extractRoomId(nspRoomId);
 
   try {
+    permissionsGuard(roomId, DsPermission.HISTORY, session.permissions);
+
     const historyData = await getRoomHistoryMessages(
       redisClient,
       nspRoomId,

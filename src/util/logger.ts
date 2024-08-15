@@ -63,7 +63,7 @@ const logger = winston.createLogger({
   transports
 });
 
-// logger.transports[0].silent = true;
+logger.transports[0].silent = true;
 
 export function getLogger(service: string) {
   return logger.child({ service });

@@ -129,7 +129,8 @@ export async function clientPublish(
     const extendedMessageData = {
       body: messageData,
       sender,
-      timestamp: new Date().getTime()
+      timestamp: new Date().getTime(),
+      event
     };
 
     const amqpManager = AmqpManager.getInstance();

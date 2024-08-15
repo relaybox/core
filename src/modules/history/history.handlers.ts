@@ -3,7 +3,7 @@ import { Session } from '../../types/session.types';
 import { SocketAckHandler } from '../../types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
 import { Logger } from 'winston';
-import { getRoomHistoryMessages, HISTORY_MAX_LIMIT, HISTORY_MAX_RANGE_MS } from './history.service';
+import { getRoomHistoryMessages, HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
 import { formatErrorResponse } from '../../util/format';
 import { permissionsGuard } from '../guards/guards.service';
 import { DsPermission } from '../../types/permissions.types';
@@ -26,7 +26,7 @@ export async function clientRoomHistoryGet(
     const historyData = await getRoomHistoryMessages(
       redisClient,
       nspRoomId,
-      seconds || HISTORY_MAX_RANGE_MS,
+      seconds || HISTORY_MAX_SECONDS,
       limit || HISTORY_MAX_LIMIT,
       nextPageToken
     );

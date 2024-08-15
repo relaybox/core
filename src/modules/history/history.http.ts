@@ -3,19 +3,19 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import * as historyService from './history.service';
 import { getLogger } from '../../util/logger';
 import { getJsonResponse } from '../../util/http';
-import { HISTORY_MAX_LIMIT, HISTORY_MAX_RANGE_MS } from './history.service';
+import { HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
 
 const logger = getLogger('history-http');
 
 export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest) {
   const nspRoomId = req.getParameter(0);
   const nextPageToken = req.getQuery('nextPageToken') || null;
-  const seconds = Number(req.getQuery('seconds')) || HISTORY_MAX_RANGE_MS;
+  const seconds = Number(req.getQuery('seconds')) || HISTORY_MAX_SECONDS;
   const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
 
   let aborted = false;
 
-  if (seconds > HISTORY_MAX_RANGE_MS) {
+  if (seconds > HISTORY_MAX_SECONDS) {
     getJsonResponse(res, '400 Bad Request').end(
       JSON.stringify({ status: 400, message: 'Invalid seconds parameter' })
     );

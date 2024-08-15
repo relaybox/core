@@ -8,7 +8,7 @@ import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue'
 const logger = getLogger('history');
 
 export const HISTORY_PARTITION_RANGE_MS = 60 * 60 * 1000;
-export const HISTORY_MAX_RANGE_MS = 60 * 60 * 1000;
+export const HISTORY_MAX_SECONDS = 24 * 60 * 60;
 export const HISTORY_MAX_LIMIT = 100;
 
 function getKey(nspRoomId: string, timestamp: number): string {

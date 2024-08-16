@@ -15,11 +15,11 @@ export function addMessageToRoomHistory(
 export function getRoomHistoryMessages(
   redisClient: RedisClient,
   key: string,
-  lastScore: number,
-  endTime: number,
+  min: number,
+  max: number,
   limit: number
 ): Promise<any[]> {
-  return redisClient.zRangeWithScores(key, endTime, lastScore, {
+  return redisClient.zRangeWithScores(key, max, min, {
     BY: 'SCORE',
     REV: true,
     LIMIT: {

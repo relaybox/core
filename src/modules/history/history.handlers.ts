@@ -17,7 +17,7 @@ export async function clientRoomHistoryGet(
   res: SocketAckHandler
 ): Promise<void> {
   const session = socket.getUserData();
-  const { nspRoomId, seconds, limit, nextPageToken } = data;
+  const { nspRoomId, seconds, limit, nextPageToken, items } = data;
   const roomId = extractRoomId(nspRoomId);
 
   try {
@@ -28,6 +28,7 @@ export async function clientRoomHistoryGet(
       nspRoomId,
       seconds || HISTORY_MAX_SECONDS,
       limit || HISTORY_MAX_LIMIT,
+      items,
       nextPageToken
     );
 

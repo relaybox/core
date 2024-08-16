@@ -32,13 +32,14 @@ function getNextPageToken(
   messages: any[],
   lastScore: number,
   limit: number,
-  currentKey: string
+  currentKey: string,
+  items?: number
 ): string | null {
-  if (messages.length === limit && lastScore) {
-    return generateToken(currentKey, lastScore - 1);
+  if ((items && items <= limit) || messages.length < limit) {
+    return null;
   }
 
-  return null;
+  return generateToken(currentKey, lastScore - 1);
 }
 
 export async function addMessageToRoomHistory(
@@ -70,16 +71,15 @@ export async function getRoomHistoryMessages(
   nspRoomId: string,
   seconds: number,
   limit = 100,
+  items?: number,
   token?: string | null
-): Promise<{ messages: any[]; nextPageToken?: string | null }> {
+): Promise<{ messages: any[]; nextPageToken?: string | null; itemsRemaining?: number }> {
   logger.info(`Getting Room history messages`, { nspRoomId, seconds, limit, token });
 
-  let messages: Record<string, unknown>[] = [],
-    currentKey,
-    lastScore,
-    endTime = Date.now(),
-    nextTime,
-    startTime = endTime - seconds * 1000;
+  const endTime = Date.now();
+  const startTime = endTime - seconds * 1000;
+
+  let currentKey, lastScore, nextTime;
 
   if (token) {
     const parsedToken = parseToken(token);
@@ -89,18 +89,21 @@ export async function getRoomHistoryMessages(
     currentKey = getKey(nspRoomId, endTime);
   }
 
+  const messages: Record<string, unknown>[] = [];
+
   try {
     while (true) {
+      const resultsLimit = items && items < limit ? items : limit;
       const currentMessages = await historyRepository.getRoomHistoryMessages(
         redisClient,
         currentKey,
         startTime,
         lastScore || endTime,
-        limit - messages.length
+        resultsLimit - messages.length
       );
 
       if (currentMessages.length) {
-        messages = messages.concat(currentMessages.map((message) => JSON.parse(message.value)));
+        messages.push(...currentMessages.map((message) => JSON.parse(message.value)));
         lastScore = currentMessages[currentMessages.length - 1].score;
         nextTime = lastScore - HISTORY_PARTITION_RANGE_MS;
       } else {
@@ -114,11 +117,12 @@ export async function getRoomHistoryMessages(
       currentKey = getKey(nspRoomId, nextTime);
     }
 
-    const nextPageToken = getNextPageToken(messages, lastScore, limit, currentKey);
+    const nextPageToken = getNextPageToken(messages, lastScore, limit, currentKey, items);
 
     return {
       messages,
-      nextPageToken
+      nextPageToken,
+      ...(items && { itemsRemaining: items - messages.length })
     };
   } catch (err) {
     logger.error(`Failed to get room history messages`, { err });

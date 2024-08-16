@@ -33,7 +33,7 @@ function getNextPageToken(
   lastScore: number,
   limit: number,
   currentKey: string,
-  items?: number
+  items: number | null = null
 ): string | null {
   if ((items && items <= limit) || messages.length < limit) {
     return null;
@@ -71,8 +71,8 @@ export async function getRoomHistoryMessages(
   nspRoomId: string,
   seconds: number,
   limit = 100,
-  items?: number,
-  token?: string | null
+  items: number | null = null,
+  token: string | null = null
 ): Promise<{ messages: any[]; nextPageToken?: string | null; itemsRemaining?: number }> {
   logger.info(`Getting Room history messages`, { nspRoomId, seconds, limit, token });
 
@@ -82,9 +82,9 @@ export async function getRoomHistoryMessages(
   let currentKey, lastScore, nextTime;
 
   if (token) {
-    const parsedToken = parseToken(token);
-    currentKey = parsedToken.key;
-    lastScore = parsedToken.lastScore;
+    const { key, lastScore: parsedLastScore } = parseToken(token);
+    currentKey = key;
+    lastScore = parsedLastScore;
   } else {
     currentKey = getKey(nspRoomId, endTime);
   }
@@ -93,7 +93,8 @@ export async function getRoomHistoryMessages(
 
   try {
     while (true) {
-      const resultsLimit = items && items < limit ? items : limit;
+      const resultsLimit = Math.min(items ?? limit, limit);
+
       const currentMessages = await historyRepository.getRoomHistoryMessages(
         redisClient,
         currentKey,

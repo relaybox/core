@@ -12,7 +12,7 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
   const nextPageToken = req.getQuery('nextPageToken') || null;
   const seconds = Number(req.getQuery('seconds')) || HISTORY_MAX_SECONDS;
   const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
-  const items = Number(req.getQuery('items'));
+  const items = Number(req.getQuery('items')) || null;
 
   let aborted = false;
 

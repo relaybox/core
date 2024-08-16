@@ -28,9 +28,12 @@ export async function clientRoomHistoryGet(
       nspRoomId,
       seconds || HISTORY_MAX_SECONDS,
       limit || HISTORY_MAX_LIMIT,
-      items,
+      items || null,
       nextPageToken
     );
+
+    console.log(historyData.messages);
+    console.log(historyData.nextPageToken);
 
     res(historyData);
   } catch (err: any) {

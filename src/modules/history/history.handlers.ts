@@ -32,9 +32,6 @@ export async function clientRoomHistoryGet(
       nextPageToken
     );
 
-    console.log(historyData.messages);
-    console.log(historyData.nextPageToken);
-
     res(historyData);
   } catch (err: any) {
     logger.error({ message: err.message, nspRoomId });

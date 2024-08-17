@@ -12,7 +12,7 @@ export const HISTORY_PARTITION_RANGE_MS = 60 * 60 * 1000;
 export const HISTORY_MAX_SECONDS = 24 * 60 * 60;
 export const HISTORY_MAX_LIMIT = 100;
 
-function getKey(nspRoomId: string, timestamp: number): string {
+function getPartitionKey(nspRoomId: string, timestamp: number): string {
   const date = new Date(timestamp);
   const hours = date.getUTCHours();
   date.setUTCHours(hours, 0, 0, 0);
@@ -25,22 +25,25 @@ function parseToken(token: string) {
   return JSON.parse(decoded);
 }
 
-function generateToken(key: string, lastScore: number) {
-  return Buffer.from(JSON.stringify({ key, lastScore })).toString('base64');
+function generateToken(partitionKey: string, lastScore: number) {
+  return Buffer.from(JSON.stringify({ partitionKey, lastScore })).toString('base64');
 }
 
 function getNextPageToken(
   messages: any[],
   lastScore: number,
   limit: number,
-  currentKey: string,
-  items: number | null = null
+  currentPartitionKey: string,
+  items: number | null = null,
+  order: HistoryOrder
 ): string | null {
   if ((items && items <= limit) || messages.length < limit) {
     return null;
   }
 
-  return generateToken(currentKey, lastScore - 1);
+  const lastScoreForOrder = order === HistoryOrder.DESC ? lastScore - 1 : lastScore + 1;
+
+  return generateToken(currentPartitionKey, lastScoreForOrder);
 }
 
 export async function addRoomHistoryMessage(
@@ -49,7 +52,7 @@ export async function addRoomHistoryMessage(
   messageData: any
 ): Promise<void> {
   const { timestamp } = messageData;
-  const key = getKey(nspRoomId, timestamp);
+  const key = getPartitionKey(nspRoomId, timestamp);
 
   logger.info(`Adding message to history`, { key, timestamp });
 
@@ -79,17 +82,19 @@ function nextTimeOutOfRange(
   endTime: number,
   order: HistoryOrder
 ): boolean {
+  console.log('nextTimeOutOfRange', nextTime, startTime, endTime, order);
   return order === HistoryOrder.DESC ? nextTime < startTime : nextTime > endTime;
 }
 
 function getPartitionRange(
   startTime: number,
   endTime: number,
-  order: HistoryOrder
+  order: HistoryOrder,
+  lastScore?: number
 ): { min: number; max: number } {
   return order === HistoryOrder.DESC
-    ? { min: startTime, max: endTime }
-    : { min: endTime, max: startTime };
+    ? { min: startTime, max: lastScore || endTime }
+    : { min: endTime, max: lastScore || startTime };
 }
 
 export async function getRoomHistoryMessages(
@@ -108,15 +113,17 @@ export async function getRoomHistoryMessages(
   const endTime = end || Date.now();
   const startTime = start || endTime - seconds * 1000;
 
-  let currentKey, lastScore, nextTime;
+  let currentPartitionKey, lastScore, nextTime;
 
   if (token) {
-    const { key, lastScore: parsedLastScore } = parseToken(token);
-    currentKey = key;
+    const { partitionKey, lastScore: parsedLastScore } = parseToken(token);
+    currentPartitionKey = partitionKey;
     lastScore = parsedLastScore;
   } else {
-    currentKey =
-      order === HistoryOrder.DESC ? getKey(nspRoomId, endTime) : getKey(nspRoomId, startTime);
+    currentPartitionKey =
+      order === HistoryOrder.DESC
+        ? getPartitionKey(nspRoomId, endTime)
+        : getPartitionKey(nspRoomId, startTime);
   }
 
   const messages: Record<string, unknown>[] = [];
@@ -125,11 +132,11 @@ export async function getRoomHistoryMessages(
     while (true) {
       const resultsLimit = Math.min(items ?? limit, limit);
 
-      const { min, max } = getPartitionRange(startTime, lastScore || endTime, order);
+      const { min, max } = getPartitionRange(startTime, endTime, order, lastScore);
 
       const currentMessages = await historyRepository.getRoomHistoryMessages(
         redisClient,
-        currentKey,
+        currentPartitionKey,
         min,
         max,
         resultsLimit - messages.length,
@@ -145,13 +152,21 @@ export async function getRoomHistoryMessages(
       }
 
       if (nextTimeOutOfRange(nextTime, startTime, endTime, order) || messages.length >= limit) {
+        console.log('break');
         break;
       }
 
-      currentKey = getKey(nspRoomId, nextTime);
+      currentPartitionKey = getPartitionKey(nspRoomId, nextTime);
     }
 
-    const nextPageToken = getNextPageToken(messages, lastScore, limit, currentKey, items);
+    const nextPageToken = getNextPageToken(
+      messages,
+      lastScore,
+      limit,
+      currentPartitionKey,
+      items,
+      order
+    );
 
     return {
       messages,

@@ -20,12 +20,23 @@ function getPartitionKey(nspRoomId: string, timestamp: number): string {
   return `${KeyPrefix.HISTORY}:messages:${nspRoomId}:${date.toISOString().slice(0, 13)}h`;
 }
 
-function parseToken(token: string) {
+function getPartitionRange(
+  startTime: number,
+  endTime: number,
+  order: HistoryOrder,
+  lastScore?: number
+): { min: number; max: number } {
+  return order === HistoryOrder.DESC
+    ? { min: startTime, max: lastScore || endTime }
+    : { min: endTime, max: lastScore || startTime };
+}
+
+function parseNextPageToken(token: string) {
   const decoded = Buffer.from(token, 'base64').toString();
   return JSON.parse(decoded);
 }
 
-function generateToken(partitionKey: string, lastScore: number) {
+function generateNextPageToken(partitionKey: string, lastScore: number) {
   return Buffer.from(JSON.stringify({ partitionKey, lastScore })).toString('base64');
 }
 
@@ -43,7 +54,27 @@ function getNextPageToken(
 
   const lastScoreForOrder = order === HistoryOrder.DESC ? lastScore - 1 : lastScore + 1;
 
-  return generateToken(currentPartitionKey, lastScoreForOrder);
+  return generateNextPageToken(currentPartitionKey, lastScoreForOrder);
+}
+
+function getNextTime(lastTime: number, order: HistoryOrder): number {
+  return order === HistoryOrder.DESC
+    ? lastTime - HISTORY_PARTITION_RANGE_MS
+    : lastTime + HISTORY_PARTITION_RANGE_MS;
+}
+
+function nextTimeOutOfRange(
+  nextTime: number,
+  startTime: number,
+  endTime: number,
+  order: HistoryOrder
+): boolean {
+  console.log('nextTimeOutOfRange', nextTime, startTime, endTime, order);
+  return order === HistoryOrder.DESC ? nextTime < startTime : nextTime > endTime;
+}
+
+function messagesLimitReached(messages: any[], limit: number, items: number | null): boolean {
+  return messages.length >= limit || messages.length === items;
 }
 
 export async function addRoomHistoryMessage(
@@ -70,60 +101,31 @@ export async function addRoomHistoryMessage(
   }
 }
 
-function getNextTime(lastTime: number, order: HistoryOrder): number {
-  return order === HistoryOrder.DESC
-    ? lastTime - HISTORY_PARTITION_RANGE_MS
-    : lastTime + HISTORY_PARTITION_RANGE_MS;
-}
-
-function nextTimeOutOfRange(
-  nextTime: number,
-  startTime: number,
-  endTime: number,
-  order: HistoryOrder
-): boolean {
-  console.log('nextTimeOutOfRange', nextTime, startTime, endTime, order);
-  return order === HistoryOrder.DESC ? nextTime < startTime : nextTime > endTime;
-}
-
-function getPartitionRange(
-  startTime: number,
-  endTime: number,
-  order: HistoryOrder,
-  lastScore?: number
-): { min: number; max: number } {
-  return order === HistoryOrder.DESC
-    ? { min: startTime, max: lastScore || endTime }
-    : { min: endTime, max: lastScore || startTime };
-}
-
 export async function getRoomHistoryMessages(
   redisClient: RedisClient,
   nspRoomId: string,
   start: number | null = null,
   end: number | null = null,
   seconds: number = HISTORY_MAX_SECONDS,
-  limit = 100,
+  limit: number = 100,
   items: number | null = null,
   order: HistoryOrder = HistoryOrder.DESC,
-  token: string | null = null
+  nextPageToken: string | null = null
 ): Promise<HistoryResponse> {
-  logger.info(`Getting room message history`, { nspRoomId, seconds, limit, token });
+  logger.info(`Getting room message history`, { nspRoomId, seconds, limit, nextPageToken });
 
   const endTime = end || Date.now();
   const startTime = start || endTime - seconds * 1000;
+  const rangeLimitForOrder = order === HistoryOrder.DESC ? endTime : startTime;
 
   let currentPartitionKey, lastScore, nextTime;
 
-  if (token) {
-    const { partitionKey, lastScore: parsedLastScore } = parseToken(token);
+  if (nextPageToken) {
+    const { partitionKey, lastScore: parsedLastScore } = parseNextPageToken(nextPageToken);
     currentPartitionKey = partitionKey;
     lastScore = parsedLastScore;
   } else {
-    currentPartitionKey =
-      order === HistoryOrder.DESC
-        ? getPartitionKey(nspRoomId, endTime)
-        : getPartitionKey(nspRoomId, startTime);
+    currentPartitionKey = getPartitionKey(nspRoomId, rangeLimitForOrder);
   }
 
   const messages: Record<string, unknown>[] = [];
@@ -148,11 +150,13 @@ export async function getRoomHistoryMessages(
         lastScore = currentMessages[currentMessages.length - 1].score;
         nextTime = getNextTime(lastScore, order);
       } else {
-        nextTime = getNextTime(nextTime || endTime, order);
+        nextTime = getNextTime(nextTime || rangeLimitForOrder, order);
       }
 
-      if (nextTimeOutOfRange(nextTime, startTime, endTime, order) || messages.length >= limit) {
-        console.log('break');
+      if (
+        nextTimeOutOfRange(nextTime, startTime, endTime, order) ||
+        messagesLimitReached(messages, limit, items)
+      ) {
         break;
       }
 

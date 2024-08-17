@@ -20,7 +20,7 @@ import { DsPermission } from '../../types/permissions.types';
 import AmqpManager from '../../lib/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
 import ChannelManager from '../../lib/channel-manager';
-import { addMessageToRoomHistory } from '../history/history.service';
+import { addRoomHistoryMessage } from '../history/history.service';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -139,7 +139,7 @@ export async function clientPublish(
       .to(nspRoomId)
       .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
 
-    await addMessageToRoomHistory(redisClient, nspRoomId, extendedMessageData);
+    await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
 
     res(messageData);
   } catch (err: any) {

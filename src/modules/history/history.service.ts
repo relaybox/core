@@ -43,7 +43,7 @@ function getNextPageToken(
   return generateToken(currentKey, lastScore - 1);
 }
 
-export async function addMessageToRoomHistory(
+export async function addRoomHistoryMessage(
   redisClient: RedisClient,
   nspRoomId: string,
   messageData: any
@@ -54,7 +54,7 @@ export async function addMessageToRoomHistory(
   logger.info(`Adding message to history`, { key, timestamp });
 
   try {
-    await historyRepository.addMessageToRoomHistory(redisClient, key, messageData);
+    await historyRepository.addRoomHistoryMessage(redisClient, key, messageData);
 
     const ttl = await redisClient.ttl(key);
 
@@ -82,7 +82,7 @@ export async function getRoomHistoryMessages(
   order: string = HistoryOrder.DESC,
   token: string | null = null
 ): Promise<{ messages: any[]; nextPageToken?: string | null; itemsRemaining?: number }> {
-  logger.info(`Getting Room history messages`, { nspRoomId, seconds, limit, token });
+  logger.info(`Getting room message history`, { nspRoomId, seconds, limit, token });
 
   const endTime = end || Date.now();
   const startTime = start || endTime - seconds * 1000;

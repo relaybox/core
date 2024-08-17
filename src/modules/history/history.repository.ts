@@ -1,9 +1,8 @@
 import { RedisClient } from '../../lib/redis';
 
-export function addMessageToRoomHistory(
+export function addRoomHistoryMessage(
   redisClient: RedisClient,
   key: string,
-  // timestamp: any,
   messageData: any
 ): Promise<number> {
   return redisClient.zAdd(key, {

@@ -150,7 +150,7 @@ export async function getRoomHistoryMessages(
         lastScore = currentMessages[currentMessages.length - 1].score;
         nextTime = getNextTime(lastScore, order);
       } else {
-        nextTime = getNextTime(nextTime || rangeLimitForOrder, order);
+        nextTime = getNextTime(nextTime || lastScore || rangeLimitForOrder, order);
       }
 
       if (

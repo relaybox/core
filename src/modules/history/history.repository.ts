@@ -3,11 +3,11 @@ import { RedisClient } from '../../lib/redis';
 export function addMessageToRoomHistory(
   redisClient: RedisClient,
   key: string,
-  timestamp: any,
+  // timestamp: any,
   messageData: any
 ): Promise<number> {
   return redisClient.zAdd(key, {
-    score: timestamp,
+    score: messageData.timestamp,
     value: JSON.stringify(messageData)
   });
 }

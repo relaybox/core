@@ -4,6 +4,7 @@ import { getLogger } from '../../util/logger';
 import { KeyPrefix } from '../../types/state.types';
 import { Job } from 'bullmq';
 import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue';
+import { HistoryOrder } from '../../types/history.types';
 
 const logger = getLogger('history');
 
@@ -47,13 +48,13 @@ export async function addMessageToRoomHistory(
   nspRoomId: string,
   messageData: any
 ): Promise<void> {
-  const timestamp = Date.now();
+  const { timestamp } = messageData;
   const key = getKey(nspRoomId, timestamp);
 
   logger.info(`Adding message to history`, { key, timestamp });
 
   try {
-    await historyRepository.addMessageToRoomHistory(redisClient, key, timestamp, messageData);
+    await historyRepository.addMessageToRoomHistory(redisClient, key, messageData);
 
     const ttl = await redisClient.ttl(key);
 
@@ -66,18 +67,25 @@ export async function addMessageToRoomHistory(
   }
 }
 
+function getNextTime(lastTime: number, order: string): number {
+  return lastTime - HISTORY_PARTITION_RANGE_MS;
+}
+
 export async function getRoomHistoryMessages(
   redisClient: RedisClient,
   nspRoomId: string,
-  seconds: number,
+  start: number | null = null,
+  end: number | null = null,
+  seconds: number = HISTORY_MAX_SECONDS,
   limit = 100,
   items: number | null = null,
+  order: string = HistoryOrder.DESC,
   token: string | null = null
 ): Promise<{ messages: any[]; nextPageToken?: string | null; itemsRemaining?: number }> {
   logger.info(`Getting Room history messages`, { nspRoomId, seconds, limit, token });
 
-  const endTime = Date.now();
-  const startTime = endTime - seconds * 1000;
+  const endTime = end || Date.now();
+  const startTime = start || endTime - seconds * 1000;
 
   let currentKey, lastScore, nextTime;
 
@@ -106,9 +114,9 @@ export async function getRoomHistoryMessages(
       if (currentMessages.length) {
         messages.push(...currentMessages.map((message) => JSON.parse(message.value)));
         lastScore = currentMessages[currentMessages.length - 1].score;
-        nextTime = lastScore - HISTORY_PARTITION_RANGE_MS;
+        nextTime = getNextTime(lastScore, order);
       } else {
-        nextTime = (nextTime || endTime) - HISTORY_PARTITION_RANGE_MS;
+        nextTime = getNextTime(nextTime || endTime, order);
       }
 
       if (nextTime < startTime || messages.length >= limit) {

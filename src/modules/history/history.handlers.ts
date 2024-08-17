@@ -17,7 +17,7 @@ export async function clientRoomHistoryGet(
   res: SocketAckHandler
 ): Promise<void> {
   const session = socket.getUserData();
-  const { nspRoomId, seconds, limit, nextPageToken, items } = data;
+  const { nspRoomId, start, end, seconds, limit, nextPageToken, items, order } = data;
   const roomId = extractRoomId(nspRoomId);
 
   try {
@@ -26,9 +26,12 @@ export async function clientRoomHistoryGet(
     const historyData = await getRoomHistoryMessages(
       redisClient,
       nspRoomId,
+      start,
+      end,
       seconds || HISTORY_MAX_SECONDS,
       limit || HISTORY_MAX_LIMIT,
       items || null,
+      order,
       nextPageToken
     );
 

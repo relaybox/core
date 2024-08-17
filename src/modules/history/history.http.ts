@@ -14,7 +14,7 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
   const seconds = Number(req.getQuery('seconds')) || null;
   const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
   const items = Number(req.getQuery('items')) || null;
-  const order = req.getQuery('order') || HistoryOrder.DESC;
+  const order = (req.getQuery('order') as HistoryOrder) || HistoryOrder.DESC;
   const start = Number(req.getQuery('start')) || null;
   const end = Number(req.getQuery('end')) || null;
 

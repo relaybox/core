@@ -16,11 +16,12 @@ export function getRoomHistoryMessages(
   key: string,
   min: number,
   max: number,
-  limit: number
+  limit: number,
+  rev: boolean
 ): Promise<any[]> {
   return redisClient.zRangeWithScores(key, max, min, {
     BY: 'SCORE',
-    REV: true,
+    ...(rev && { REV: true }),
     LIMIT: {
       offset: 0,
       count: limit

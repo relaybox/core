@@ -4,7 +4,7 @@ import { getLogger } from '../../util/logger';
 import { KeyPrefix } from '../../types/state.types';
 import { Job } from 'bullmq';
 import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue';
-import { HistoryOrder } from '../../types/history.types';
+import { HistoryOrder, HistoryResponse } from '../../types/history.types';
 
 const logger = getLogger('history');
 
@@ -67,8 +67,29 @@ export async function addRoomHistoryMessage(
   }
 }
 
-function getNextTime(lastTime: number, order: string): number {
-  return lastTime - HISTORY_PARTITION_RANGE_MS;
+function getNextTime(lastTime: number, order: HistoryOrder): number {
+  return order === HistoryOrder.DESC
+    ? lastTime - HISTORY_PARTITION_RANGE_MS
+    : lastTime + HISTORY_PARTITION_RANGE_MS;
+}
+
+function nextTimeOutOfRange(
+  nextTime: number,
+  startTime: number,
+  endTime: number,
+  order: HistoryOrder
+): boolean {
+  return order === HistoryOrder.DESC ? nextTime < startTime : nextTime > endTime;
+}
+
+function getPartitionRange(
+  startTime: number,
+  endTime: number,
+  order: HistoryOrder
+): { min: number; max: number } {
+  return order === HistoryOrder.DESC
+    ? { min: startTime, max: endTime }
+    : { min: endTime, max: startTime };
 }
 
 export async function getRoomHistoryMessages(
@@ -79,9 +100,9 @@ export async function getRoomHistoryMessages(
   seconds: number = HISTORY_MAX_SECONDS,
   limit = 100,
   items: number | null = null,
-  order: string = HistoryOrder.DESC,
+  order: HistoryOrder = HistoryOrder.DESC,
   token: string | null = null
-): Promise<{ messages: any[]; nextPageToken?: string | null; itemsRemaining?: number }> {
+): Promise<HistoryResponse> {
   logger.info(`Getting room message history`, { nspRoomId, seconds, limit, token });
 
   const endTime = end || Date.now();
@@ -94,7 +115,8 @@ export async function getRoomHistoryMessages(
     currentKey = key;
     lastScore = parsedLastScore;
   } else {
-    currentKey = getKey(nspRoomId, endTime);
+    currentKey =
+      order === HistoryOrder.DESC ? getKey(nspRoomId, endTime) : getKey(nspRoomId, startTime);
   }
 
   const messages: Record<string, unknown>[] = [];
@@ -103,12 +125,15 @@ export async function getRoomHistoryMessages(
     while (true) {
       const resultsLimit = Math.min(items ?? limit, limit);
 
+      const { min, max } = getPartitionRange(startTime, lastScore || endTime, order);
+
       const currentMessages = await historyRepository.getRoomHistoryMessages(
         redisClient,
         currentKey,
-        startTime,
-        lastScore || endTime,
-        resultsLimit - messages.length
+        min,
+        max,
+        resultsLimit - messages.length,
+        order === HistoryOrder.DESC
       );
 
       if (currentMessages.length) {
@@ -119,7 +144,7 @@ export async function getRoomHistoryMessages(
         nextTime = getNextTime(nextTime || endTime, order);
       }
 
-      if (nextTime < startTime || messages.length >= limit) {
+      if (nextTimeOutOfRange(nextTime, startTime, endTime, order) || messages.length >= limit) {
         break;
       }
 

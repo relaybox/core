@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/20240814_room_history
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}

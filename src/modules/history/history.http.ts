@@ -9,6 +9,16 @@ import { HistoryOrder } from '../../types/history.types';
 const logger = getLogger('history-http');
 
 export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest) {
+  res.onAborted(() => {
+    aborted = true;
+  });
+
+  res.cork(() => {
+    getJsonResponse(res, '501 Not Implemented').end(
+      JSON.stringify({ status: 501, message: 'HTTPS endpoint not implemented' })
+    );
+  });
+
   const nspRoomId = req.getParameter(0);
   const nextPageToken = req.getQuery('nextPageToken') || null;
   const seconds = Number(req.getQuery('seconds')) || null;
@@ -50,10 +60,6 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
   // HANLDE START TIME GREATER THAN 24 HOURS BEFORE END TIME
 
   try {
-    res.onAborted(() => {
-      aborted = true;
-    });
-
     const redisClient = getRedisClient();
 
     const data = await historyService.getRoomHistoryMessages(

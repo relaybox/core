@@ -28,3 +28,7 @@ export function getRoomHistoryMessages(
     }
   });
 }
+
+export function roomHistoryKeyExists(redisClient: RedisClient, key: string): Promise<number> {
+  return redisClient.exists(key);
+}

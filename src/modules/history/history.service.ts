@@ -121,6 +121,10 @@ export async function getRoomHistoryMessages(
   const startTime = start || endTime - seconds * 1000;
   const rangeLimitForOrder = order === HistoryOrder.DESC ? endTime : startTime;
 
+  if (endTime - startTime > HISTORY_MAX_SECONDS * 1000) {
+    throw new Error(`End time must be within ${HISTORY_MAX_SECONDS} seconds of start time`);
+  }
+
   let currentPartitionKey, lastScore, nextTime;
 
   if (nextPageToken) {
@@ -135,8 +139,6 @@ export async function getRoomHistoryMessages(
 
   try {
     while (true) {
-      console.log('------------------');
-      console.log(currentPartitionKey);
       const resultsLimit = Math.min(items ?? limit, limit);
 
       const { min, max } = getPartitionRange(startTime, endTime, order, lastScore);

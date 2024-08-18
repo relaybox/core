@@ -47,6 +47,8 @@ export async function getRoomHistoryMessages(res: HttpResponse, req: HttpRequest
     return;
   }
 
+  // HANLDE START TIME GREATER THAN 24 HOURS BEFORE END TIME
+
   try {
     res.onAborted(() => {
       aborted = true;

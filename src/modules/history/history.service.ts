@@ -69,8 +69,11 @@ function nextTimeOutOfRange(
   endTime: number,
   order: HistoryOrder
 ): boolean {
-  console.log('nextTimeOutOfRange', nextTime, startTime, endTime, order);
-  return order === HistoryOrder.DESC ? nextTime < startTime : nextTime > endTime;
+  const oneHourMs = 3600 * 1000;
+
+  return order === HistoryOrder.DESC
+    ? nextTime < startTime - oneHourMs
+    : nextTime > endTime + oneHourMs;
 }
 
 function messagesLimitReached(messages: any[], limit: number, items: number | null): boolean {
@@ -132,6 +135,8 @@ export async function getRoomHistoryMessages(
 
   try {
     while (true) {
+      console.log('------------------');
+      console.log(currentPartitionKey);
       const resultsLimit = Math.min(items ?? limit, limit);
 
       const { min, max } = getPartitionRange(startTime, endTime, order, lastScore);

@@ -69,7 +69,7 @@ function nextTimeOutOfRange(
   endTime: number,
   order: HistoryOrder
 ): boolean {
-  const oneHourMs = 3600 * 1000;
+  const oneHourMs = 60 * 60 * 1000;
 
   return order === HistoryOrder.DESC
     ? nextTime < startTime - oneHourMs
@@ -122,7 +122,7 @@ export async function getRoomHistoryMessages(
   const rangeLimitForOrder = order === HistoryOrder.DESC ? endTime : startTime;
 
   if (endTime - startTime > HISTORY_MAX_SECONDS * 1000) {
-    throw new Error(`End time must be within ${HISTORY_MAX_SECONDS} seconds of start time`);
+    throw new Error(`Maximum time range of ${HISTORY_MAX_SECONDS / 60 / 60} hours exceeded`);
   }
 
   let currentPartitionKey, lastScore, nextTime;

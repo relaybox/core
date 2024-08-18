@@ -23,6 +23,7 @@ const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
+const WS_MAX_LIFETIME_MINS = 60;
 
 const app = App()
   .options('/*', (res: HttpResponse, req: HttpRequest) => {
@@ -34,13 +35,13 @@ const app = App()
   })
   .get('/rooms/:nspRoomId/messages', getRoomHistoryMessages)
   .ws('/*', {
+    maxLifetime: WS_MAX_LIFETIME_MINS,
     idleTimeout: WS_IDLE_TIMEOUT_MS,
     sendPingsAutomatically: true,
     subscription: handleSubscription,
     upgrade: handleConnectionUpgrade,
     open: handleSocketOpen,
     pong: handleClientHeartbeat,
-    maxLifetime: 1,
     message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
       handleSocketMessage(socket, message, isBinary, app);
     },

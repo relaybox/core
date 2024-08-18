@@ -40,6 +40,7 @@ const app = App()
     upgrade: handleConnectionUpgrade,
     open: handleSocketOpen,
     pong: handleClientHeartbeat,
+    maxLifetime: 1,
     message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
       handleSocketMessage(socket, message, isBinary, app);
     },

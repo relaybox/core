@@ -17,7 +17,7 @@ import os from 'os';
 import { getRoomHistoryMessages } from './modules/history/history.http';
 import { getCorsResponse } from './util/http';
 
-// Force deploy to ECS v1.5
+// Force deploy to ECS v1.5.1
 
 const logger = getLogger('uws-socket-server');
 

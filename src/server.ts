@@ -17,6 +17,8 @@ import os from 'os';
 import { getRoomHistoryMessages } from './modules/history/history.http';
 import { getCorsResponse } from './util/http';
 
+// Force deploy to ECS
+
 const logger = getLogger('uws-socket-server');
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;

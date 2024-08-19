@@ -29,7 +29,7 @@ interface RedisOptions {
 
 export type RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 
-const tlsConnectOptions = {
+export const tlsConnectOptions = {
   password: REDIS_PASSWORD,
   socket: {
     tls: true,
@@ -38,10 +38,10 @@ const tlsConnectOptions = {
   }
 };
 
-const connectionOptions: RedisOptions = {
+export const connectionOptions: RedisOptions = {
   host: REDIS_HOST!,
   port: Number(REDIS_PORT)!,
-  ...(REDIS_TLS_DISABLED && tlsConnectOptions)
+  ...(!REDIS_TLS_DISABLED && tlsConnectOptions)
 };
 
 let redisClient: RedisClient;

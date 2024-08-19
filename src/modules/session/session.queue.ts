@@ -1,11 +1,7 @@
 import { Queue } from 'bullmq';
+import { connectionOptions } from '../../lib/redis';
 
 const SESSION_QUEUE_NAME = 'session';
-
-const connectionOpts = {
-  host: process.env.REDIS_HOST!,
-  port: Number(process.env.REDIS_PORT!)
-};
 
 const defaultQueueConfig = {
   streams: {
@@ -27,7 +23,7 @@ export enum SessionJobName {
 export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
 
 export const sessionQueue = new Queue(SESSION_QUEUE_NAME, {
-  connection: connectionOpts,
+  connection: connectionOptions,
   prefix: 'queue',
   ...defaultQueueConfig
 });

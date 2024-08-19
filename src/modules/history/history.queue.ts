@@ -1,11 +1,7 @@
 import { Queue } from 'bullmq';
+import { connectionOptions } from '../../lib/redis';
 
 const HISTORY_QUEUE_NAME = 'history';
-
-const connectionOpts = {
-  host: process.env.REDIS_HOST!,
-  port: Number(process.env.REDIS_PORT!)
-};
 
 const defaultQueueConfig = {
   streams: {
@@ -25,7 +21,7 @@ export const defaultJobConfig = {
 };
 
 export const historyQueue = new Queue(HISTORY_QUEUE_NAME, {
-  connection: connectionOpts,
+  connection: connectionOptions,
   prefix: 'queue',
   ...defaultQueueConfig
 });

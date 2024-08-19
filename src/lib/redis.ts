@@ -6,22 +6,42 @@ import {
   RedisScripts
 } from 'redis';
 import { getLogger } from '../util/logger';
+import fs from 'fs';
+import path from 'path';
 
 const logger = getLogger('redis');
 
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT;
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';
+const REDIS_TLS_DISABLED = process.env.REDIS_TLS_DISABLED === 'true';
 
 interface RedisOptions {
   host: string;
   port: number;
+  password?: string;
+  socket?: {
+    tls: boolean;
+    rejectUnauthorized: boolean;
+    cert: Buffer;
+  };
 }
 
 export type RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 
+const tlsConnectOptions = {
+  password: REDIS_PASSWORD,
+  socket: {
+    tls: true,
+    rejectUnauthorized: true,
+    cert: fs.readFileSync(path.join(__dirname, '../certs/AmazonRootCA1.pem'))
+  }
+};
+
 const connectionOptions: RedisOptions = {
   host: REDIS_HOST!,
-  port: Number(REDIS_PORT)!
+  port: Number(REDIS_PORT)!,
+  ...(REDIS_TLS_DISABLED && tlsConnectOptions)
 };
 
 let redisClient: RedisClient;

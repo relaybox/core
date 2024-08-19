@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { connectionOptions } from '../../lib/redis';
+import { connectionOptionsIo } from '../../lib/redis';
 
 const METRICS_QUEUE_NAME = 'metrics';
 
@@ -22,7 +22,7 @@ export enum MetricsJobName {
 export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
 
 export const metricsQueue = new Queue(METRICS_QUEUE_NAME, {
-  connection: connectionOptions,
+  connection: connectionOptionsIo,
   prefix: 'queue',
   ...defaultQueueConfig
 });

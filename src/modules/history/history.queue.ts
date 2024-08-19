@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { connectionOptions } from '../../lib/redis';
+import { connectionOptionsIo } from '../../lib/redis';
 
 const HISTORY_QUEUE_NAME = 'history';
 
@@ -21,7 +21,7 @@ export const defaultJobConfig = {
 };
 
 export const historyQueue = new Queue(HISTORY_QUEUE_NAME, {
-  connection: connectionOptions,
+  connection: connectionOptionsIo,
   prefix: 'queue',
   ...defaultQueueConfig
 });

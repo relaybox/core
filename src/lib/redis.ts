@@ -1,9 +1,10 @@
 import {
-  createClient as createRedisClient,
+  createClient,
   RedisClientType,
   RedisModules,
   RedisFunctions,
-  RedisScripts
+  RedisScripts,
+  RedisClientOptions
 } from 'redis';
 import { getLogger } from '../util/logger';
 import fs from 'fs';
@@ -16,32 +17,37 @@ const REDIS_PORT = process.env.REDIS_PORT;
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';
 const REDIS_TLS_DISABLED = process.env.REDIS_TLS_DISABLED === 'true';
 
-interface RedisOptions {
-  host: string;
-  port: number;
-  password?: string;
-  socket?: {
-    tls: boolean;
-    rejectUnauthorized: boolean;
-    cert: Buffer;
-  };
-}
-
 export type RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 
 export const tlsConnectOptions = {
-  password: REDIS_PASSWORD,
-  socket: {
-    tls: true,
-    rejectUnauthorized: true,
-    cert: fs.readFileSync(path.join(__dirname, '../certs/AmazonRootCA1.pem'))
-  }
+  tls: true,
+  rejectUnauthorized: true,
+  cert: fs.readFileSync(path.join(__dirname, '../certs/AmazonRootCA1.pem'))
 };
 
-export const connectionOptions: RedisOptions = {
+export const socketOptions = {
   host: REDIS_HOST!,
   port: Number(REDIS_PORT)!,
   ...(!REDIS_TLS_DISABLED && tlsConnectOptions)
+};
+
+export const connectionOptions: RedisClientOptions = {
+  ...(!REDIS_TLS_DISABLED && { password: REDIS_PASSWORD }),
+  socket: {
+    ...socketOptions,
+    reconnectStrategy
+  }
+};
+
+const tlsConnectionOptionsIo = {
+  password: REDIS_PASSWORD,
+  tls: tlsConnectOptions
+};
+
+export const connectionOptionsIo = {
+  host: REDIS_HOST!,
+  port: Number(REDIS_PORT)!,
+  ...(!REDIS_TLS_DISABLED && tlsConnectionOptionsIo)
 };
 
 let redisClient: RedisClient;
@@ -58,12 +64,7 @@ export function getRedisClient(): RedisClient {
 
   logger.info(`Creating redis client`);
 
-  redisClient = createRedisClient({
-    socket: {
-      ...connectionOptions,
-      reconnectStrategy
-    }
-  });
+  redisClient = createClient(connectionOptions);
 
   redisClient.on('connect', () => {
     logger.info('Redis connected');

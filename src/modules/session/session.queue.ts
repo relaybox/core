@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { connectionOptions } from '../../lib/redis';
+import { connectionOptionsIo } from '../../lib/redis';
 
 const SESSION_QUEUE_NAME = 'session';
 
@@ -23,7 +23,7 @@ export enum SessionJobName {
 export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
 
 export const sessionQueue = new Queue(SESSION_QUEUE_NAME, {
-  connection: connectionOptions,
+  connection: connectionOptionsIo,
   prefix: 'queue',
   ...defaultQueueConfig
 });

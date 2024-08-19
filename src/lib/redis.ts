@@ -19,6 +19,7 @@ const REDIS_TLS_DISABLED = process.env.REDIS_TLS_DISABLED === 'true';
 
 export type RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 
+// Node redis client options
 export const tlsConnectOptions = {
   tls: true,
   rejectUnauthorized: true,
@@ -39,6 +40,7 @@ export const connectionOptions: RedisClientOptions = {
   }
 };
 
+// IO redis client options (BullMQ)
 const tlsConnectionOptionsIo = {
   password: REDIS_PASSWORD,
   tls: tlsConnectOptions

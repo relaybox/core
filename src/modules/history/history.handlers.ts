@@ -46,9 +46,9 @@ export async function clientRoomHistoryGet(
       );
     }
 
-    if (!start && !end && !items && !seconds) {
-      seconds = 120;
-    }
+    // if (!start && !end && !items && !seconds) {
+    //   seconds = 120;
+    // }
 
     const historyData = await getRoomHistoryMessages(
       redisClient,

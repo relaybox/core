@@ -141,7 +141,7 @@ export async function clientPublish(
 
     await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
 
-    res(messageData);
+    res(extendedMessageData);
   } catch (err: any) {
     res(null, formatErrorResponse(err));
   }

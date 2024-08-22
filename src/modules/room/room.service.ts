@@ -14,7 +14,7 @@ export async function joinRoom(
 ): Promise<void> {
   const { uid, connectionId } = session;
 
-  logger.debug(`Joining room ${nspRoomId}`, { uid, connectionId });
+  logger.info(`Joining room ${nspRoomId}`, { uid, connectionId });
 
   try {
     await setRoomJoin(redisClient, connectionId, nspRoomId);

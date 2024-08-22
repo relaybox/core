@@ -26,7 +26,7 @@ export async function clientRoomSubscriptionBind(
   const { roomId, event } = data;
   const { appPid, permissions, connectionId } = session;
 
-  logger.info('Binding subscription', { session, roomId, event });
+  logger.debug('Binding subscription', { session, roomId, event });
 
   const subscription = formatDefaultSubscription(appPid, roomId, event);
   const nspRoomId = getNspRoomId(appPid, roomId);
@@ -68,7 +68,7 @@ export async function clientRoomSubscriptionUnbind(
   const { roomId, event } = data;
   const { appPid, connectionId } = session;
 
-  logger.info('Unbinding subscription', { session, roomId, event });
+  logger.debug('Unbinding subscription', { session, roomId, event });
 
   const subscription = formatDefaultSubscription(appPid, roomId, event);
   const nspRoomId = getNspRoomId(appPid, roomId);

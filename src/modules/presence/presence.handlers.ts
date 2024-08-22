@@ -45,7 +45,7 @@ export async function clientPresenceSubscribe(
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatPresenceSubscription(nspRoomId, event);
 
-  logger.info('Subscribing to presence', {
+  logger.debug('Subscribing to presence', {
     session,
     nspRoomId,
     event,
@@ -92,7 +92,7 @@ export async function clientPresenceUnsubscribe(
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatPresenceSubscription(nspRoomId, event);
 
-  logger.info('Unsubscribing from presence', {
+  logger.debug('Unsubscribing from presence', {
     session,
     nspRoomId,
     event,

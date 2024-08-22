@@ -25,7 +25,7 @@ export async function clientMetricsSubscribe(
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatMetricsSubscription(nspRoomId, event);
 
-  logger.info('Subscribing to metrics', {
+  logger.debug('Subscribing to metrics', {
     session,
     nspRoomId,
     event,
@@ -66,7 +66,7 @@ export async function clientMetricsUnsubscribe(
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatMetricsSubscription(nspRoomId, event);
 
-  logger.info('Unsubscribing from metrics', {
+  logger.debug('Unsubscribing from metrics', {
     session,
     nspRoomId,
     event,

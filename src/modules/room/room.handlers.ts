@@ -34,7 +34,7 @@ export async function clientRoomJoin(
 
   const { roomId } = data;
 
-  logger.info('Joining room', { session, data });
+  logger.debug('Joining room', { session, data });
 
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);

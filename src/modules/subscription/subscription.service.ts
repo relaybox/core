@@ -73,7 +73,7 @@ export async function unbindAllSubscriptions(
 ): Promise<void> {
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
-  logger.info(`Unbinding all subscriptions`, { connectionId, keyNamespace, nspRoomId });
+  logger.debug(`Unbinding all subscriptions`, { connectionId, keyNamespace, nspRoomId });
 
   try {
     const subscriptions = await getAllSubscriptions(redisClient, key);

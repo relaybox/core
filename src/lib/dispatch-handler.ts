@@ -51,7 +51,7 @@ export default class DispatchHandler {
 
     const message = this.buildMessage(nspRoomId, event, data, session, latencyLog);
 
-    this.logger.info('Dispatching message', { nspRoomId, event });
+    this.logger.info('Dispatching message', { nspRoomId, event, session });
 
     this.publisher.send(envelope, message);
   }

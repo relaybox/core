@@ -29,7 +29,7 @@ export async function bindSubscription(
 ): Promise<void> {
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
-  logger.info(`Binding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
+  logger.debug(`Binding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
 
   try {
     await createSubscription(redisClient, key, subscription);
@@ -50,7 +50,7 @@ export async function unbindSubscription(
 ): Promise<void> {
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
-  logger.info(`Unbinding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
+  logger.debug(`Unbinding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
 
   try {
     await deleteSubscription(redisClient, key, subscription);
@@ -102,7 +102,7 @@ export async function restoreRoomSubscriptions(
   keyNamespace: KeyNamespace,
   socket: WebSocket<Session>
 ): Promise<void> {
-  logger.info(`Restoring subscriptions for ${connectionId}`, { keyNamespace, nspRoomId });
+  logger.debug(`Restoring subscriptions for ${connectionId}`, { keyNamespace, nspRoomId });
 
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 

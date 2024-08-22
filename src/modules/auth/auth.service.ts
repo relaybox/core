@@ -11,7 +11,7 @@ export async function verifyAuthToken(token: string, connectionId?: string): Pro
     throw new Error('Auth token verification failed');
   }
 
-  logger.info('Verifying auth token', { connectionId });
+  logger.debug('Verifying auth token', { connectionId });
 
   const headers = getAuthHeaders(token, connectionId);
 

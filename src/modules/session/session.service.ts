@@ -47,7 +47,7 @@ export async function restoreSession(
 
     const rooms = await getCachedRooms(redisClient, connectionId);
 
-    logger.info(`Restoring session, rooms (${rooms?.length})`, { uid, rooms });
+    logger.debug(`Restoring session, rooms (${rooms?.length})`, { uid, rooms });
 
     if (rooms && rooms.length > 0) {
       await Promise.all(
@@ -109,14 +109,14 @@ export async function markSessionForDeletion(
   session: Session,
   instanceId: string | number
 ): Promise<Job> {
-  logger.info('Marking session for deletion', { session });
+  logger.debug('Marking session for deletion', { session });
 
   const { connectionId } = session;
 
   const exsitingJob = await sessionQueue.getJob(connectionId);
 
   if (exsitingJob) {
-    logger.info(`Existing session destroy job found, removing...`, { connectionId });
+    logger.debug(`Existing session destroy job found, removing...`, { connectionId });
     await exsitingJob.remove();
   }
 
@@ -140,7 +140,7 @@ export async function markSessionUserInactive(
   session: Session,
   instanceId: string | number
 ): Promise<Job> {
-  logger.info('Marking session user as inactive', { session });
+  logger.debug('Marking session user as inactive', { session });
 
   const { uid } = session;
 
@@ -166,7 +166,7 @@ export async function markSessionUserInactive(
 }
 
 export async function unmarkSessionForDeletion(connectionId: string): Promise<any> {
-  logger.info('Unmarking session for deletion', { connectionId });
+  logger.debug('Unmarking session for deletion', { connectionId });
 
   try {
     await clearDelayedSessionJob(connectionId);
@@ -177,7 +177,7 @@ export async function unmarkSessionForDeletion(connectionId: string): Promise<an
 }
 
 export async function markSessionUserActive(uid: string): Promise<any> {
-  logger.info('Setting session user as active', { uid });
+  logger.debug('Setting session user as active', { uid });
 
   try {
     await clearDelayedSessionJob(uid);
@@ -188,14 +188,14 @@ export async function markSessionUserActive(uid: string): Promise<any> {
 }
 
 async function clearDelayedSessionJob(id: string) {
-  logger.info('Clearing delayed session job', { id });
+  logger.debug('Clearing delayed session job', { id });
 
   try {
     const job = await sessionQueue.getJob(id);
 
     if (job) {
       await job.remove();
-      logger.info(`Session delete job removed`, { id: job.id, name: job.name });
+      logger.debug(`Session delete job removed`, { id: job.id, name: job.name });
     }
   } catch (err) {
     logger.error(`Failed to delete job with ID ${id}:`, { err });
@@ -241,7 +241,7 @@ export function recordConnnectionEvent(
   socket: WebSocket<Session>,
   connectionEventType: SocketConnectionEventType
 ): Promise<Job> {
-  logger.info(`Recording socket connection event, ${connectionEventType}`, {
+  logger.debug(`Recording socket connection event, ${connectionEventType}`, {
     session,
     connectionEventType
   });
@@ -267,7 +267,7 @@ export function recordConnnectionEvent(
 }
 
 export function enqueueSessionHeartbeat(session: Session): Promise<Job> {
-  logger.info('Setting session heartbeat', { session });
+  logger.debug('Setting session heartbeat', { session });
 
   const { permissions, ...rest } = session;
 

@@ -90,9 +90,10 @@ export function handleConnectionUpgrade(
     connectionId: getQueryParamRealValue(req.getQuery('connectionId'))
   };
 
-  logger.info(
-    `Handling connection upgrade, ${connectionAuthParams.connectionId || `new connection`}`
-  );
+  logger.debug(`Handling connection upgrade`, {
+    clientId: connectionAuthParams.clientId,
+    connectionId: connectionAuthParams.connectionId
+  });
 
   const secWebsocketKey = req.getHeader('sec-websocket-key');
   const secWebsocketProtocol = req.getHeader('sec-websocket-protocol');
@@ -135,7 +136,7 @@ export async function handleSocketOpen(socket: WebSocket<Session>): Promise<void
     const verifiedSession = socket.getUserData();
     const { uid, connectionId, clientId } = verifiedSession;
 
-    logger.info(`Socket connect event, ${connectionId}`, verifiedSession);
+    logger.debug(`Socket connect event, ${connectionId}`, verifiedSession);
 
     await setSessionActive(verifiedSession, socket);
     await markSessionUserActive(uid);
@@ -253,7 +254,7 @@ export async function handleSubscription(
     return;
   }
 
-  logger.info(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
+  logger.debug(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
 
   if (oldCount === 0 && newCount > 0) {
     eventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, decodedTopic);

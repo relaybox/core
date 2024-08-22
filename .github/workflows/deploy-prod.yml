@@ -51,6 +51,7 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
           environment-variables: |
             AWS_REGION=${{vars.AWS_REGION}}
+            LOG_LEVEL=${{ vars.LOG_LEVEL }}
             RABBIT_MQ_CONNECTION_STRING=${{ vars.RABBIT_MQ_CONNECTION_STRING }}
             RABBIT_MQ_QUEUE_AUTO_DELETE=${{ vars.RABBIT_MQ_QUEUE_AUTO_DELETE }}
             RABBIT_MQ_QUEUE_COUNT=${{ vars.RABBIT_MQ_QUEUE_COUNT }}

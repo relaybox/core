@@ -109,7 +109,7 @@ export async function clientPublish(
 ): Promise<void> {
   const session = socket.getUserData();
 
-  logger.info(`Client publish event`, { session });
+  logger.debug(`Client publish event`, { session });
 
   const { roomId, event, data: messageData } = data;
 

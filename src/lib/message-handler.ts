@@ -18,7 +18,7 @@ export default class MessageHandler {
   }
 
   public async handleMessage(msg: any) {
-    this.logger.info(`Received message from queue, preparing to distribute`, { msg });
+    this.logger.debug(`Received message from queue, preparing to distribute`, { msg });
 
     const { nspRoomId, event, data, requestId, session, latencyLog } = msg.body;
 
@@ -40,7 +40,7 @@ export default class MessageHandler {
   }
 
   private formatMessageEventData(event: string, data: any): string {
-    this.logger.info(`Formatting message event data`, { event });
+    this.logger.debug(`Formatting message event data`, { event });
 
     const messageEventData = {
       type: event,
@@ -61,7 +61,7 @@ export default class MessageHandler {
     latencyLog: any,
     forEvent?: string
   ) {
-    this.logger.info(`Emitting log metrics`, { event });
+    this.logger.debug(`Emitting log metrics`, { event });
     const messageEventData = this.formatMessageEventData(event, data);
     this.app.publish(event, messageEventData);
     this.handleDeliveryMetrics(nspRoomId, event, data, requestId, session, latencyLog, forEvent);

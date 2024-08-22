@@ -88,7 +88,7 @@ export async function addRoomHistoryMessage(
   const { timestamp } = messageData;
   const key = getPartitionKey(nspRoomId, timestamp);
 
-  logger.info(`Adding message to history`, { key, timestamp });
+  logger.debug(`Adding message to history`, { key, timestamp });
 
   try {
     await historyRepository.addRoomHistoryMessage(redisClient, key, messageData);
@@ -115,7 +115,7 @@ export async function getRoomHistoryMessages(
   order: HistoryOrder = HistoryOrder.DESC,
   nextPageToken: string | null = null
 ): Promise<HistoryResponse> {
-  logger.info(`Getting room message history`, { nspRoomId, seconds, limit, nextPageToken });
+  logger.debug(`Getting room message history`, { nspRoomId, seconds, limit, nextPageToken });
 
   const endTime = end || Date.now();
   const startTime = start || endTime - seconds * 1000;
@@ -191,7 +191,7 @@ export async function getRoomHistoryMessages(
 }
 
 export function setRoomHistoryKeyTtl(nspRoomId: string, key: string): Promise<Job> | void {
-  logger.info('Adding history ttl job to history queue', { nspRoomId, key });
+  logger.debug('Adding history ttl job to history queue', { nspRoomId, key });
 
   try {
     const jobData = {

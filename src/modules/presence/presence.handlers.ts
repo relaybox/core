@@ -133,7 +133,7 @@ export async function clientPresenceUnsubscribeAll(
   const { roomId } = data;
   const { uid, appPid, connectionId } = session;
 
-  logger.info('Unsubscribing from presence (all subscriptions)', { session, roomId });
+  logger.debug('Unsubscribing from presence (all subscriptions)', { session, roomId });
 
   const nspRoomId = getNspRoomId(appPid, roomId);
 

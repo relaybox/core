@@ -16,7 +16,7 @@ export async function verifyAuthToken(token: string, connectionId?: string): Pro
   const headers = getAuthHeaders(token, connectionId);
 
   try {
-    const { data } = await request<Session>(`${RELAYBOX_AUTH_SERVICE_URL}/validate-token`, {
+    const { data } = await request<Session>(`${RELAYBOX_AUTH_SERVICE_URL}/validation/token`, {
       method: 'GET',
       headers
     });
@@ -42,7 +42,7 @@ export async function verifyApiKey(
   try {
     const headers = getAuthHeaders(apiKey, connectionId, clientId);
 
-    const { data } = await request<Session>(`${RELAYBOX_AUTH_SERVICE_URL}/validate-api-key`, {
+    const { data } = await request<Session>(`${RELAYBOX_AUTH_SERVICE_URL}/validation/api-key`, {
       method: 'GET',
       headers
     });

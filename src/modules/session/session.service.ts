@@ -220,7 +220,7 @@ export function setSessionActive(session: Session, socket: WebSocket<Session>): 
 }
 
 export function getReducedSession(session: Session, socket?: WebSocket<Session>): ReducedSession {
-  const { appPid, keyId, uid, connectionId, clientId } = session;
+  const { appPid, keyId, uid, connectionId, clientId, user } = session;
 
   const socketId = socket?.getUserData()?.socketId || session.socketId;
 
@@ -230,7 +230,8 @@ export function getReducedSession(session: Session, socket?: WebSocket<Session>)
     uid,
     connectionId,
     clientId,
-    socketId
+    socketId,
+    user
   };
 
   return reducedSession;

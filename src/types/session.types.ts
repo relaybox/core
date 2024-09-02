@@ -1,5 +1,13 @@
 import { DsPermissions } from './permissions.types';
 
+export interface AuthUser {
+  id: string;
+  clientId: string;
+  createdAt: string;
+  updatedAt: string;
+  username: string;
+}
+
 export interface Session {
   uid: string;
   appPid: string;
@@ -11,6 +19,7 @@ export interface Session {
   anonymous: boolean;
   connectionId: string;
   socketId: string;
+  user?: AuthUser;
 }
 
 export interface ReducedSession {
@@ -21,4 +30,5 @@ export interface ReducedSession {
   connectionId: string;
   socketId: string;
   instanceId?: string | number;
+  user?: AuthUser;
 }

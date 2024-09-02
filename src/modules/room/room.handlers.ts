@@ -123,7 +123,8 @@ export async function clientPublish(
 
     const sender = {
       clientId: reducedSession.clientId?.split(':')[1] || null,
-      connectionId: reducedSession.connectionId
+      connectionId: reducedSession.connectionId,
+      user: reducedSession.user
     };
 
     const extendedMessageData = {

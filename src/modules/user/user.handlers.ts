@@ -118,7 +118,7 @@ export async function clientAuthUserUnsubscribeAll(
 
   try {
     const subscriptions = await getUserSubscriptions(logger, redisClient, connectionId, clientId);
-    console.log(subscriptions);
+
     await Promise.all(
       subscriptions.map(async (subscription) =>
         unbindUserSubscription(logger, redisClient, connectionId, clientId, subscription, socket)

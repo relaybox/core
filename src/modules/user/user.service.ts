@@ -91,7 +91,7 @@ export async function unbindUserSubscription(
   subscription: string,
   socket: WebSocket<Session>
 ): Promise<number> {
-  logger.debug(`Unbinding user subscription`, { connectionId, subscription });
+  logger.debug(`Unbinding user subscription ${subscription}`, { connectionId, subscription });
 
   try {
     const key = getUserSubscriptionKeyName(connectionId, clientId);

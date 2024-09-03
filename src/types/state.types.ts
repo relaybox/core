@@ -17,7 +17,8 @@ export enum KeySuffix {
   INDEX = 'index',
   MEMBERS = 'members',
   ACTIVE = 'active',
-  KEEP_ALIVE = 'keepalive'
+  KEEP_ALIVE = 'keepalive',
+  USERS = 'users'
 }
 
 export enum KeyNamespace {

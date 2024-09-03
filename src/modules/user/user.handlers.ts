@@ -3,46 +3,46 @@ import { WebSocket } from 'uWebSockets.js';
 import { RedisClient } from '../../lib/redis';
 import { Session } from '../../types/session.types';
 import { SocketAckHandler } from '../../types/socket.types';
-import { KeyNamespace } from '../../types/state.types';
 import { formatErrorResponse, formatUserSubscription } from '../../util/format';
-import { getNspClientId } from '../../util/helpers';
-import { bindSubscription, unbindSubscription } from '../subscription/subscription.service';
+import { ClientSubscription } from '../../types/subscription.types';
+import {
+  bindUserSubscription,
+  getUserSubscriptions,
+  pushUserSubscription,
+  removeUserSubscription,
+  unbindUserSubscription
+} from './user.service';
 
 export async function clientAuthUserSubscribe(
   logger: Logger,
   redisClient: RedisClient,
   socket: WebSocket<Session>,
-  data: any,
+  data: ClientSubscription,
   res: SocketAckHandler,
   createdAt: string
 ): Promise<void> {
   const session = socket.getUserData();
-  const { appPid, permissions, connectionId } = session;
 
-  const { clientId, event } = data;
+  const { connectionId } = session;
+  const { subscriptionId: clientId, event } = data;
 
-  logger.debug('Subscribing to user actions', {
+  logger.debug('Creating user subscription', {
     clientId
   });
 
-  const nspClientId = getNspClientId(appPid, clientId);
-  const subscription = formatUserSubscription(nspClientId, event);
+  const subscription = formatUserSubscription(clientId, event);
 
   try {
-    await bindSubscription(
-      redisClient,
-      connectionId,
-      nspClientId,
-      subscription,
-      KeyNamespace.USERS,
-      socket
-    );
+    await pushUserSubscription(logger, redisClient, connectionId, clientId);
+    await bindUserSubscription(logger, redisClient, connectionId, clientId, subscription, socket);
+
+    socket.subscribe(subscription);
 
     res(subscription);
   } catch (err: any) {
-    logger.error(`Failed to subscribe to user actions`, {
+    logger.error(`Failed to bind user subscription`, {
       session,
-      nspClientId,
+      clientId,
       event,
       subscription
     });
@@ -55,39 +55,83 @@ export async function clientAuthUserUnsubscribe(
   logger: Logger,
   redisClient: RedisClient,
   socket: WebSocket<Session>,
+  data: ClientSubscription,
+  res: SocketAckHandler,
+  createdAt: string
+): Promise<void> {
+  const session = socket.getUserData();
+
+  const { connectionId } = session;
+  const { subscriptionId: clientId, event } = data;
+
+  logger.debug('Deleting user subscription', {
+    clientId
+  });
+
+  const subscription = formatUserSubscription(clientId, event);
+
+  try {
+    const remainingSubscriptionCount = await unbindUserSubscription(
+      logger,
+      redisClient,
+      connectionId,
+      clientId,
+      subscription,
+      socket
+    );
+
+    if (!remainingSubscriptionCount) {
+      await removeUserSubscription(logger, redisClient, connectionId, clientId);
+    }
+
+    socket.unsubscribe(subscription);
+
+    res(subscription);
+  } catch (err: any) {
+    logger.error(`Failed to unbind user subscription`, {
+      session,
+      clientId,
+      event,
+      subscription
+    });
+
+    res(null, formatErrorResponse(err));
+  }
+}
+
+export async function clientAuthUserUnsubscribeAll(
+  logger: Logger,
+  redisClient: RedisClient,
+  socket: WebSocket<Session>,
   data: any,
   res: SocketAckHandler,
   createdAt: string
 ): Promise<void> {
   const session = socket.getUserData();
-  const { appPid, permissions, connectionId } = session;
 
-  const { clientId, event } = data;
+  const { connectionId } = session;
+  const { subscriptionId: clientId } = data;
 
-  logger.debug('Unsubscribing from user actions', {
+  logger.debug('Deleting all user subscriptions', {
     clientId
   });
 
-  const nspClientId = getNspClientId(appPid, clientId);
-  const subscription = formatUserSubscription(nspClientId, event);
-
   try {
-    await unbindSubscription(
-      redisClient,
-      connectionId,
-      nspClientId,
-      subscription,
-      KeyNamespace.USERS,
-      socket
+    const subscriptions = await getUserSubscriptions(logger, redisClient, connectionId, clientId);
+    console.log(subscriptions);
+    await Promise.all(
+      subscriptions.map(async (subscription) =>
+        unbindUserSubscription(logger, redisClient, connectionId, clientId, subscription, socket)
+      )
     );
 
-    res(subscription);
+    await removeUserSubscription(logger, redisClient, connectionId, clientId);
+
+    res(true);
   } catch (err: any) {
-    logger.error(`Failed to unsubscribe from user actions`, {
+    logger.error(`Failed to delete all user subscriptions`, {
       session,
-      nspClientId,
-      event,
-      subscription
+      clientId
     });
 
     res(null, formatErrorResponse(err));

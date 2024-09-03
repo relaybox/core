@@ -9,7 +9,7 @@ import { Job } from 'bullmq';
 import { RedisClient } from '../../lib/redis';
 import { joinRoom } from '../room/room.service';
 import { getCachedRooms } from '../room/room.repository';
-import { SocketConnectionEventType, SocketUserData } from '../../types/socket.types';
+import { SocketConnectionEventType } from '../../types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
 
 const logger = getLogger('session');

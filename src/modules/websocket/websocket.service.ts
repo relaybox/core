@@ -47,7 +47,11 @@ import {
 } from 'uWebSockets.js';
 import ChannelManager from '../../lib/channel-manager';
 import { clientRoomHistoryGet } from '../history/history.handlers';
-import { clientAuthUserSubscribe, clientAuthUserUnsubscribe } from '../user/user.handlers';
+import {
+  clientAuthUserSubscribe,
+  clientAuthUserUnsubscribe,
+  clientAuthUserUnsubscribeAll
+} from '../user/user.handlers';
 
 const logger = getLogger('websocket');
 const redisClient = getRedisClient();
@@ -74,7 +78,8 @@ const eventHandlersMap = {
   [ClientEvent.ROOM_METRICS_UNSUBSCRIBE]: clientMetricsUnsubscribe,
   [ClientEvent.ROOM_HISTORY_GET]: clientRoomHistoryGet,
   [ClientEvent.AUTH_USER_SUBSCRIBE]: clientAuthUserSubscribe,
-  [ClientEvent.AUTH_USER_UNSUBSCRIBE]: clientAuthUserUnsubscribe
+  [ClientEvent.AUTH_USER_UNSUBSCRIBE]: clientAuthUserUnsubscribe,
+  [ClientEvent.AUTH_USER_UNSUBSCRIBE_ALL]: clientAuthUserUnsubscribeAll
 };
 
 export function handleConnectionUpgrade(

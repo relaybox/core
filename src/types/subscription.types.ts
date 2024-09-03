@@ -3,3 +3,8 @@ export enum SubscriptionType {
   LEAVE = 'leave',
   UPDATE = 'update'
 }
+
+export interface ClientSubscription {
+  subscriptionId: string;
+  event: string;
+}

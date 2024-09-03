@@ -23,5 +23,6 @@ export enum KeySuffix {
 export enum KeyNamespace {
   SUBSCRIPTIONS = 'subscriptions',
   PRESENCE = 'presence',
-  METRICS = 'metrics'
+  METRICS = 'metrics',
+  USERS = 'users'
 }

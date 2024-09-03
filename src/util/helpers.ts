@@ -2,6 +2,10 @@ export function getNspRoomId(appPid: string, roomId: string): string {
   return `${appPid}:${roomId}`;
 }
 
+export function getNspClientId(appPid: string, clientId: string): string {
+  return `${appPid}:${clientId}`;
+}
+
 export function extractRoomId(nspRoomId: string): string {
   const [_, roomId] = nspRoomId.split(/:(.+)/);
   return roomId;

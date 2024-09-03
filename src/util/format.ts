@@ -14,6 +14,10 @@ export function formatMetricsSubscription(nspRoomId: string, event: string): str
   return `${nspRoomId}:${PLATFORM_RESERVED_NAMESPACE}:metrics:${event}`;
 }
 
+export function formatUserSubscription(nspClientId: string, event: string): string {
+  return `${nspClientId}:${PLATFORM_RESERVED_NAMESPACE}:user:${event}`;
+}
+
 export function formatErrorResponse(error: Error, status?: number): DsErrorResponse {
   return {
     message: error.message,

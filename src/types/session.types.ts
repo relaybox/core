@@ -6,11 +6,15 @@ export interface AuthUser {
   createdAt: string;
   updatedAt: string;
   username: string;
+  orgId: string;
+  isOnline: boolean;
+  lastOnline: string;
 }
 
 export interface Session {
   uid: string;
   appPid: string;
+  orgId: string;
   keyId: string;
   clientId: string;
   exp: number;

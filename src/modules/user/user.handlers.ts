@@ -12,6 +12,8 @@ import {
   removeUserSubscription,
   unbindUserSubscription
 } from './user.service';
+import ChannelManager from '../../lib/channel-manager';
+import { getNspClientId } from '../../util/helpers';
 
 export async function clientAuthUserSubscribe(
   logger: Logger,
@@ -30,19 +32,36 @@ export async function clientAuthUserSubscribe(
     clientId
   });
 
-  const subscription = formatUserSubscription(clientId, event);
+  const nspClientId = getNspClientId(session.appPid, clientId);
+  const subscription = formatUserSubscription(nspClientId, event);
+  const userRoutingKey = ChannelManager.getRoutingKey(nspClientId);
 
   try {
-    await pushUserSubscription(logger, redisClient, connectionId, clientId);
-    await bindUserSubscription(logger, redisClient, connectionId, clientId, subscription, socket);
+    const subscriptionCount = await bindUserSubscription(
+      logger,
+      redisClient,
+      connectionId,
+      nspClientId,
+      subscription,
+      socket
+    );
 
-    socket.subscribe(subscription);
+    if (subscriptionCount === 1) {
+      await pushUserSubscription(
+        logger,
+        redisClient,
+        connectionId,
+        nspClientId,
+        userRoutingKey,
+        socket
+      );
+    }
 
     res(subscription);
   } catch (err: any) {
     logger.error(`Failed to bind user subscription`, {
       session,
-      clientId,
+      nspClientId,
       event,
       subscription
     });
@@ -68,29 +87,36 @@ export async function clientAuthUserUnsubscribe(
     clientId
   });
 
-  const subscription = formatUserSubscription(clientId, event);
+  const nspClientId = getNspClientId(session.appPid, clientId);
+  const subscription = formatUserSubscription(nspClientId, event);
+  const userRoutingKey = ChannelManager.getRoutingKey(nspClientId);
 
   try {
-    const remainingSubscriptionCount = await unbindUserSubscription(
+    const subscriptionCount = await unbindUserSubscription(
       logger,
       redisClient,
       connectionId,
-      clientId,
+      nspClientId,
       subscription,
       socket
     );
 
-    if (!remainingSubscriptionCount) {
-      await removeUserSubscription(logger, redisClient, connectionId, clientId);
+    if (!subscriptionCount) {
+      await removeUserSubscription(
+        logger,
+        redisClient,
+        connectionId,
+        nspClientId,
+        userRoutingKey,
+        socket
+      );
     }
-
-    socket.unsubscribe(subscription);
 
     res(subscription);
   } catch (err: any) {
     logger.error(`Failed to unbind user subscription`, {
       session,
-      clientId,
+      nspClientId,
       event,
       subscription
     });
@@ -116,22 +142,31 @@ export async function clientAuthUserUnsubscribeAll(
     clientId
   });
 
-  try {
-    const subscriptions = await getUserSubscriptions(logger, redisClient, connectionId, clientId);
+  const nspClientId = getNspClientId(session.appPid, clientId);
+  const subscriptions = await getUserSubscriptions(logger, redisClient, connectionId, nspClientId);
+  const userRoutingKey = ChannelManager.getRoutingKey(nspClientId);
 
+  try {
     await Promise.all(
       subscriptions.map(async (subscription) =>
-        unbindUserSubscription(logger, redisClient, connectionId, clientId, subscription, socket)
+        unbindUserSubscription(logger, redisClient, connectionId, nspClientId, subscription, socket)
       )
     );
 
-    await removeUserSubscription(logger, redisClient, connectionId, clientId);
+    await removeUserSubscription(
+      logger,
+      redisClient,
+      connectionId,
+      nspClientId,
+      userRoutingKey,
+      socket
+    );
 
     res(true);
   } catch (err: any) {
     logger.error(`Failed to delete all user subscriptions`, {
       session,
-      clientId
+      nspClientId
     });
 
     res(null, formatErrorResponse(err));

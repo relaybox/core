@@ -1,17 +1,15 @@
 import { getLogger } from '../../util/logger';
 import { ReducedSession, Session } from '../../types/session.types';
-import { restoreRoomSubscriptions } from '../subscription/subscription.service';
-import { KeyNamespace } from '../../types/state.types';
 import { pushRoomLeaveMetrics } from '../metrics/metrics.service';
 import { verifyApiKey, verifyAuthToken } from '../auth/auth.service';
 import { SessionJobName, defaultJobConfig, sessionQueue } from './session.queue';
 import { Job } from 'bullmq';
 import { RedisClient } from '../../lib/redis';
-import { joinRoom, restoreCachedRooms } from '../room/room.service';
+import { restoreCachedRooms } from '../room/room.service';
 import { getCachedRooms } from '../room/room.repository';
 import { SocketConnectionEventType } from '../../types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
-import { getCachedUsers, restoreCachedUsers, restoreUserSubscriptions } from '../user/user.service';
+import { restoreCachedUsers } from '../user/user.service';
 
 const logger = getLogger('session');
 
@@ -173,7 +171,7 @@ async function clearDelayedSessionJob(id: string) {
 }
 
 export function setSessionActive(session: Session, socket: WebSocket<Session>): Promise<Job> {
-  // logger.info(`Setting session active, ${session.connectionId}`, { session });
+  logger.debug(`Setting session active, ${session.connectionId}`, { session });
 
   const { permissions, ...rest } = session;
 

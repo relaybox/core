@@ -1,4 +1,5 @@
 import { Logger } from 'winston';
+import { WebSocket } from 'uWebSockets.js';
 import { RedisClient } from '../../lib/redis';
 import { DsPermission } from '../../types/permissions.types';
 import { Session } from '../../types/session.types';
@@ -27,8 +28,6 @@ import {
 } from './presence.service';
 import { getLatencyLog, publishMetric, unpublishMetric } from '../metrics/metrics.service';
 import { MetricType } from '../../types/metric.types';
-import { setSessionActive } from '../session/session.service';
-import { WebSocket } from 'uWebSockets.js';
 
 export async function clientPresenceSubscribe(
   logger: Logger,
@@ -163,7 +162,7 @@ export async function clientPresenceJoin(
 ): Promise<void> {
   const session = socket.getUserData();
   const { roomId, userData } = data;
-  const { appPid, clientId, connectionId } = session;
+  const { appPid, clientId, connectionId, user } = session;
 
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatPresenceSubscription(nspRoomId, SubscriptionType.JOIN);
@@ -174,7 +173,8 @@ export async function clientPresenceJoin(
     id: clientId,
     data: userData,
     timestamp,
-    event: SubscriptionType.JOIN
+    event: SubscriptionType.JOIN,
+    user
   };
 
   try {
@@ -206,7 +206,7 @@ export async function clientPresenceLeave(
 ): Promise<void> {
   const session = socket.getUserData();
   const { roomId, userData } = data;
-  const { appPid, clientId } = session;
+  const { appPid, clientId, user } = session;
 
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
@@ -215,7 +215,8 @@ export async function clientPresenceLeave(
   const message = {
     id: clientId,
     data: userData,
-    event: SubscriptionType.LEAVE
+    event: SubscriptionType.LEAVE,
+    user
   };
 
   try {
@@ -245,7 +246,7 @@ export async function clientPresenceUpdate(
 ): Promise<void> {
   const session = socket.getUserData();
   const { roomId, userData } = data;
-  const { appPid, clientId, connectionId, uid } = session;
+  const { appPid, clientId, connectionId, uid, user } = session;
 
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatPresenceSubscription(nspRoomId, SubscriptionType.UPDATE);
@@ -256,7 +257,8 @@ export async function clientPresenceUpdate(
     id: clientId,
     data: userData,
     timestamp,
-    event: SubscriptionType.UPDATE
+    event: SubscriptionType.UPDATE,
+    user
   };
 
   try {

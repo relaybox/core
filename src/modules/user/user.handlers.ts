@@ -15,6 +15,8 @@ import {
 import ChannelManager from '../../lib/channel-manager';
 import { getNspClientId } from '../../util/helpers';
 import { KeyNamespace } from '../../types/state.types';
+import AmqpManager from '../../lib/amqp-manager';
+import { getLatencyLog } from '../metrics/metrics.service';
 
 export async function clientAuthUserSubscribe(
   logger: Logger,
@@ -159,6 +161,47 @@ export async function clientAuthUserUnsubscribeAll(
     logger.error(`Failed to delete all user subscriptions`, {
       session,
       nspClientId
+    });
+
+    res(null, formatErrorResponse(err));
+  }
+}
+
+export async function clientAuthUserStatusUpdate(
+  logger: Logger,
+  redisClient: RedisClient,
+  socket: WebSocket<Session>,
+  data: any,
+  res: SocketAckHandler,
+  createdAt: string
+): Promise<void> {
+  logger.debug('Updating user status');
+
+  const session = socket.getUserData();
+
+  try {
+    if (!session.user) {
+      throw new Error('User not found');
+    }
+
+    const { status, event } = data;
+    const nspClientId = getNspClientId(KeyNamespace.USERS, session.user!.clientId);
+    const subscription = formatUserSubscription(nspClientId, event);
+    const amqpManager = AmqpManager.getInstance();
+    const latencyLog = getLatencyLog(createdAt);
+    const messageData = {
+      status,
+      updatedAt: new Date().toISOString()
+    };
+
+    amqpManager.dispatchHandler
+      .to(nspClientId)
+      .dispatch(subscription, messageData, session, latencyLog);
+
+    res(true);
+  } catch (err: any) {
+    logger.error(`Failed to update user status`, {
+      session
     });
 
     res(null, formatErrorResponse(err));

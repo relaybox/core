@@ -48,6 +48,7 @@ import {
 import ChannelManager from '../../lib/channel-manager';
 import { clientRoomHistoryGet } from '../history/history.handlers';
 import {
+  clientAuthUserStatusUpdate,
   clientAuthUserSubscribe,
   clientAuthUserUnsubscribe,
   clientAuthUserUnsubscribeAll
@@ -79,7 +80,8 @@ const eventHandlersMap = {
   [ClientEvent.ROOM_HISTORY_GET]: clientRoomHistoryGet,
   [ClientEvent.AUTH_USER_SUBSCRIBE]: clientAuthUserSubscribe,
   [ClientEvent.AUTH_USER_UNSUBSCRIBE]: clientAuthUserUnsubscribe,
-  [ClientEvent.AUTH_USER_UNSUBSCRIBE_ALL]: clientAuthUserUnsubscribeAll
+  [ClientEvent.AUTH_USER_UNSUBSCRIBE_ALL]: clientAuthUserUnsubscribeAll,
+  [ClientEvent.AUTH_USER_STATUS_UPDATE]: clientAuthUserStatusUpdate
 };
 
 export function handleConnectionUpgrade(
@@ -262,9 +264,11 @@ export async function handleSubscription(
     return;
   }
 
-  console.log(oldCount, newCount, decodedTopic);
-
-  logger.debug(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
+  logger.info(`Emitting subscription create for "${appPid}:${hashedNamespace}"`, {
+    oldCount,
+    newCount,
+    decodedTopic
+  });
 
   if (oldCount === 0 && newCount > 0) {
     eventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, decodedTopic);
@@ -278,10 +282,9 @@ export async function handleSubscription(
 export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise<void> {
   const session = socket.getUserData();
 
-  // TOO MUCH LOGGING OUTPUT
-  // logger.info(`Client heartbeat recieved via "pong" response, ${session.connectionId}`, {
-  //   session
-  // });
+  logger.debug(`Client heartbeat recieved via "pong" response, ${session.connectionId}`, {
+    session
+  });
 
   try {
     await setSessionActive(session, socket);

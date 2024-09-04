@@ -174,7 +174,7 @@ export async function restoreUserSubscriptions(
   connectionId: string,
   clientId: string,
   socket: WebSocket<Session>
-): Promise<(number | void)[]> {
+): Promise<void> {
   logger.debug(`Restoring user subscriptions for ${connectionId}`, { connectionId });
 
   try {
@@ -188,14 +188,8 @@ export async function restoreUserSubscriptions(
       nspClientId
     );
 
-    const subscriptionBindingPromises = subscriptions.map(async (subscription) =>
-      bindUserSubscription(logger, redisClient, connectionId, nspClientId, subscription, socket)
-    );
-
-    return Promise.all([
-      pushUserSubscription(logger, redisClient, connectionId, clientId, userRoutingKey, socket),
-      ...subscriptionBindingPromises
-    ]);
+    socket.subscribe(userRoutingKey);
+    subscriptions.forEach((subscription) => socket.subscribe(subscription));
   } catch (err) {
     logger.error(`Failed to restore user subscriptions for ${connectionId}`, { err });
     throw err;

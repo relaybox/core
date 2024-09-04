@@ -262,6 +262,8 @@ export async function handleSubscription(
     return;
   }
 
+  console.log(oldCount, newCount, decodedTopic);
+
   logger.debug(`Emitting subscription create for "${appPid}:${hashedNamespace}"`);
 
   if (oldCount === 0 && newCount > 0) {

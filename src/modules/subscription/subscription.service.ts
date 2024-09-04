@@ -108,7 +108,6 @@ export async function restoreRoomSubscriptions(
 
   try {
     const subscriptions = await getAllSubscriptions(redisClient, key);
-
     subscriptions.forEach((subscription) => socket.subscribe(subscription));
   } catch (err: any) {
     logger.error(`Failed to restore subscriptions for ${connectionId}`, { key, err });

@@ -14,6 +14,7 @@ import {
 } from './user.service';
 import ChannelManager from '../../lib/channel-manager';
 import { getNspClientId } from '../../util/helpers';
+import { KeyNamespace } from '../../types/state.types';
 
 export async function clientAuthUserSubscribe(
   logger: Logger,
@@ -32,12 +33,12 @@ export async function clientAuthUserSubscribe(
     clientId
   });
 
-  const nspClientId = getNspClientId(session.appPid, clientId);
+  const nspClientId = getNspClientId(KeyNamespace.USERS, clientId);
   const subscription = formatUserSubscription(nspClientId, event);
   const userRoutingKey = ChannelManager.getRoutingKey(nspClientId);
 
   try {
-    const subscriptionCount = await bindUserSubscription(
+    await bindUserSubscription(
       logger,
       redisClient,
       connectionId,
@@ -46,16 +47,7 @@ export async function clientAuthUserSubscribe(
       socket
     );
 
-    if (subscriptionCount === 1) {
-      await pushUserSubscription(
-        logger,
-        redisClient,
-        connectionId,
-        nspClientId,
-        userRoutingKey,
-        socket
-      );
-    }
+    await pushUserSubscription(logger, redisClient, connectionId, clientId, userRoutingKey, socket);
 
     res(subscription);
   } catch (err: any) {
@@ -87,7 +79,7 @@ export async function clientAuthUserUnsubscribe(
     clientId
   });
 
-  const nspClientId = getNspClientId(session.appPid, clientId);
+  const nspClientId = getNspClientId(KeyNamespace.USERS, clientId);
   const subscription = formatUserSubscription(nspClientId, event);
   const userRoutingKey = ChannelManager.getRoutingKey(nspClientId);
 
@@ -106,7 +98,7 @@ export async function clientAuthUserUnsubscribe(
         logger,
         redisClient,
         connectionId,
-        nspClientId,
+        clientId,
         userRoutingKey,
         socket
       );
@@ -142,7 +134,7 @@ export async function clientAuthUserUnsubscribeAll(
     clientId
   });
 
-  const nspClientId = getNspClientId(session.appPid, clientId);
+  const nspClientId = getNspClientId(KeyNamespace.USERS, clientId);
   const subscriptions = await getUserSubscriptions(logger, redisClient, connectionId, nspClientId);
   const userRoutingKey = ChannelManager.getRoutingKey(nspClientId);
 
@@ -157,7 +149,7 @@ export async function clientAuthUserUnsubscribeAll(
       logger,
       redisClient,
       connectionId,
-      nspClientId,
+      clientId,
       userRoutingKey,
       socket
     );

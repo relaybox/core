@@ -46,3 +46,10 @@ export function getUserSubscriptions(
 ): Promise<{ [x: string]: string }> {
   return redisClient.hGetAll(key);
 }
+
+export function getCachedUsers(
+  redisClient: RedisClient,
+  key: string
+): Promise<{ [x: string]: string }> {
+  return redisClient.hGetAll(key);
+}

@@ -20,12 +20,12 @@ export default class MessageHandler {
   public async handleMessage(msg: any) {
     this.logger.debug(`Received message from queue, preparing to distribute`, { msg });
 
-    const { nspRoomId, event, data, requestId, session, latencyLog } = msg.body;
+    const { nspRoomId, event, data, requestId, session, latencyLog, service } = msg.body;
 
     try {
       this.emitAndLogMetrics(event, data, nspRoomId, requestId, session, latencyLog);
       this.emitAndLogMetrics(
-        `${nspRoomId}::$:subscribe:all`,
+        `${nspRoomId}:${service ? '$' : ''}:$:subscribe:all`,
         data,
         nspRoomId,
         requestId,

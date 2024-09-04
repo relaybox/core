@@ -7,10 +7,11 @@ import { verifyApiKey, verifyAuthToken } from '../auth/auth.service';
 import { SessionJobName, defaultJobConfig, sessionQueue } from './session.queue';
 import { Job } from 'bullmq';
 import { RedisClient } from '../../lib/redis';
-import { joinRoom } from '../room/room.service';
+import { joinRoom, restoreCachedRooms } from '../room/room.service';
 import { getCachedRooms } from '../room/room.repository';
 import { SocketConnectionEventType } from '../../types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
+import { getCachedUsers, restoreCachedUsers, restoreUserSubscriptions } from '../user/user.service';
 
 const logger = getLogger('session');
 
@@ -43,42 +44,10 @@ export async function restoreSession(
   socket: WebSocket<Session>
 ): Promise<void> {
   try {
-    const { uid, connectionId } = session;
-
-    const rooms = await getCachedRooms(redisClient, connectionId);
-
-    logger.debug(`Restoring session, rooms (${rooms?.length})`, { uid, rooms });
-
-    if (rooms && rooms.length > 0) {
-      await Promise.all(
-        rooms.map(async (nspRoomId) =>
-          Promise.all([
-            joinRoom(redisClient, session, nspRoomId, socket),
-            restoreRoomSubscriptions(
-              redisClient,
-              connectionId,
-              nspRoomId,
-              KeyNamespace.SUBSCRIPTIONS,
-              socket
-            ),
-            restoreRoomSubscriptions(
-              redisClient,
-              connectionId,
-              nspRoomId,
-              KeyNamespace.PRESENCE,
-              socket
-            ),
-            restoreRoomSubscriptions(
-              redisClient,
-              connectionId,
-              nspRoomId,
-              KeyNamespace.METRICS,
-              socket
-            )
-          ])
-        )
-      );
-    }
+    await Promise.all([
+      restoreCachedRooms(logger, redisClient, session, socket),
+      restoreCachedUsers(logger, redisClient, session, socket)
+    ]);
   } catch (err) {
     logger.error(`Session restoration failed`, { err });
     throw err;

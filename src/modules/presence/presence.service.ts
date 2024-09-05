@@ -4,7 +4,8 @@ import { Session } from '../../types/session.types';
 import { Job } from 'bullmq';
 import { RedisClient } from '../../lib/redis';
 import { getActiveMemberCountByRoomId, getActiveMembersByRoomId } from './presence.repository';
-import { LatencyLog } from 'src/types/request.types';
+import { LatencyLog } from '../../types/request.types';
+import AmqpManager from '../../lib/amqp-manager';
 
 export function addActiveMember(
   clientId: string,
@@ -61,7 +62,18 @@ export function updateActiveMember(
   session: Session,
   message: any,
   latencyLog?: LatencyLog
-): Promise<Job> {
+) {
+  // const user = session.user;
+  // const amqpManager = AmqpManager.getInstance();
+  // const messageData = {
+  //   ...message,
+  //   user
+  // };
+
+  // amqpManager.dispatchHandler
+  //   .to(nspRoomId)
+  //   .dispatch(subscription, messageData, session, latencyLog!);
+
   const reducedSession = getReducedSession(session);
 
   return presenceQueue.add(

@@ -198,7 +198,7 @@ export async function clientAuthUserStatusUpdate(
       .to(nspClientId)
       .dispatch(subscription, messageData, session, latencyLog);
 
-    res(true);
+    res(messageData);
   } catch (err: any) {
     logger.error(`Failed to update user status`, {
       session

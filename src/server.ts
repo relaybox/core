@@ -8,7 +8,7 @@ import {
   handleDisconnect,
   handleSocketMessage,
   handleSocketOpen,
-  handleSubscription
+  handleSubscriptionBindings
 } from './modules/websocket/websocket.service';
 import { Session } from './types/session.types';
 import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
@@ -16,8 +16,6 @@ import AmqpManager from './lib/amqp-manager';
 import os from 'os';
 import { getRoomHistoryMessages } from './modules/history/history.http';
 import { getCorsResponse } from './util/http';
-
-// Force deploy to ECS v1.5.1
 
 const logger = getLogger('uws-socket-server');
 
@@ -40,7 +38,7 @@ const app = App()
     maxLifetime: WS_MAX_LIFETIME_MINS,
     idleTimeout: WS_IDLE_TIMEOUT_MS,
     sendPingsAutomatically: true,
-    subscription: handleSubscription,
+    subscription: handleSubscriptionBindings,
     upgrade: handleConnectionUpgrade,
     open: handleSocketOpen,
     pong: handleClientHeartbeat,

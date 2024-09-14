@@ -191,7 +191,8 @@ export async function clientAuthUserStatusUpdate(
     const latencyLog = getLatencyLog(createdAt);
     const messageData = {
       status,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      user: session.user
     };
 
     amqpManager.dispatchHandler

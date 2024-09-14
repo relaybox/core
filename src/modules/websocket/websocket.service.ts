@@ -248,7 +248,7 @@ export async function handleDisconnect(
   }
 }
 
-export async function handleSubscription(
+export async function handleSubscriptionBindings(
   socket: WebSocket<Session>,
   topic: ArrayBuffer,
   newCount: number,
@@ -270,6 +270,8 @@ export async function handleSubscription(
     decodedTopic
   });
 
+  // Emitter event is handled in amqp-manager.ts
+  // Responsible or creating the RMQ bindings for the subscription
   if (oldCount === 0 && newCount > 0) {
     eventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, decodedTopic);
   }

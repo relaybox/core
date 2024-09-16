@@ -38,7 +38,7 @@ export default class ConsumerManager {
       const queueName = `${this.instanceId}-${AMQP_QUEUE_NAME_PREFIX}-${i}`;
 
       const queueOptions = {
-        durable: true,
+        // durable: true,
         autoDelete: this.autoDelete
       };
 

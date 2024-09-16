@@ -12,7 +12,7 @@ export interface AmqpConfig {
 }
 
 export default class ConfigManager {
-  static AMQP_DEFAULT_EXCHANGE_NAME = 'ds.rooms';
+  static AMQP_DEFAULT_EXCHANGE_NAME = 'ds.rooms.durable';
   static EXCHANGE_TYPE = ExchangeType.TOPIC;
 
   static get(key: string): string | undefined {

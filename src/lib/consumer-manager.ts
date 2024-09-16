@@ -49,7 +49,8 @@ export default class ConsumerManager {
       const exchanges = [
         {
           exchange: this.exchange,
-          type: this.exchangeType
+          type: this.exchangeType,
+          durable: true
         }
       ];
 

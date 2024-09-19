@@ -17,6 +17,7 @@ export default class ChannelManager {
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000; // 5 seconds
   static AMQP_ROUTING_KEY_PREFIX = '$$';
+  private bindings: Map<string, string> = new Map();
 
   private logger: Logger = getLogger('channel-manager');
 
@@ -35,6 +36,10 @@ export default class ChannelManager {
     this.logger.info(`Channel initialized`);
 
     this.channel.on('close', this.handleClose.bind(this));
+
+    if (this.bindings.size) {
+      this.restoreBindings();
+    }
   }
 
   handleClose() {
@@ -61,6 +66,8 @@ export default class ChannelManager {
         queue: queueName,
         routingKey: roomId
       });
+
+      this.bindings.set(roomId, queueName);
     } catch (err) {
       this.logger.error(`Unable to bind queue`, { roomId, err });
     }
@@ -75,9 +82,19 @@ export default class ChannelManager {
         queue: queueName,
         routingKey: roomId
       });
+
+      this.bindings.delete(roomId);
     } catch (err) {
       this.logger.error(`Unable to unbind queue`, { roomId, err });
     }
+  }
+
+  private restoreBindings() {
+    this.logger.info(`Restoring bindings`, { size: this.bindings.size });
+
+    this.bindings.forEach((_, roomId) => {
+      this.bindRoom(roomId);
+    });
   }
 
   private getQueueName(room: string): string {

@@ -1,0 +1,22 @@
+outputs:
+  version:
+    description: The version extracted from the tag
+    value: ${{ steps.get-version.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Extract Version from Tag
+      shell: bash
+      id: get-version
+      run: |
+        VERSION=${{ github.event.release.tag_name }}
+        echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+
+    - name: Validate Version Extraction
+      shell: bash
+      run: |
+        if [ -z "${{ steps.get-version.outputs.version }}" ]; then
+          echo "Error: Version could not be extracted from the tag."
+          exit 1
+        fi

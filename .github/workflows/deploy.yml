@@ -1,0 +1,77 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      app-name:
+        required: true
+        type: string
+      service-name:
+        required: true
+        type: string
+      cluster-suffix:
+        required: true
+        type: string
+      service-suffix:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: deploy:main
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+          audience: sts.amazonaws.com
+          role-to-assume: ${{ vars.AWS_CI_DEPLOYER_ROLE_ARN }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+
+      - name: Run aws/push-ecr
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          npm ci
+          npm run build
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: task-def
+        with:
+          task-definition: ./ecs/${{ vars.STAGE }}/task-definition.json
+          container-name: ${{inputs.app-name}}-${{ inputs.service-name }}-${{ vars.STAGE }}
+          image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            AWS_REGION=${{vars.AWS_REGION}}
+            LOG_LEVEL=${{ vars.LOG_LEVEL }}
+            RABBIT_MQ_CONNECTION_STRING=${{ vars.RABBIT_MQ_CONNECTION_STRING }}
+            RABBIT_MQ_QUEUE_AUTO_DELETE=${{ vars.RABBIT_MQ_QUEUE_AUTO_DELETE }}
+            RABBIT_MQ_QUEUE_COUNT=${{ vars.RABBIT_MQ_QUEUE_COUNT }}
+            REDIS_HOST=${{ vars.REDIS_HOST }}
+            REDIS_PORT=${{ vars.REDIS_PORT }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            RELAYBOX_AUTH_SERVICE_URL=${{ vars.RELAYBOX_AUTH_SERVICE_URL }}
+            WS_IDLE_TIMEOUT_MS=${{ vars.WS_IDLE_TIMEOUT_MS }}
+
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ inputs.app-name }}-${{ inputs.service-name }}-${{ vars.STAGE }}-ecs-service-ECSService-${{ inputs.service-suffix}}
+          cluster: ${{ inputs.app-name }}-${{ inputs.service-name }}-${{ vars.STAGE }}-ecs-cluster-ECSCluster-${{ inputs.cluster-suffix }}
+          wait-for-service-stability: false
+          force-new-deployment: true

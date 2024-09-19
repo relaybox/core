@@ -9,6 +9,7 @@ on:
 jobs:
   deploy:
     uses: ./.github/workflows/deploy.yml
+    name: Deploy Application
     with:
       environment: development
       app-name: relaybox

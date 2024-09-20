@@ -1,5 +1,16 @@
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
-import { clearSessionMetrics, initializeSession, restoreSession } from './session.service';
+import {
+  clearSessionMetrics,
+  getReducedSession,
+  initializeSession,
+  markSessionForDeletion,
+  markSessionUserActive,
+  markSessionUserInactive,
+  recordConnnectionEvent,
+  restoreSession,
+  setSessionActive,
+  unmarkSessionForDeletion
+} from './session.service';
 import { Session } from 'src/types/session.types';
 import { getMockSession } from './session.mock';
 import { RedisClient } from 'src/lib/redis';
@@ -9,19 +20,23 @@ import { restoreCachedUsers } from './../user/user.service';
 import { getLogger } from 'src/util/logger';
 import { pushRoomLeaveMetrics } from '../metrics/metrics.service';
 import { verifyApiKey, verifyAuthToken } from '../auth/auth.service';
+import { SessionJobName } from './session.queue';
+import { SocketConnectionEventType } from 'src/types/socket.types';
 
 const logger = getLogger('');
 
-const { mockBullMQAdd } = vi.hoisted(() => {
+const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
   return {
-    mockBullMQAdd: vi.fn()
+    mockBullMQAdd: vi.fn(),
+    mockBullMQGetJob: vi.fn()
   };
 });
 
 vi.mock('bullmq', () => {
   return {
     Queue: vi.fn().mockImplementation(() => ({
-      add: mockBullMQAdd
+      add: mockBullMQAdd,
+      getJob: mockBullMQGetJob
     }))
   };
 });
@@ -63,7 +78,10 @@ describe('sessionService', () => {
     it('should initialize a session with API key', async () => {
       verifyApiKeyMock.mockResolvedValue(session);
 
-      const result = await initializeSession({ apiKey: 'testKey', clientId: 'client1' });
+      const result = await initializeSession({
+        apiKey: 'testKey',
+        clientId: 'client1'
+      });
 
       expect(verifyApiKeyMock).toHaveBeenCalledWith('testKey', 'client1', undefined);
       expect(result).toEqual(session);
@@ -73,17 +91,34 @@ describe('sessionService', () => {
       verifyApiKeyMock.mockRejectedValue(new Error('Invalid API Key'));
 
       await expect(
-        initializeSession({ apiKey: 'invalidKey', clientId: 'client1' })
+        initializeSession({
+          apiKey: 'invalidKey',
+          clientId: 'client1'
+        })
       ).rejects.toThrow('Invalid API Key');
     });
 
     it('should initialize session with Auth token', async () => {
       verifyAuthTokenMock.mockResolvedValue(session);
 
-      const result = await initializeSession({ token: 'validToken', connectionId: 'conn123' });
+      const result = await initializeSession({
+        token: 'validToken',
+        connectionId: 'conn123'
+      });
 
       expect(verifyAuthTokenMock).toHaveBeenCalledWith('validToken', 'conn123');
       expect(result).toEqual(session);
+    });
+
+    it('should throw an error on invalid Auth token', async () => {
+      verifyAuthTokenMock.mockRejectedValue(new Error('Invalid Auth token'));
+
+      await expect(
+        initializeSession({
+          token: 'invalidAuthToken',
+          connectionId: '12345'
+        })
+      ).rejects.toThrow('Invalid Auth token');
     });
   });
 
@@ -165,6 +200,263 @@ describe('sessionService', () => {
     it('should log and throw an error if getCachedRooms fails', async () => {
       getCachedRoomsMock.mockRejectedValueOnce(new Error('Redis error'));
       await expect(clearSessionMetrics(redisClient, session)).rejects.toThrow('Redis error');
+    });
+  });
+
+  describe('markSessionForDeletion', () => {
+    const connectionId = '12345';
+    const instanceId = 'instance-1';
+    const session = getMockSession({ connectionId });
+
+    afterEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it('should add a session destroy job when no existing job is found', async () => {
+      mockBullMQGetJob.mockResolvedValueOnce(null);
+
+      const reducedSession = getReducedSession(session);
+
+      const jobData = {
+        ...reducedSession,
+        instanceId
+      };
+
+      await markSessionForDeletion(session, instanceId);
+
+      expect(mockBullMQGetJob).toHaveBeenCalledWith(connectionId);
+
+      expect(mockBullMQAdd).toHaveBeenCalledWith(
+        SessionJobName.SESSION_DESTROY,
+        jobData,
+        expect.objectContaining({
+          jobId: connectionId,
+          delay: expect.any(Number)
+        })
+      );
+    });
+
+    it('should remove an existing job and add a new one', async () => {
+      const existingJob = {
+        remove: vi.fn()
+      };
+
+      mockBullMQGetJob.mockResolvedValueOnce(existingJob);
+
+      const reducedSession = getReducedSession(session);
+
+      const jobData = {
+        ...reducedSession,
+        instanceId
+      };
+
+      await markSessionForDeletion(session, instanceId);
+
+      expect(existingJob.remove).toHaveBeenCalled();
+
+      expect(mockBullMQAdd).toHaveBeenCalledWith(
+        SessionJobName.SESSION_DESTROY,
+        jobData,
+        expect.objectContaining({
+          jobId: connectionId,
+          delay: expect.any(Number)
+        })
+      );
+    });
+
+    it('should throw an error if adding a new job fails', async () => {
+      mockBullMQGetJob.mockResolvedValueOnce(null);
+      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+
+      await expect(markSessionForDeletion(session, instanceId)).rejects.toThrow(
+        'Failed to add job'
+      );
+    });
+  });
+
+  describe('markSessionUserInactive', () => {
+    const uid = '12345';
+    const instanceId = 'instance-1';
+    const session = getMockSession({ uid });
+
+    afterEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it('should add a delayed job to mark session user inactive when no existing job is found', async () => {
+      const reducedSession = getReducedSession(session);
+
+      const jobData = {
+        ...reducedSession,
+        instanceId
+      };
+
+      await markSessionUserInactive(session, instanceId);
+
+      expect(mockBullMQAdd).toHaveBeenCalledWith(
+        SessionJobName.SESSION_USER_INACTIVE,
+        jobData,
+        expect.objectContaining({
+          jobId: uid,
+          delay: expect.any(Number)
+        })
+      );
+    });
+
+    it('should throw an error if adding a new job fails', async () => {
+      mockBullMQGetJob.mockResolvedValueOnce(null);
+      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+
+      await expect(markSessionUserInactive(session, instanceId)).rejects.toThrow(
+        'Failed to add job'
+      );
+    });
+  });
+
+  describe('unmarkSessionForDeletion', () => {
+    const connectionId = '12345';
+
+    afterEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it('should remove a session destroy job by connection id when one is found', async () => {
+      const existingJob = {
+        remove: vi.fn()
+      };
+
+      mockBullMQGetJob.mockResolvedValueOnce(existingJob);
+
+      await unmarkSessionForDeletion(connectionId);
+
+      expect(existingJob.remove).toHaveBeenCalled();
+    });
+
+    it('should throw an error if removing a session destroy job fails', async () => {
+      mockBullMQGetJob.mockRejectedValueOnce(new Error('Failed to add job'));
+
+      await expect(unmarkSessionForDeletion(connectionId)).rejects.toThrow('Failed to add job');
+    });
+  });
+
+  describe('markSessionUserActive', () => {
+    const uid = '12345';
+
+    afterEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it('should remove a session destroy job by uid when one is found', async () => {
+      const existingJob = {
+        remove: vi.fn()
+      };
+
+      mockBullMQGetJob.mockResolvedValueOnce(existingJob);
+
+      await markSessionUserActive(uid);
+
+      expect(existingJob.remove).toHaveBeenCalled();
+    });
+
+    it('should throw an error if adding a session user active job fails', async () => {
+      mockBullMQGetJob.mockRejectedValueOnce(new Error('Failed to add job'));
+
+      await expect(markSessionUserActive(uid)).rejects.toThrow('Failed to add job');
+    });
+  });
+
+  describe('setSessionActive', () => {
+    let socket: WebSocket<Session>;
+
+    const session = getMockSession();
+
+    beforeEach(() => {
+      socket = {
+        getUserData: vi.fn().mockReturnValue({
+          socketId: 'mocked-socket-id'
+        })
+      } as unknown as WebSocket<Session>;
+    });
+
+    afterEach(() => {
+      vi.resetAllMocks();
+      vi.clearAllMocks();
+    });
+
+    it('should add a session active job when active connection is established', async () => {
+      await setSessionActive(session, socket);
+
+      const { permissions, ...rest } = session;
+
+      const jobData = {
+        ...rest,
+        timestamp: expect.any(String),
+        socketId: 'mocked-socket-id'
+      };
+
+      expect(mockBullMQAdd).toHaveBeenCalledWith(
+        SessionJobName.SESSION_ACTIVE,
+        expect.objectContaining(jobData),
+        expect.any(Object)
+      );
+    });
+
+    it('should throw an error if adding a session active job fails', async () => {
+      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+
+      await expect(setSessionActive(session, socket)).rejects.toThrow('Failed to add job');
+    });
+  });
+
+  describe('recordConnnectionEvent', () => {
+    let socket: WebSocket<Session>;
+    const session = getMockSession({
+      socketId: 'mocked-socket-id'
+    });
+
+    beforeEach(() => {
+      socket = {
+        getUserData: vi.fn().mockReturnValue({
+          socketId: 'mocked-socket-id'
+        })
+      } as unknown as WebSocket<Session>;
+
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.resetAllMocks();
+      vi.clearAllMocks();
+      vi.useRealTimers();
+    });
+
+    it('should add a socket connection event job when a connection is established', async () => {
+      const reducedSession = getReducedSession(session);
+      const connectionEventType = SocketConnectionEventType.CONNECT;
+
+      const connectionEvent = {
+        connectionEventType,
+        connectionEventTimestamp: new Date().toISOString()
+      };
+
+      const jobData = {
+        ...reducedSession,
+        ...connectionEvent
+      };
+
+      await recordConnnectionEvent(session, socket, connectionEventType);
+
+      expect(mockBullMQAdd).toHaveBeenCalledWith(
+        SessionJobName.SESSION_SOCKET_CONNECTION_EVENT,
+        expect.objectContaining(jobData),
+        expect.any(Object)
+      );
+    });
+
+    it('should throw an error if removing a session destroy job fails', async () => {
+      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+
+      await expect(setSessionActive(session, socket)).rejects.toThrow('Failed to add job');
     });
   });
 });

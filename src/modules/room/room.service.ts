@@ -1,5 +1,5 @@
 import { RedisClient } from '../../lib/redis';
-import { getCachedRooms, setRoomJoin, setRoomLeave } from './room.repository';
+import * as repository from './room.repository';
 import { Session } from '../../types/session.types';
 import { getLogger } from '../../util/logger';
 import { WebSocket } from 'uWebSockets.js';
@@ -20,7 +20,7 @@ export async function joinRoom(
   logger.info(`Joining room ${nspRoomId}`, { uid, connectionId });
 
   try {
-    await setRoomJoin(redisClient, connectionId, nspRoomId);
+    await repository.setRoomJoin(redisClient, connectionId, nspRoomId);
     socket.subscribe(nspRoomId);
   } catch (err: any) {
     logger.error(`Failed to join room`, { err, uid, connectionId });
@@ -39,10 +39,24 @@ export async function leaveRoom(
   logger.info(`Leaving room ${nspRoomId}`, { uid, connectionId });
 
   try {
-    await setRoomLeave(redisClient, connectionId, nspRoomId);
+    await repository.setRoomLeave(redisClient, connectionId, nspRoomId);
     socket.unsubscribe(nspRoomId);
   } catch (err: any) {
     logger.error(`Failed to leave room`, { err, uid, connectionId });
+    throw err;
+  }
+}
+
+export async function getCachedRooms(
+  logger: Logger,
+  redisClient: RedisClient,
+  connectionId: string
+): Promise<string[] | null> {
+  try {
+    const rooms = await repository.getCachedRooms(redisClient, connectionId);
+    return Object.keys(rooms);
+  } catch (err: any) {
+    logger.error(`Failed to get cached rooms`, { err, connectionId });
     throw err;
   }
 }
@@ -55,7 +69,7 @@ export async function restoreCachedRooms(
 ): Promise<void> {
   const { uid, connectionId } = session;
 
-  const rooms = await getCachedRooms(redisClient, connectionId);
+  const rooms = await getCachedRooms(logger, redisClient, connectionId);
 
   logger.debug(`Restoring session, rooms (${rooms?.length})`, { uid, rooms });
 

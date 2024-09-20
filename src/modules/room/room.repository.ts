@@ -26,12 +26,8 @@ export async function setRoomLeave(
 export async function getCachedRooms(
   redisClient: RedisClient,
   connectionId: string
-): Promise<string[] | null> {
-  const rooms = await redisClient.hGetAll(
-    `${KeyPrefix.CONNECTION}:${connectionId}:${KeySuffix.ROOMS}`
-  );
-
-  return Object.keys(rooms);
+): Promise<Record<string, string>> {
+  return redisClient.hGetAll(`${KeyPrefix.CONNECTION}:${connectionId}:${KeySuffix.ROOMS}`);
 }
 
 export function getRoomByConnectionId(

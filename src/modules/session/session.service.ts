@@ -6,7 +6,7 @@ import { SessionJobName, defaultJobConfig, sessionQueue } from './session.queue'
 import { Job } from 'bullmq';
 import { RedisClient } from '../../lib/redis';
 import { restoreCachedRooms } from '../room/room.service';
-import { getCachedRooms } from '../room/room.repository';
+import { getCachedRooms } from '../room/room.service';
 import { SocketConnectionEventType } from '../../types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
 import { restoreCachedUsers } from '../user/user.service';
@@ -59,7 +59,7 @@ export async function clearSessionMetrics(
   const { uid, connectionId } = session;
 
   try {
-    const rooms = await getCachedRooms(redisClient, connectionId);
+    const rooms = await getCachedRooms(logger, redisClient, connectionId);
 
     if (rooms && rooms.length > 0) {
       await Promise.all(

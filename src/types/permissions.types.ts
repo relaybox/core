@@ -9,5 +9,5 @@ export enum DsPermission {
 }
 
 export interface DsPermissions {
-  [room: string]: string[];
+  [room: string]: string[] | string[];
 }

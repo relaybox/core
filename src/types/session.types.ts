@@ -9,18 +9,20 @@ export interface AuthUser {
   orgId: string;
   isOnline: boolean;
   lastOnline: string;
+  appId: string;
+  blockedAt: string | null;
 }
 
 export interface Session {
   uid: string;
   appPid: string;
-  orgId: string;
+  // orgId: string;
   keyId: string;
   clientId: string;
   exp: number;
   timestamp: string;
   permissions: DsPermissions;
-  anonymous: boolean;
+  // anonymous: boolean;
   connectionId: string;
   socketId: string;
   user?: AuthUser;

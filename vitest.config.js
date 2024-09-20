@@ -2,10 +2,11 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    // silent: true,
     tsconfig: './tsconfig.json',
     include: ['**/*.test.ts'],
     environment: 'node',
-    // setupFiles: ['./path/to/setupTests.ts'], // Adjust if you have specific setup files
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

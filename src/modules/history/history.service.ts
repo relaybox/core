@@ -12,7 +12,7 @@ export const HISTORY_PARTITION_RANGE_MS = 60 * 60 * 1000;
 export const HISTORY_MAX_SECONDS = 24 * 60 * 60;
 export const HISTORY_MAX_LIMIT = 100;
 
-function getPartitionKey(nspRoomId: string, timestamp: number): string {
+export function getPartitionKey(nspRoomId: string, timestamp: number): string {
   const date = new Date(timestamp);
   const hours = date.getUTCHours();
   date.setUTCHours(hours, 0, 0, 0);
@@ -20,7 +20,7 @@ function getPartitionKey(nspRoomId: string, timestamp: number): string {
   return `${KeyPrefix.HISTORY}:messages:${nspRoomId}:${date.toISOString().slice(0, 13)}h`;
 }
 
-function getPartitionRange(
+export function getPartitionRange(
   startTime: number,
   endTime: number,
   order: HistoryOrder,
@@ -36,11 +36,11 @@ function parseNextPageToken(token: string) {
   return JSON.parse(decoded);
 }
 
-function generateNextPageToken(partitionKey: string, lastScore: number) {
+export function generateNextPageToken(partitionKey: string, lastScore: number) {
   return Buffer.from(JSON.stringify({ partitionKey, lastScore })).toString('base64');
 }
 
-function getNextPageToken(
+export function getNextPageToken(
   messages: any[],
   lastScore: number,
   limit: number,
@@ -57,13 +57,13 @@ function getNextPageToken(
   return generateNextPageToken(currentPartitionKey, lastScoreForOrder);
 }
 
-function getNextTime(lastTime: number, order: HistoryOrder): number {
+export function getNextTime(lastTime: number, order: HistoryOrder): number {
   return order === HistoryOrder.DESC
     ? lastTime - HISTORY_PARTITION_RANGE_MS
     : lastTime + HISTORY_PARTITION_RANGE_MS;
 }
 
-function nextTimeOutOfRange(
+export function nextTimeOutOfRange(
   nextTime: number,
   startTime: number,
   endTime: number,
@@ -76,7 +76,11 @@ function nextTimeOutOfRange(
     : nextTime > endTime + oneHourMs;
 }
 
-function messagesLimitReached(messages: any[], limit: number, items: number | null): boolean {
+export function messagesLimitReached(
+  messages: any[],
+  limit: number,
+  items: number | null
+): boolean {
   return messages.length >= limit || messages.length === items;
 }
 

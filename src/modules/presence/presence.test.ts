@@ -1,4 +1,4 @@
-import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, vi, it, afterEach } from 'vitest';
 import { getMockSession } from '../session/session.mock';
 import { addActiveMember, removeActiveMember, updateActiveMember } from './presence.service';
 import { PresenceJobName } from './presence.queue';

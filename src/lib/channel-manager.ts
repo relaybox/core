@@ -16,8 +16,9 @@ export default class ChannelManager {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000; // 5 seconds
-  static AMQP_ROUTING_KEY_PREFIX = '$$';
   private bindings: Map<string, string> = new Map();
+
+  static AMQP_ROUTING_KEY_PREFIX = '$$';
 
   private logger: Logger = getLogger('channel-manager');
 
@@ -28,6 +29,28 @@ export default class ChannelManager {
 
     eventEmitter.on(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, this.bindRoom.bind(this));
     eventEmitter.on(SocketSubscriptionEvent.SUBSCRIPTION_DELETE, this.unbindRoom.bind(this));
+  }
+
+  static getRoutingKey(nspRoomId: string): string {
+    const [appPid, roomId] = nspRoomId.split(/:(.+)/);
+    const hashedRoomId = this.gethashedRoomId(roomId || appPid);
+
+    return `${ChannelManager.AMQP_ROUTING_KEY_PREFIX}:${appPid}:${hashedRoomId}`;
+  }
+
+  static gethashedRoomId(namespace: string): number {
+    const queueCount = ConfigManager.getInt('RABBIT_MQ_QUEUE_COUNT') || 20;
+
+    let hash = 0;
+    let chr: number;
+
+    for (let i = 0; i < namespace.length; i++) {
+      chr = namespace.charCodeAt(i);
+      hash = (hash << 5) - hash + chr;
+      hash |= 0;
+    }
+
+    return ((hash % queueCount) + queueCount) % queueCount;
   }
 
   public async createChannel(connection: Connection): Promise<void> {
@@ -57,35 +80,35 @@ export default class ChannelManager {
     }
   }
 
-  private async bindRoom(roomId: string): Promise<void> {
+  private async bindRoom(routingKey: string): Promise<void> {
     try {
-      const queueName = this.getQueueName(roomId);
+      const queueName = this.getQueueName(routingKey);
 
       await this.channel.queueBind({
         exchange: this.exchange,
         queue: queueName,
-        routingKey: roomId
+        routingKey
       });
 
-      this.bindings.set(roomId, queueName);
+      this.bindings.set(routingKey, queueName);
     } catch (err) {
-      this.logger.error(`Unable to bind queue`, { roomId, err });
+      this.logger.error(`Unable to bind queue`, { routingKey, err });
     }
   }
 
-  private async unbindRoom(roomId: string): Promise<void> {
+  private async unbindRoom(routingKey: string): Promise<void> {
     try {
-      const queueName = this.getQueueName(roomId);
+      const queueName = this.getQueueName(routingKey);
 
       await this.channel.queueUnbind({
         exchange: this.exchange,
         queue: queueName,
-        routingKey: roomId
+        routingKey
       });
 
-      this.bindings.delete(roomId);
+      this.bindings.delete(routingKey);
     } catch (err) {
-      this.logger.error(`Unable to unbind queue`, { roomId, err });
+      this.logger.error(`Unable to unbind queue`, { routingKey, err });
     }
   }
 
@@ -113,27 +136,5 @@ export default class ChannelManager {
     }
 
     return ((hash % this.queueCount) + this.queueCount) % this.queueCount;
-  }
-
-  static getRoutingKey(nspRoomId: string): string {
-    const [appPid, roomId] = nspRoomId.split(/:(.+)/);
-    const hashedRoomId = this.gethashedRoomId(roomId || appPid);
-
-    return `${ChannelManager.AMQP_ROUTING_KEY_PREFIX}:${appPid}:${hashedRoomId}`;
-  }
-
-  static gethashedRoomId(namespace: string): number {
-    const queueCount = ConfigManager.getInt('RABBIT_MQ_QUEUE_COUNT') || 20;
-
-    let hash = 0;
-    let chr: number;
-
-    for (let i = 0; i < namespace.length; i++) {
-      chr = namespace.charCodeAt(i);
-      hash = (hash << 5) - hash + chr;
-      hash |= 0;
-    }
-
-    return ((hash % queueCount) + queueCount) % queueCount;
   }
 }

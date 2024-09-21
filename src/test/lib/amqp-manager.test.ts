@@ -1,5 +1,5 @@
 import AmqpManager from 'src/lib/amqp-manager';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { App } from 'uWebSockets.js';
 import ConnectionManager from '../../lib/connection-manager';
 import ConfigManager from '../../lib/config-manager';
@@ -16,7 +16,6 @@ const mockLogger = vi.hoisted(() => ({
   })
 }));
 
-vi.mock('../../util/logger', () => mockLogger);
 vi.mock('../../lib/connection-manager', () => ({
   default: {
     getInstance: vi.fn().mockReturnValue({
@@ -24,6 +23,8 @@ vi.mock('../../lib/connection-manager', () => ({
     })
   }
 }));
+
+vi.mock('../../util/logger', () => mockLogger);
 vi.mock('../../lib/config-manager');
 vi.mock('../../lib/message-handler');
 vi.mock('../../lib/consumer-manager');

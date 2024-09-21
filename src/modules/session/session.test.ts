@@ -59,7 +59,7 @@ vi.mock('./../auth/auth.service', () => ({
   verifyAuthToken: vi.fn()
 }));
 
-describe('sessionService', () => {
+describe('session.service', () => {
   describe('initializeSession', () => {
     let session = getMockSession();
 
@@ -194,7 +194,7 @@ describe('sessionService', () => {
       await clearSessionMetrics(redisClient, session);
 
       expect(getCachedRoomsMock).toHaveBeenCalledWith(logger, redisClient, session.connectionId);
-      expect(vi.mocked(pushRoomLeaveMetrics)).not.toHaveBeenCalled();
+      expect(pushRoomLeaveMetricsMock).not.toHaveBeenCalled();
     });
 
     it('should log and throw an error if getCachedRooms fails', async () => {
@@ -433,10 +433,11 @@ describe('sessionService', () => {
     it('should add a socket connection event job when a connection is established', async () => {
       const reducedSession = getReducedSession(session);
       const connectionEventType = SocketConnectionEventType.CONNECT;
+      const connectionEventTimestamp = new Date().toISOString();
 
       const connectionEvent = {
         connectionEventType,
-        connectionEventTimestamp: new Date().toISOString()
+        connectionEventTimestamp
       };
 
       const jobData = {
@@ -448,7 +449,7 @@ describe('sessionService', () => {
 
       expect(mockBullMQAdd).toHaveBeenCalledWith(
         SessionJobName.SESSION_SOCKET_CONNECTION_EVENT,
-        expect.objectContaining(jobData),
+        jobData,
         expect.any(Object)
       );
     });

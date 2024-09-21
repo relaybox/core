@@ -38,7 +38,7 @@ vi.mock('./history.repository', () => ({
   getRoomHistoryMessages: mockGetRoomHistoryMessages
 }));
 
-describe('historyService', () => {
+describe('history.service', () => {
   describe('getPartitionKey', async () => {
     it('should return the correct date partition key for a given time and namespace', () => {
       const staticDateString = '2023-09-20T00:00:00.000Z';

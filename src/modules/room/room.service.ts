@@ -69,38 +69,43 @@ export async function restoreCachedRooms(
 ): Promise<void> {
   const { uid, connectionId } = session;
 
-  const rooms = await getCachedRooms(logger, redisClient, connectionId);
+  try {
+    const rooms = await getCachedRooms(logger, redisClient, connectionId);
 
-  logger.debug(`Restoring session, rooms (${rooms?.length})`, { uid, rooms });
+    logger.debug(`Restoring session, rooms (${rooms?.length})`, { uid, rooms });
 
-  if (rooms && rooms.length > 0) {
-    await Promise.all(
-      rooms.map(async (nspRoomId) =>
-        Promise.all([
-          joinRoom(redisClient, session, nspRoomId, socket),
-          restoreRoomSubscriptions(
-            redisClient,
-            connectionId,
-            nspRoomId,
-            KeyNamespace.SUBSCRIPTIONS,
-            socket
-          ),
-          restoreRoomSubscriptions(
-            redisClient,
-            connectionId,
-            nspRoomId,
-            KeyNamespace.PRESENCE,
-            socket
-          ),
-          restoreRoomSubscriptions(
-            redisClient,
-            connectionId,
-            nspRoomId,
-            KeyNamespace.METRICS,
-            socket
-          )
-        ])
-      )
-    );
+    if (rooms && rooms.length > 0) {
+      await Promise.all(
+        rooms.map(async (nspRoomId) =>
+          Promise.all([
+            joinRoom(redisClient, session, nspRoomId, socket),
+            restoreRoomSubscriptions(
+              redisClient,
+              connectionId,
+              nspRoomId,
+              KeyNamespace.SUBSCRIPTIONS,
+              socket
+            ),
+            restoreRoomSubscriptions(
+              redisClient,
+              connectionId,
+              nspRoomId,
+              KeyNamespace.PRESENCE,
+              socket
+            ),
+            restoreRoomSubscriptions(
+              redisClient,
+              connectionId,
+              nspRoomId,
+              KeyNamespace.METRICS,
+              socket
+            )
+          ])
+        )
+      );
+    }
+  } catch (err: any) {
+    logger.error(`Failed to restore cached rooms`, { err });
+    throw err;
   }
 }

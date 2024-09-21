@@ -1,14 +1,16 @@
-import { getLogger } from 'src/util/logger';
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
-import { getPartitionKey, getPartitionRange, getRoomHistoryMessages } from './history.service';
+import {
+  getPartitionKey,
+  getPartitionRange,
+  getRoomHistoryMessages,
+  HISTORY_MAX_SECONDS
+} from './history.service';
 import * as historyService from './history.service';
 import * as historyRepository from './history.repository';
 import { KeyPrefix } from 'src/types/state.types';
 import { HistoryOrder } from 'src/types/history.types';
 import { RedisClient } from 'src/lib/redis';
 import { getMockHistoryMessagesRange } from './history.mock';
-
-const logger = getLogger('');
 
 const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
   return {
@@ -76,10 +78,10 @@ describe('historyService', () => {
       Parameters<typeof getPartitionRange>,
       { min: number; max: number }
     >;
-    // let getRoomHistoryMessagesSpy: MockInstance<
-    //   Parameters<typeof historyRepository.getRoomHistoryMessages>,
-    //   Promise<any>
-    // >;
+    let getRoomHistoryMessagesSpy: MockInstance<
+      Parameters<typeof historyRepository.getRoomHistoryMessages>,
+      Promise<any>
+    >;
     let nextTimeOutOfRangeSpy: MockInstance<
       Parameters<typeof historyService.nextTimeOutOfRange>,
       boolean
@@ -98,7 +100,7 @@ describe('historyService', () => {
       redisClient = {} as RedisClient;
       getPartitionKeySpy = vi.spyOn(historyService, 'getPartitionKey');
       getPartitionRangeSpy = vi.spyOn(historyService, 'getPartitionRange');
-      // getRoomHistoryMessagesSpy = vi.spyOn(historyRepository, 'getRoomHistoryMessages');
+      getRoomHistoryMessagesSpy = vi.spyOn(historyRepository, 'getRoomHistoryMessages');
       nextTimeOutOfRangeSpy = vi.spyOn(historyService, 'nextTimeOutOfRange');
       messagesLimitReachedSpy = vi.spyOn(historyService, 'messagesLimitReached');
       getNextPageTokenSpy = vi.spyOn(historyService, 'getNextPageToken');
@@ -114,22 +116,19 @@ describe('historyService', () => {
       vi.useRealTimers();
     });
 
-    it('should retrieve room history messages with default parameters', async () => {
+    it('should retrieve maximum number of room history messages based on time range parameters', async () => {
       const mockedTime = new Date('2023-09-20T12:00:00Z').getTime();
 
       vi.setSystemTime(mockedTime);
 
-      let nextTime = mockedTime;
+      let lastScore = mockedTime;
       const getMessageRange = () => {
-        console.log(nextTime);
-        const messages = getMockHistoryMessagesRange(2, nextTime, 5000);
-        console.log(messages);
-        nextTime = messages[messages.length - 1].score;
-        console.log(nextTime);
+        const messages = getMockHistoryMessagesRange(10, lastScore, 5000);
+        lastScore = messages[messages.length - 1].score;
         return messages;
       };
 
-      mockGetRoomHistoryMessages.mockResolvedValue(getMessageRange());
+      getRoomHistoryMessagesSpy.mockImplementation(getMessageRange as any);
 
       const nspRoomId = 'room1';
       const start = mockedTime - 60 * 60 * 1000;
@@ -152,15 +151,39 @@ describe('historyService', () => {
         nextPageToken
       );
 
-      // console.log(response);
+      expect(getRoomHistoryMessagesSpy).toHaveBeenCalledTimes(10);
+      expect(response.nextPageToken).toBeDefined();
     });
 
-    it('should throw an error when time range exceeds the maximum allowed range', async () => {});
+    it('should throw an error when time range exceeds the maximum allowed range', async () => {
+      const nspRoomId = 'room1';
+      const start = new Date('2023-09-18T12:00:00Z').getTime();
+      const end = new Date('2023-09-20T12:00:00Z').getTime();
+      const seconds = 24 * 60 * 60;
+      const limit = 100;
+      const items = null;
+      const order = HistoryOrder.DESC;
+      const nextPageToken = null;
 
-    it('should use nextPageToken to continue fetching messages', async () => {});
+      await expect(
+        getRoomHistoryMessages(
+          redisClient,
+          nspRoomId,
+          start,
+          end,
+          seconds,
+          limit,
+          items,
+          order,
+          nextPageToken
+        )
+      ).rejects.toThrow(`Maximum time range of ${HISTORY_MAX_SECONDS / 60 / 60} hours exceeded`);
+    });
 
-    it('should handle empty result set', async () => {});
+    it.todo('should use nextPageToken to continue fetching messages', async () => {});
 
-    it('should log and throw an error if fetching messages fails', async () => {});
+    it.todo('should handle empty result set', async () => {});
+
+    it.todo('should log and throw an error if fetching messages fails', async () => {});
   });
 });

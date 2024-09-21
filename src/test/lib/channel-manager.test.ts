@@ -1,10 +1,10 @@
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ChannelManager from 'src/lib/channel-manager';
 import ConfigManager from '../../lib/config-manager';
 import { EventEmitter } from 'events';
 import { SocketSubscriptionEvent } from 'src/types/socket.types';
 import ConnectionManager from 'src/lib/connection-manager';
-import { afterEach, beforeEach } from 'node:test';
+import Connection from 'rabbitmq-client';
 
 const mockEventEmitter = new EventEmitter();
 
@@ -66,57 +66,62 @@ describe('ChannelManager', () => {
     });
   });
 
-  describe('bindRoom', () => {
-    it('should bind a room to a routing key', async () => {
-      const routingKey = '$$:appPid:7';
+  describe('Room bindings', () => {
+    let connection: Connection;
 
-      const connectionManageInstance = ConnectionManager.getInstance();
-      const connection = connectionManageInstance.connect('amqp://localhost');
-
-      const channelManager = new ChannelManager('instanceId', mockEventEmitter);
-      const channel = await channelManager.createChannel(connection);
-
-      mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, routingKey);
-
-      expect(channel.queueBind).toHaveBeenCalledWith(
-        expect.objectContaining({
-          routingKey
-        })
-      );
-
-      await new Promise(process.nextTick);
-
-      expect(channelManager['bindings'].get(routingKey)).toBeDefined();
+    beforeEach(() => {
+      const connectionManager = ConnectionManager.getInstance();
+      connection = connectionManager.connect('amqp://localhost');
     });
-  });
 
-  describe('unbindRoom', () => {
-    it('should unbind a room from a routing key', async () => {
-      const routingKey = '$$:appPid:7';
+    afterEach(() => {
+      ConnectionManager.destroyInstance();
+    });
 
-      const connectionManageInstance = ConnectionManager.getInstance();
-      const connection = connectionManageInstance.connect('amqp://localhost');
+    describe('bindRoom', () => {
+      it('should bind a room to a routing key', async () => {
+        const routingKey = '$$:appPid:7';
+        const channelManager = new ChannelManager('instanceId', mockEventEmitter);
+        const channel = await channelManager.createChannel(connection);
 
-      const channelManager = new ChannelManager('instanceId', mockEventEmitter);
-      const channel = await channelManager.createChannel(connection);
+        mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, routingKey);
 
-      mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, routingKey);
+        expect(channel.queueBind).toHaveBeenCalledWith(
+          expect.objectContaining({
+            routingKey
+          })
+        );
 
-      await new Promise(process.nextTick);
+        await new Promise(process.nextTick);
 
-      expect(channelManager['bindings'].get(routingKey)).toBeDefined();
+        expect(channelManager['bindings'].get(routingKey)).toBeDefined();
+      });
+    });
 
-      mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_DELETE, routingKey);
+    describe('unbindRoom', () => {
+      it('should unbind a room from a routing key', async () => {
+        const routingKey = '$$:appPid:7';
+        const channelManager = new ChannelManager('instanceId', mockEventEmitter);
+        const channel = await channelManager.createChannel(connection);
 
-      expect(channel.queueUnbind).toHaveBeenCalledWith(
-        expect.objectContaining({
-          routingKey
-        })
-      );
+        mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, routingKey);
 
-      await new Promise(process.nextTick);
+        await new Promise(process.nextTick);
 
-      expect(channelManager['bindings'].get(routingKey)).toBeUndefined();
+        expect(channelManager['bindings'].get(routingKey)).toBeDefined();
+
+        mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_DELETE, routingKey);
+
+        expect(channel.queueUnbind).toHaveBeenCalledWith(
+          expect.objectContaining({
+            routingKey
+          })
+        );
+
+        await new Promise(process.nextTick);
+
+        expect(channelManager['bindings'].get(routingKey)).toBeUndefined();
+      });
     });
   });
 });

@@ -17,6 +17,10 @@ export default class ConnectionManager {
     return ConnectionManager.instance;
   }
 
+  public static destroyInstance() {
+    ConnectionManager.instance = null;
+  }
+
   public connect(connectionString: string): Connection {
     this.connection = new Connection(connectionString);
 

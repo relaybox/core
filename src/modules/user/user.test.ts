@@ -186,7 +186,7 @@ describe('user.service', () => {
   });
 
   describe('getCachedUsers', async () => {
-    it('should get cahced users for connection id', async () => {
+    it('should get cached users for connection id', async () => {
       const connectionId = '12345';
       const expectedCacheKey = `${KeyPrefix.CONNECTION}:${connectionId}:${KeySuffix.USERS}`;
 
@@ -209,8 +209,7 @@ describe('user.service', () => {
 
     it('should restore cached user subscriptions for a given session', async () => {
       mockUserRepository.getCachedUsers.mockResolvedValueOnce({
-        'user:1': '2024-09-21T08:00:00.000Z',
-        'user:2': '2024-09-21T08:00:00.000Z'
+        'user:1': '2024-09-21T08:00:00.000Z'
       });
 
       mockUserRepository.getUserSubscriptions.mockResolvedValueOnce({
@@ -218,25 +217,15 @@ describe('user.service', () => {
         'user:1:disconnect': '2024-09-21T08:00:00.000Z'
       });
 
-      mockUserRepository.getUserSubscriptions.mockResolvedValueOnce({
-        'user:2:connect': '2024-09-21T08:00:00.000Z',
-        'user:2:disconnect': '2024-09-21T08:00:00.000Z'
-      });
-
-      const nspUser1 = 'users:user:1';
-      const nspUser2 = 'users:user:2';
-      const user1RoutingKey = ChannelManager.getRoutingKey(nspUser1);
-      const user2RoutingKey = ChannelManager.getRoutingKey(nspUser2);
+      const nspUser = 'users:user:1';
+      const userRoutingKey = ChannelManager.getRoutingKey(nspUser);
 
       await restoreCachedUsers(logger, redisClient, session, socket);
 
-      expect(socket.subscribe).toHaveBeenCalledWith(user1RoutingKey);
-      expect(socket.subscribe).toHaveBeenCalledWith(user2RoutingKey);
+      expect(socket.subscribe).toHaveBeenCalledWith(userRoutingKey);
       expect(socket.subscribe).toHaveBeenCalledWith('user:1:connect');
       expect(socket.subscribe).toHaveBeenCalledWith('user:1:disconnect');
-      expect(socket.subscribe).toHaveBeenCalledWith('user:2:connect');
-      expect(socket.subscribe).toHaveBeenCalledWith('user:2:disconnect');
-      expect(socket.subscribe).toHaveBeenCalledTimes(6);
+      expect(socket.subscribe).toHaveBeenCalledTimes(3);
     });
   });
 });

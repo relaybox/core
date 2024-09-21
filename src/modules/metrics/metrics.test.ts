@@ -11,6 +11,7 @@ import {
 import { MetricType } from 'src/types/metric.types';
 import { MetricsJobName } from './metrics.queue';
 import { RedisClient } from 'src/lib/redis';
+import exp from 'constants';
 
 const mockQueue = vi.hoisted(() => ({
   add: vi.fn(),
@@ -173,21 +174,17 @@ describe('metrics.service', () => {
 
       await pushRoomLeaveMetrics(uid, nspRoomId, session);
 
+      const jobData = expect.objectContaining({
+        uid,
+        nspRoomId,
+        metrics: ['connection', 'subscriber', 'publisher', 'presenceSubscriber', 'presenceMember'],
+        timestamp,
+        session: reducedSession
+      });
+
       expect(mockQueue.add).toHaveBeenCalledWith(
         MetricsJobName.METRICS_CLIENT_ROOM_LEAVE,
-        expect.objectContaining({
-          uid,
-          nspRoomId,
-          metrics: [
-            'connection',
-            'subscriber',
-            'publisher',
-            'presenceSubscriber',
-            'presenceMember'
-          ],
-          timestamp,
-          session: reducedSession
-        }),
+        jobData,
         expect.any(Object)
       );
     });

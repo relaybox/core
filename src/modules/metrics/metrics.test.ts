@@ -1,4 +1,3 @@
-import { get, request } from 'http';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import { getMockSession } from '../session/session.mock';
 import { getReducedSession } from '../session/session.service';

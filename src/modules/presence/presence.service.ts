@@ -17,18 +17,16 @@ export function addActiveMember(
 ): Promise<Job> {
   const reducedSession = getReducedSession(session);
 
-  return presenceQueue.add(
-    PresenceJobName.PRESENCE_JOIN,
-    {
-      clientId,
-      nspRoomId,
-      subscription,
-      session: reducedSession,
-      message,
-      latencyLog
-    },
-    { ...defaultJobConfig }
-  );
+  const jobData = {
+    clientId,
+    nspRoomId,
+    subscription,
+    session: reducedSession,
+    message,
+    latencyLog
+  };
+
+  return presenceQueue.add(PresenceJobName.PRESENCE_JOIN, jobData, defaultJobConfig);
 }
 
 export function removeActiveMember(
@@ -41,18 +39,16 @@ export function removeActiveMember(
 ): Promise<Job> {
   const reducedSession = getReducedSession(session);
 
-  return presenceQueue.add(
-    PresenceJobName.PRESENCE_LEAVE,
-    {
-      clientId,
-      nspRoomId,
-      subscription,
-      session: reducedSession,
-      ...(message && { message }),
-      latencyLog
-    },
-    { ...defaultJobConfig }
-  );
+  const jobData = {
+    clientId,
+    nspRoomId,
+    subscription,
+    session: reducedSession,
+    ...(message && { message }),
+    latencyLog
+  };
+
+  return presenceQueue.add(PresenceJobName.PRESENCE_LEAVE, jobData, defaultJobConfig);
 }
 
 export function updateActiveMember(
@@ -76,18 +72,16 @@ export function updateActiveMember(
 
   const reducedSession = getReducedSession(session);
 
-  return presenceQueue.add(
-    PresenceJobName.PRESENCE_UPDATE,
-    {
-      clientId,
-      nspRoomId,
-      subscription,
-      session: reducedSession,
-      message,
-      latencyLog
-    },
-    { ...defaultJobConfig }
-  );
+  const jobData = {
+    clientId,
+    nspRoomId,
+    subscription,
+    session: reducedSession,
+    message,
+    latencyLog
+  };
+
+  return presenceQueue.add(PresenceJobName.PRESENCE_UPDATE, jobData, defaultJobConfig);
 }
 
 export function getActiveMembers(redisClient: RedisClient, nspRoomId: string): Promise<any[]> {

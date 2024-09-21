@@ -28,13 +28,13 @@ vi.mock('bullmq', () => {
   };
 });
 
-const mockPresenceRepository = vi.hoisted(() => {
+const mockPresenceService = vi.hoisted(() => {
   return {
     isActiveMember: vi.fn()
   };
 });
 
-vi.mock('./../presence/presence.repository', () => mockPresenceRepository);
+vi.mock('./../presence/presence.service', () => mockPresenceService);
 
 describe('metrics.service', () => {
   const uid = '12345';
@@ -117,7 +117,7 @@ describe('metrics.service', () => {
       const reducedSession = getReducedSession(session);
       const timestamp = new Date().toISOString();
 
-      mockPresenceRepository.isActiveMember.mockResolvedValue(true);
+      mockPresenceService.isActiveMember.mockResolvedValue(true);
 
       const jobData = {
         uid: session.uid,
@@ -147,7 +147,7 @@ describe('metrics.service', () => {
       const reducedSession = getReducedSession(session);
       const timestamp = new Date().toISOString();
 
-      mockPresenceRepository.isActiveMember.mockResolvedValue(false);
+      mockPresenceService.isActiveMember.mockResolvedValue(false);
 
       const jobData = {
         uid: session.uid,

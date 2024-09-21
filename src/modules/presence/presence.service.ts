@@ -3,9 +3,8 @@ import { getReducedSession } from '../session/session.service';
 import { Session } from '../../types/session.types';
 import { Job } from 'bullmq';
 import { RedisClient } from '../../lib/redis';
-import { getActiveMemberCountByRoomId, getActiveMembersByRoomId } from './presence.repository';
+import * as repository from './presence.repository';
 import { LatencyLog } from '../../types/request.types';
-import AmqpManager from '../../lib/amqp-manager';
 
 export function addActiveMember(
   clientId: string,
@@ -59,17 +58,6 @@ export function updateActiveMember(
   message: any,
   latencyLog?: LatencyLog
 ) {
-  // const user = session.user;
-  // const amqpManager = AmqpManager.getInstance();
-  // const messageData = {
-  //   ...message,
-  //   user
-  // };
-
-  // amqpManager.dispatchHandler
-  //   .to(nspRoomId)
-  //   .dispatch(subscription, messageData, session, latencyLog!);
-
   const reducedSession = getReducedSession(session);
 
   const jobData = {
@@ -85,9 +73,19 @@ export function updateActiveMember(
 }
 
 export function getActiveMembers(redisClient: RedisClient, nspRoomId: string): Promise<any[]> {
-  return getActiveMembersByRoomId(redisClient, nspRoomId);
+  return repository.getActiveMembersByRoomId(redisClient, nspRoomId);
 }
 
 export function getActiveMemberCount(redisClient: RedisClient, nspRoomId: string): Promise<number> {
-  return getActiveMemberCountByRoomId(redisClient, nspRoomId);
+  return repository.getActiveMemberCountByRoomId(redisClient, nspRoomId);
+}
+
+export async function isActiveMember(
+  redisClient: RedisClient,
+  uid: string,
+  nspRoomId: string
+): Promise<boolean> {
+  const activeMember = await repository.isActiveMember(redisClient, uid, nspRoomId);
+
+  return !!activeMember;
 }

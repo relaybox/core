@@ -7,8 +7,8 @@ import { DsPermission } from '../../types/permissions.types';
 import { MetricsJobName, defaultJobConfig, metricsQueue } from './metrics.queue';
 import { getReducedSession } from '../session/session.service';
 import { LatencyLog } from 'src/types/request.types';
-import { isActiveMember } from '../presence/presence.repository';
 import { RedisClient } from 'src/lib/redis';
+import { isActiveMember } from '../presence/presence.service';
 
 const logger = getLogger('metrics');
 

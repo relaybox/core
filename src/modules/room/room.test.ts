@@ -9,29 +9,23 @@ import { KeyNamespace } from 'src/types/state.types';
 
 const logger = getLogger('');
 
-const { mockSetRoomJoin, mockSetRoomLeave, mockGetCachedRooms } = vi.hoisted(() => {
+const mockRoomRepository = vi.hoisted(() => {
   return {
-    mockSetRoomJoin: vi.fn(),
-    mockSetRoomLeave: vi.fn(),
-    mockGetCachedRooms: vi.fn()
+    setRoomJoin: vi.fn(),
+    setRoomLeave: vi.fn(),
+    getCachedRooms: vi.fn()
   };
 });
 
-vi.mock('./room.repository', () => ({
-  setRoomJoin: mockSetRoomJoin,
-  setRoomLeave: mockSetRoomLeave,
-  getCachedRooms: mockGetCachedRooms
-}));
+vi.mock('./room.repository', () => mockRoomRepository);
 
-const { mockRestoreRoomSubscriptions } = vi.hoisted(() => {
+const mockSubscriptionService = vi.hoisted(() => {
   return {
-    mockRestoreRoomSubscriptions: vi.fn()
+    restoreRoomSubscriptions: vi.fn()
   };
 });
 
-vi.mock('./../subscription/subscription.service', () => ({
-  restoreRoomSubscriptions: mockRestoreRoomSubscriptions
-}));
+vi.mock('./../subscription/subscription.service', () => mockSubscriptionService);
 
 describe('room.service', async () => {
   let redisClient: RedisClient;
@@ -61,12 +55,16 @@ describe('room.service', async () => {
 
       await joinRoom(redisClient, session, nspRoomId, socket);
 
-      expect(mockSetRoomJoin).toHaveBeenCalledWith(redisClient, connectionId, nspRoomId);
+      expect(mockRoomRepository.setRoomJoin).toHaveBeenCalledWith(
+        redisClient,
+        connectionId,
+        nspRoomId
+      );
       expect(socket.subscribe).toHaveBeenCalledWith(nspRoomId);
     });
 
     it('should throw an error if adding a connection to cached rooms fails', async () => {
-      mockSetRoomJoin.mockRejectedValueOnce(new Error('Failed to add room'));
+      mockRoomRepository.setRoomJoin.mockRejectedValueOnce(new Error('Failed to add room'));
 
       await expect(joinRoom(redisClient, session, 'room1', socket)).rejects.toThrow(
         'Failed to add room'
@@ -85,12 +83,16 @@ describe('room.service', async () => {
 
       await leaveRoom(redisClient, session, nspRoomId, socket);
 
-      expect(mockSetRoomLeave).toHaveBeenCalledWith(redisClient, connectionId, nspRoomId);
+      expect(mockRoomRepository.setRoomLeave).toHaveBeenCalledWith(
+        redisClient,
+        connectionId,
+        nspRoomId
+      );
       expect(socket.unsubscribe).toHaveBeenCalledWith(nspRoomId);
     });
 
     it('should throw an error if removing a connection from cached rooms fails', async () => {
-      mockSetRoomLeave.mockRejectedValueOnce(new Error('Failed to add room'));
+      mockRoomRepository.setRoomLeave.mockRejectedValueOnce(new Error('Failed to add room'));
 
       await expect(leaveRoom(redisClient, session, 'room1', socket)).rejects.toThrow(
         'Failed to add room'
@@ -108,19 +110,19 @@ describe('room.service', async () => {
     });
 
     it("should return an array of cached room id's by connection id", async () => {
-      mockGetCachedRooms.mockResolvedValueOnce({
+      mockRoomRepository.getCachedRooms.mockResolvedValueOnce({
         room1: '2024-09-21T08:00:00.000',
         room2: '2024-09-21T08:00:00.000'
       });
 
       const cachedRooms = await getCachedRooms(logger, redisClient, connectionId);
 
-      expect(mockGetCachedRooms).toHaveBeenCalledWith(redisClient, connectionId);
+      expect(mockRoomRepository.getCachedRooms).toHaveBeenCalledWith(redisClient, connectionId);
       expect(cachedRooms).toEqual(['room1', 'room2']);
     });
 
     it('should throw an error if retreiving cached rooms by connection id fails', async () => {
-      mockGetCachedRooms.mockRejectedValueOnce(new Error('Failed to add room'));
+      mockRoomRepository.getCachedRooms.mockRejectedValueOnce(new Error('Failed to add room'));
 
       await expect(getCachedRooms(logger, redisClient, connectionId)).rejects.toThrow(
         'Failed to add room'
@@ -134,14 +136,14 @@ describe('room.service', async () => {
     });
 
     it('should retrieve cached rooms, join and bind subscriptions', async () => {
-      mockGetCachedRooms.mockResolvedValueOnce({
+      mockRoomRepository.getCachedRooms.mockResolvedValueOnce({
         room1: '2024-09-21T08:00:00.000',
         room2: '2024-09-21T08:00:00.000'
       });
 
       await restoreCachedRooms(logger, redisClient, session, socket);
 
-      expect(mockRestoreRoomSubscriptions).toHaveBeenCalledWith(
+      expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledWith(
         redisClient,
         session.connectionId,
         'room1',
@@ -149,7 +151,7 @@ describe('room.service', async () => {
         socket
       );
 
-      expect(mockRestoreRoomSubscriptions).toHaveBeenCalledWith(
+      expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledWith(
         redisClient,
         session.connectionId,
         'room1',
@@ -157,7 +159,7 @@ describe('room.service', async () => {
         socket
       );
 
-      expect(mockRestoreRoomSubscriptions).toHaveBeenCalledWith(
+      expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledWith(
         redisClient,
         session.connectionId,
         'room1',
@@ -165,8 +167,8 @@ describe('room.service', async () => {
         socket
       );
 
-      expect(mockRestoreRoomSubscriptions).toHaveBeenCalledTimes(6);
-      expect(mockSetRoomJoin).toHaveBeenCalledTimes(2);
+      expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledTimes(6);
+      expect(mockRoomRepository.setRoomJoin).toHaveBeenCalledTimes(2);
       expect(socket.subscribe).toHaveBeenCalledTimes(2);
     });
   });

@@ -28,16 +28,6 @@ vi.mock('bullmq', () => {
   };
 });
 
-const { mockGetRoomHistoryMessages } = vi.hoisted(() => {
-  return {
-    mockGetRoomHistoryMessages: vi.fn()
-  };
-});
-
-vi.mock('./history.repository', () => ({
-  getRoomHistoryMessages: mockGetRoomHistoryMessages
-}));
-
 describe('history.service', () => {
   describe('getPartitionKey', async () => {
     it('should return the correct date partition key for a given time and namespace', () => {

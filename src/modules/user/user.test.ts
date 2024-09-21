@@ -11,7 +11,6 @@ import {
   pushUserSubscription,
   removeUserSubscription,
   restoreCachedUsers,
-  restoreUserSubscriptions,
   unbindUserSubscription
 } from './user.service';
 import { getMockSession } from '../session/session.mock';
@@ -19,45 +18,19 @@ import ChannelManager from 'src/lib/channel-manager';
 
 const logger = getLogger('');
 
-const {
-  mockPushUserSubscription,
-  mockBindUserSubscription,
-  mockRemoveUserSubscription,
-  mockUnbindUserSubscription,
-  mockGetUserSubscriptions,
-  mockGetCachedUsers,
-  mockGetUserSubscriptionCount
-} = vi.hoisted(() => {
+const mockUserRepository = vi.hoisted(() => {
   return {
-    mockPushUserSubscription: vi.fn(),
-    mockBindUserSubscription: vi.fn(),
-    mockRemoveUserSubscription: vi.fn(),
-    mockUnbindUserSubscription: vi.fn(),
-    mockGetUserSubscriptions: vi.fn(),
-    mockGetCachedUsers: vi.fn(),
-    mockGetUserSubscriptionCount: vi.fn()
+    pushUserSubscription: vi.fn(),
+    bindUserSubscription: vi.fn(),
+    removeUserSubscription: vi.fn(),
+    unbindUserSubscription: vi.fn(),
+    getUserSubscriptions: vi.fn(),
+    getCachedUsers: vi.fn(),
+    getUserSubscriptionCount: vi.fn()
   };
 });
 
-vi.mock('./user.repository', () => ({
-  pushUserSubscription: mockPushUserSubscription,
-  bindUserSubscription: mockBindUserSubscription,
-  removeUserSubscription: mockRemoveUserSubscription,
-  unbindUserSubscription: mockUnbindUserSubscription,
-  getUserSubscriptions: mockGetUserSubscriptions,
-  getCachedUsers: mockGetCachedUsers,
-  getUserSubscriptionCount: mockGetUserSubscriptionCount
-}));
-
-const { mockRestoreUserSubscriptions } = vi.hoisted(() => {
-  return {
-    mockRestoreUserSubscriptions: vi.fn()
-  };
-});
-
-vi.mock('./../subscription/subscription.service', () => ({
-  restoreUserSubscriptions: mockRestoreUserSubscriptions
-}));
+vi.mock('./user.repository', () => mockUserRepository);
 
 describe('user.service', () => {
   let redisClient: RedisClient;
@@ -92,7 +65,7 @@ describe('user.service', () => {
         socket
       );
 
-      expect(mockPushUserSubscription).toHaveBeenCalledWith(
+      expect(mockUserRepository.pushUserSubscription).toHaveBeenCalledWith(
         redisClient,
         expectedCacheKey,
         clientId
@@ -118,14 +91,17 @@ describe('user.service', () => {
         socket
       );
 
-      expect(mockBindUserSubscription).toHaveBeenCalledWith(
+      expect(mockUserRepository.bindUserSubscription).toHaveBeenCalledWith(
         redisClient,
         expectedCacheKey,
         subscription
       );
 
       expect(socket.subscribe).toHaveBeenCalledWith(subscription);
-      expect(mockGetUserSubscriptionCount).toHaveBeenCalledWith(redisClient, expectedCacheKey);
+      expect(mockUserRepository.getUserSubscriptionCount).toHaveBeenCalledWith(
+        redisClient,
+        expectedCacheKey
+      );
     });
   });
 
@@ -145,7 +121,7 @@ describe('user.service', () => {
         socket
       );
 
-      expect(mockRemoveUserSubscription).toHaveBeenCalledWith(
+      expect(mockUserRepository.removeUserSubscription).toHaveBeenCalledWith(
         redisClient,
         expectedCacheKey,
         clientId
@@ -171,14 +147,17 @@ describe('user.service', () => {
         socket
       );
 
-      expect(mockUnbindUserSubscription).toHaveBeenCalledWith(
+      expect(mockUserRepository.unbindUserSubscription).toHaveBeenCalledWith(
         redisClient,
         expectedCacheKey,
         subscription
       );
 
       expect(socket.unsubscribe).toHaveBeenCalledWith(subscription);
-      expect(mockGetUserSubscriptionCount).toHaveBeenCalledWith(redisClient, expectedCacheKey);
+      expect(mockUserRepository.getUserSubscriptionCount).toHaveBeenCalledWith(
+        redisClient,
+        expectedCacheKey
+      );
     });
   });
 
@@ -188,7 +167,7 @@ describe('user.service', () => {
       const nspClientId = 'nsp:abcde';
       const expectedCacheKey = `${KeyPrefix.CONNECTION}:${connectionId}:${nspClientId}`;
 
-      mockGetUserSubscriptions.mockResolvedValueOnce({
+      mockUserRepository.getUserSubscriptions.mockResolvedValueOnce({
         'user:connect': '2024-09-21T08:00:00.000Z',
         'user:disconnect': '2024-09-21T08:00:00.000Z'
       });
@@ -200,7 +179,10 @@ describe('user.service', () => {
         nspClientId
       );
 
-      expect(mockGetUserSubscriptions).toHaveBeenCalledWith(redisClient, expectedCacheKey);
+      expect(mockUserRepository.getUserSubscriptions).toHaveBeenCalledWith(
+        redisClient,
+        expectedCacheKey
+      );
       expect(subscriptions).toEqual(['user:connect', 'user:disconnect']);
     });
   });
@@ -210,14 +192,14 @@ describe('user.service', () => {
       const connectionId = '12345';
       const expectedCacheKey = `${KeyPrefix.CONNECTION}:${connectionId}:${KeySuffix.USERS}`;
 
-      mockGetCachedUsers.mockResolvedValueOnce({
+      mockUserRepository.getCachedUsers.mockResolvedValueOnce({
         'user:1': '2024-09-21T08:00:00.000Z',
         'user:2': '2024-09-21T08:00:00.000Z'
       });
 
       const users = await getCachedUsers(redisClient, connectionId);
 
-      expect(mockGetCachedUsers).toHaveBeenCalledWith(redisClient, expectedCacheKey);
+      expect(mockUserRepository.getCachedUsers).toHaveBeenCalledWith(redisClient, expectedCacheKey);
       expect(users).toEqual(['user:1', 'user:2']);
     });
   });
@@ -228,17 +210,17 @@ describe('user.service', () => {
     });
 
     it('should restore cached user subscriptions for a given session', async () => {
-      mockGetCachedUsers.mockResolvedValueOnce({
+      mockUserRepository.getCachedUsers.mockResolvedValueOnce({
         'user:1': '2024-09-21T08:00:00.000Z',
         'user:2': '2024-09-21T08:00:00.000Z'
       });
 
-      mockGetUserSubscriptions.mockResolvedValueOnce({
+      mockUserRepository.getUserSubscriptions.mockResolvedValueOnce({
         'user:1:connect': '2024-09-21T08:00:00.000Z',
         'user:1:disconnect': '2024-09-21T08:00:00.000Z'
       });
 
-      mockGetUserSubscriptions.mockResolvedValueOnce({
+      mockUserRepository.getUserSubscriptions.mockResolvedValueOnce({
         'user:2:connect': '2024-09-21T08:00:00.000Z',
         'user:2:disconnect': '2024-09-21T08:00:00.000Z'
       });

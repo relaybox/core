@@ -4,21 +4,14 @@ import { addActiveMember, removeActiveMember, updateActiveMember } from './prese
 import { PresenceJobName } from './presence.queue';
 import { getReducedSession } from '../session/session.service';
 
-const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
-  return {
-    mockBullMQAdd: vi.fn(),
-    mockBullMQGetJob: vi.fn()
-  };
-});
+const mockQueue = vi.hoisted(() => ({
+  add: vi.fn(),
+  getJob: vi.fn()
+}));
 
-vi.mock('bullmq', () => {
-  return {
-    Queue: vi.fn().mockImplementation(() => ({
-      add: mockBullMQAdd,
-      getJob: mockBullMQGetJob
-    }))
-  };
-});
+vi.mock('bullmq', () => ({
+  Queue: vi.fn().mockImplementation(() => mockQueue)
+}));
 
 describe('presence.service', () => {
   const clientId = '12345';
@@ -46,7 +39,7 @@ describe('presence.service', () => {
 
       await addActiveMember(clientId, nspRoomId, subscription, session, message);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         PresenceJobName.PRESENCE_JOIN,
         jobData,
         expect.any(Object)
@@ -70,7 +63,7 @@ describe('presence.service', () => {
 
       await removeActiveMember(clientId, nspRoomId, subscription, session, message);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         PresenceJobName.PRESENCE_LEAVE,
         jobData,
         expect.any(Object)
@@ -94,7 +87,7 @@ describe('presence.service', () => {
 
       await updateActiveMember(clientId, nspRoomId, subscription, session, message);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         PresenceJobName.PRESENCE_UPDATE,
         jobData,
         expect.any(Object)

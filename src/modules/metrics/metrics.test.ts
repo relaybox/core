@@ -12,27 +12,18 @@ import { MetricType } from 'src/types/metric.types';
 import { MetricsJobName } from './metrics.queue';
 import { RedisClient } from 'src/lib/redis';
 
-const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
-  return {
-    mockBullMQAdd: vi.fn(),
-    mockBullMQGetJob: vi.fn()
-  };
-});
+const mockQueue = vi.hoisted(() => ({
+  add: vi.fn(),
+  getJob: vi.fn()
+}));
 
-vi.mock('bullmq', () => {
-  return {
-    Queue: vi.fn().mockImplementation(() => ({
-      add: mockBullMQAdd,
-      getJob: mockBullMQGetJob
-    }))
-  };
-});
+vi.mock('bullmq', () => ({
+  Queue: vi.fn().mockImplementation(() => mockQueue)
+}));
 
-const mockPresenceService = vi.hoisted(() => {
-  return {
-    isActiveMember: vi.fn()
-  };
-});
+const mockPresenceService = vi.hoisted(() => ({
+  isActiveMember: vi.fn()
+}));
 
 vi.mock('./../presence/presence.service', () => mockPresenceService);
 
@@ -66,7 +57,7 @@ describe('metrics.service', () => {
 
       await publishMetric(uid, nspRoomId, metricType, session);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         MetricsJobName.METRICS_PUSH,
         jobData,
         expect.any(Object)
@@ -87,7 +78,7 @@ describe('metrics.service', () => {
 
       await unpublishMetric(uid, nspRoomId, metricType, session);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         MetricsJobName.METRICS_SHIFT,
         jobData,
         expect.any(Object)
@@ -129,7 +120,7 @@ describe('metrics.service', () => {
 
       await pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         MetricsJobName.METRICS_CLIENT_ROOM_JOIN,
         jobData,
         expect.any(Object)
@@ -159,7 +150,7 @@ describe('metrics.service', () => {
 
       await pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         MetricsJobName.METRICS_CLIENT_ROOM_JOIN,
         jobData,
         expect.any(Object)
@@ -182,7 +173,7 @@ describe('metrics.service', () => {
 
       await pushRoomLeaveMetrics(uid, nspRoomId, session);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         MetricsJobName.METRICS_CLIENT_ROOM_LEAVE,
         expect.objectContaining({
           uid,
@@ -246,7 +237,7 @@ describe('metrics.service', () => {
         recipientCount
       );
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         MetricsJobName.METRICS_DELIVERY_DATA,
         jobData,
         expect.any(Object)

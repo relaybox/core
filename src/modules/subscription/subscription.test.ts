@@ -9,13 +9,11 @@ import {
   unbindSubscription
 } from './subscription.service';
 
-const mockSubscriptionRepository = vi.hoisted(() => {
-  return {
-    createSubscription: vi.fn(),
-    deleteSubscription: vi.fn(),
-    getAllSubscriptions: vi.fn()
-  };
-});
+const mockSubscriptionRepository = vi.hoisted(() => ({
+  createSubscription: vi.fn(),
+  deleteSubscription: vi.fn(),
+  getAllSubscriptions: vi.fn()
+}));
 
 vi.mock('./subscription.repository', () => mockSubscriptionRepository);
 

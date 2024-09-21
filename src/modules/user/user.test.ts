@@ -18,17 +18,15 @@ import ChannelManager from 'src/lib/channel-manager';
 
 const logger = getLogger('');
 
-const mockUserRepository = vi.hoisted(() => {
-  return {
-    pushUserSubscription: vi.fn(),
-    bindUserSubscription: vi.fn(),
-    removeUserSubscription: vi.fn(),
-    unbindUserSubscription: vi.fn(),
-    getUserSubscriptions: vi.fn(),
-    getCachedUsers: vi.fn(),
-    getUserSubscriptionCount: vi.fn()
-  };
-});
+const mockUserRepository = vi.hoisted(() => ({
+  pushUserSubscription: vi.fn(),
+  bindUserSubscription: vi.fn(),
+  removeUserSubscription: vi.fn(),
+  unbindUserSubscription: vi.fn(),
+  getUserSubscriptions: vi.fn(),
+  getCachedUsers: vi.fn(),
+  getUserSubscriptionCount: vi.fn()
+}));
 
 vi.mock('./user.repository', () => mockUserRepository);
 

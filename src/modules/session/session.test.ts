@@ -21,53 +21,38 @@ import { SocketConnectionEventType } from 'src/types/socket.types';
 
 const logger = getLogger('');
 
-const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
-  return {
-    mockBullMQAdd: vi.fn(),
-    mockBullMQGetJob: vi.fn()
-  };
-});
+const mockQueue = vi.hoisted(() => ({
+  add: vi.fn(),
+  getJob: vi.fn()
+}));
 
-vi.mock('bullmq', () => {
-  return {
-    Queue: vi.fn().mockImplementation(() => ({
-      add: mockBullMQAdd,
-      getJob: mockBullMQGetJob
-    }))
-  };
-});
+vi.mock('bullmq', () => ({
+  Queue: vi.fn().mockImplementation(() => mockQueue)
+}));
 
-const mockRoomService = vi.hoisted(() => {
-  return {
-    restoreCachedRooms: vi.fn(),
-    getCachedRooms: vi.fn()
-  };
-});
+const mockRoomService = vi.hoisted(() => ({
+  restoreCachedRooms: vi.fn(),
+  getCachedRooms: vi.fn()
+}));
 
 vi.mock('./../room/room.service', () => mockRoomService);
 
-const mockUserService = vi.hoisted(() => {
-  return {
-    restoreCachedUsers: vi.fn()
-  };
-});
+const mockUserService = vi.hoisted(() => ({
+  restoreCachedUsers: vi.fn()
+}));
 
 vi.mock('./../user/user.service', () => mockUserService);
 
-const mockMetricsService = vi.hoisted(() => {
-  return {
-    pushRoomLeaveMetrics: vi.fn()
-  };
-});
+const mockMetricsService = vi.hoisted(() => ({
+  pushRoomLeaveMetrics: vi.fn()
+}));
 
 vi.mock('./../metrics/metrics.service', () => mockMetricsService);
 
-const mockAuthService = vi.hoisted(() => {
-  return {
-    verifyApiKey: vi.fn(),
-    verifyAuthToken: vi.fn()
-  };
-});
+const mockAuthService = vi.hoisted(() => ({
+  verifyApiKey: vi.fn(),
+  verifyAuthToken: vi.fn()
+}));
 
 vi.mock('./../auth/auth.service', () => mockAuthService);
 
@@ -224,7 +209,7 @@ describe('session.service', () => {
     });
 
     it('should add a session destroy job when no existing job is found', async () => {
-      mockBullMQGetJob.mockResolvedValueOnce(null);
+      mockQueue.getJob.mockResolvedValueOnce(null);
 
       const reducedSession = getReducedSession(session);
 
@@ -235,9 +220,9 @@ describe('session.service', () => {
 
       await markSessionForDeletion(session, instanceId);
 
-      expect(mockBullMQGetJob).toHaveBeenCalledWith(connectionId);
+      expect(mockQueue.getJob).toHaveBeenCalledWith(connectionId);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_DESTROY,
         jobData,
         expect.objectContaining({
@@ -252,7 +237,7 @@ describe('session.service', () => {
         remove: vi.fn()
       };
 
-      mockBullMQGetJob.mockResolvedValueOnce(existingJob);
+      mockQueue.getJob.mockResolvedValueOnce(existingJob);
 
       const reducedSession = getReducedSession(session);
 
@@ -265,7 +250,7 @@ describe('session.service', () => {
 
       expect(existingJob.remove).toHaveBeenCalled();
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_DESTROY,
         jobData,
         expect.objectContaining({
@@ -276,8 +261,8 @@ describe('session.service', () => {
     });
 
     it('should throw an error if adding a new job fails', async () => {
-      mockBullMQGetJob.mockResolvedValueOnce(null);
-      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+      mockQueue.getJob.mockResolvedValueOnce(null);
+      mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(markSessionForDeletion(session, instanceId)).rejects.toThrow(
         'Failed to add job'
@@ -304,7 +289,7 @@ describe('session.service', () => {
 
       await markSessionUserInactive(session, instanceId);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_USER_INACTIVE,
         jobData,
         expect.objectContaining({
@@ -315,8 +300,8 @@ describe('session.service', () => {
     });
 
     it('should throw an error if adding a new job fails', async () => {
-      mockBullMQGetJob.mockResolvedValueOnce(null);
-      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+      mockQueue.getJob.mockResolvedValueOnce(null);
+      mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(markSessionUserInactive(session, instanceId)).rejects.toThrow(
         'Failed to add job'
@@ -336,7 +321,7 @@ describe('session.service', () => {
         remove: vi.fn()
       };
 
-      mockBullMQGetJob.mockResolvedValueOnce(existingJob);
+      mockQueue.getJob.mockResolvedValueOnce(existingJob);
 
       await unmarkSessionForDeletion(connectionId);
 
@@ -344,7 +329,7 @@ describe('session.service', () => {
     });
 
     it('should throw an error if removing a session destroy job fails', async () => {
-      mockBullMQGetJob.mockRejectedValueOnce(new Error('Failed to add job'));
+      mockQueue.getJob.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(unmarkSessionForDeletion(connectionId)).rejects.toThrow('Failed to add job');
     });
@@ -362,7 +347,7 @@ describe('session.service', () => {
         remove: vi.fn()
       };
 
-      mockBullMQGetJob.mockResolvedValueOnce(existingJob);
+      mockQueue.getJob.mockResolvedValueOnce(existingJob);
 
       await markSessionUserActive(uid);
 
@@ -370,7 +355,7 @@ describe('session.service', () => {
     });
 
     it('should throw an error if adding a session user active job fails', async () => {
-      mockBullMQGetJob.mockRejectedValueOnce(new Error('Failed to add job'));
+      mockQueue.getJob.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(markSessionUserActive(uid)).rejects.toThrow('Failed to add job');
     });
@@ -405,7 +390,7 @@ describe('session.service', () => {
         socketId: 'mocked-socket-id'
       };
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_ACTIVE,
         expect.objectContaining(jobData),
         expect.any(Object)
@@ -413,7 +398,7 @@ describe('session.service', () => {
     });
 
     it('should throw an error if adding a session active job fails', async () => {
-      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+      mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(setSessionActive(session, socket)).rejects.toThrow('Failed to add job');
     });
@@ -458,7 +443,7 @@ describe('session.service', () => {
 
       await recordConnnectionEvent(session, socket, connectionEventType);
 
-      expect(mockBullMQAdd).toHaveBeenCalledWith(
+      expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_SOCKET_CONNECTION_EVENT,
         jobData,
         expect.any(Object)
@@ -466,7 +451,7 @@ describe('session.service', () => {
     });
 
     it('should throw an error if removing a session destroy job fails', async () => {
-      mockBullMQAdd.mockRejectedValueOnce(new Error('Failed to add job'));
+      mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(setSessionActive(session, socket)).rejects.toThrow('Failed to add job');
     });

@@ -17,11 +17,9 @@ const mockRoomRepository = vi.hoisted(() => ({
 
 vi.mock('./room.repository', () => mockRoomRepository);
 
-const mockSubscriptionService = vi.hoisted(() => {
-  return {
-    restoreRoomSubscriptions: vi.fn()
-  };
-});
+const mockSubscriptionService = vi.hoisted(() => ({
+  restoreRoomSubscriptions: vi.fn()
+}));
 
 vi.mock('./../subscription/subscription.service', () => mockSubscriptionService);
 

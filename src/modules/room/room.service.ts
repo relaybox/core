@@ -109,3 +109,16 @@ export async function restoreCachedRooms(
     throw err;
   }
 }
+
+export async function getRoomByConnectionId(
+  redisClient: RedisClient,
+  connectionId: string,
+  nspRoomId: string
+): Promise<string | undefined> {
+  try {
+    return await repository.getRoomByConnectionId(redisClient, connectionId, nspRoomId);
+  } catch (err: any) {
+    logger.error(`Failed to get room by connection id`, { err });
+    throw err;
+  }
+}

@@ -1,8 +1,23 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import ChannelManager from 'src/lib/channel-manager';
 import ConfigManager from '../../lib/config-manager';
+import { EventEmitter } from 'events';
+import { SocketSubscriptionEvent } from 'src/types/socket.types';
+import ConnectionManager from 'src/lib/connection-manager';
+import { afterEach, beforeEach } from 'node:test';
 
-vi.mock('rabbitmq-client');
+const mockEventEmitter = new EventEmitter();
+
+vi.mock('rabbitmq-client', () => ({
+  Connection: vi.fn().mockImplementation(() => ({
+    on: vi.fn(),
+    acquire: vi.fn().mockResolvedValue({
+      on: vi.fn(),
+      queueBind: vi.fn(),
+      queueUnbind: vi.fn()
+    })
+  }))
+}));
 
 vi.mock('../../lib/config-manager', () => ({
   default: {
@@ -54,21 +69,54 @@ describe('ChannelManager', () => {
   describe('bindRoom', () => {
     it('should bind a room to a routing key', async () => {
       const routingKey = '$$:appPid:7';
-      const queueName = 'queue:1';
 
-      const channelManager = new ChannelManager('instanceId');
+      const connectionManageInstance = ConnectionManager.getInstance();
+      const connection = connectionManageInstance.connect('amqp://localhost');
 
-      console.log(channelManager.bindings);
+      const channelManager = new ChannelManager('instanceId', mockEventEmitter);
+      const channel = await channelManager.createChannel(connection);
 
-      // await channelManager.bindRoom(routingKey);
+      mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, routingKey);
 
-      // expect(channelManager['channel'].queueBind).toHaveBeenCalledWith({
-      //   exchange: channelManager['exchange'],
-      //   queue: queueName,
-      //   routingKey
-      // });
+      expect(channel.queueBind).toHaveBeenCalledWith(
+        expect.objectContaining({
+          routingKey
+        })
+      );
 
-      // expect(channelManager['bindings'].set).toHaveBeenCalledWith(routingKey, queueName);
+      await new Promise(process.nextTick);
+
+      expect(channelManager['bindings'].get(routingKey)).toBeDefined();
+    });
+  });
+
+  describe('unbindRoom', () => {
+    it('should unbind a room from a routing key', async () => {
+      const routingKey = '$$:appPid:7';
+
+      const connectionManageInstance = ConnectionManager.getInstance();
+      const connection = connectionManageInstance.connect('amqp://localhost');
+
+      const channelManager = new ChannelManager('instanceId', mockEventEmitter);
+      const channel = await channelManager.createChannel(connection);
+
+      mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, routingKey);
+
+      await new Promise(process.nextTick);
+
+      expect(channelManager['bindings'].get(routingKey)).toBeDefined();
+
+      mockEventEmitter.emit(SocketSubscriptionEvent.SUBSCRIPTION_DELETE, routingKey);
+
+      expect(channel.queueUnbind).toHaveBeenCalledWith(
+        expect.objectContaining({
+          routingKey
+        })
+      );
+
+      await new Promise(process.nextTick);
+
+      expect(channelManager['bindings'].get(routingKey)).toBeUndefined();
     });
   });
 });

@@ -16,6 +16,7 @@ import AmqpManager from './lib/amqp-manager';
 import os from 'os';
 import { getRoomHistoryMessages } from './modules/history/history.http';
 import { getCorsResponse } from './util/http';
+import { eventEmitter } from './lib/event-bus';
 
 const logger = getLogger('uws-socket-server');
 
@@ -50,7 +51,7 @@ const app = App()
     }
   });
 
-const amqpManager = AmqpManager.getInstance(app, {
+const amqpManager = AmqpManager.getInstance(app, eventEmitter, {
   instanceId: CONTAINER_HOSTNAME,
   enqueueDeliveryMetrics
 });

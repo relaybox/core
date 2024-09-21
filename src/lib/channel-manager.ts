@@ -1,9 +1,9 @@
 import { Logger } from 'winston';
-import { eventEmitter } from './event-bus';
 import { Connection, Channel } from 'rabbitmq-client';
 import { getLogger } from '../util/logger';
 import { SocketSubscriptionEvent } from '../types/socket.types';
 import ConfigManager from './config-manager';
+import EventEmitter from 'events';
 
 const AMQP_QUEUE_NAME_PREFIX = 'queue';
 
@@ -17,18 +17,20 @@ export default class ChannelManager {
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000; // 5 seconds
   private bindings: Map<string, string> = new Map();
+  private eventEmitter: EventEmitter;
 
   static AMQP_ROUTING_KEY_PREFIX = '$$';
 
   private logger: Logger = getLogger('channel-manager');
 
-  constructor(instanceId: string | number) {
+  constructor(instanceId: string | number, eventEmitter: EventEmitter) {
     this.instanceId = instanceId;
+    this.eventEmitter = eventEmitter;
     this.exchange = ConfigManager.AMQP_DEFAULT_EXCHANGE_NAME;
     this.queueCount = ConfigManager.getInt('RABBIT_MQ_QUEUE_COUNT');
 
-    eventEmitter.on(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, this.bindRoom.bind(this));
-    eventEmitter.on(SocketSubscriptionEvent.SUBSCRIPTION_DELETE, this.unbindRoom.bind(this));
+    this.eventEmitter.on(SocketSubscriptionEvent.SUBSCRIPTION_CREATE, this.bindRoom.bind(this));
+    this.eventEmitter.on(SocketSubscriptionEvent.SUBSCRIPTION_DELETE, this.unbindRoom.bind(this));
   }
 
   static getRoutingKey(nspRoomId: string): string {
@@ -53,7 +55,7 @@ export default class ChannelManager {
     return ((hash % queueCount) + queueCount) % queueCount;
   }
 
-  public async createChannel(connection: Connection): Promise<void> {
+  public async createChannel(connection: Connection): Promise<Channel> {
     this.connection = connection;
     this.channel = await connection.acquire();
     this.logger.info(`Channel initialized`);
@@ -63,6 +65,8 @@ export default class ChannelManager {
     if (this.bindings.size) {
       this.restoreBindings();
     }
+
+    return this.channel;
   }
 
   handleClose() {

@@ -8,6 +8,7 @@ import ConsumerManager from '../../lib/consumer-manager';
 import ChannelManager from '../../lib/channel-manager';
 import PublisherManager from '../../lib/publisher-manager';
 import DispatchHandler from '../../lib/dispatch-handler';
+import EventEmitter from 'events';
 
 const mockLogger = vi.hoisted(() => ({
   getLogger: vi.fn().mockReturnValue({
@@ -34,6 +35,7 @@ vi.mock('../../lib/dispatch-handler');
 
 describe('amqp-manager', () => {
   const app = App();
+  const mockEventEmitter = new EventEmitter();
 
   const enqueueDeliveryMetrics = vi.fn();
 
@@ -43,7 +45,7 @@ describe('amqp-manager', () => {
   };
 
   beforeAll(() => {
-    AmqpManager.getInstance(app, instanceConfig);
+    AmqpManager.getInstance(app, mockEventEmitter, instanceConfig);
   });
 
   describe('getInstance', () => {
@@ -61,7 +63,7 @@ describe('amqp-manager', () => {
         instanceConfig.instanceId,
         instance1['messageHandler']
       );
-      expect(ChannelManager).toHaveBeenCalledWith(instanceConfig.instanceId);
+      expect(ChannelManager).toHaveBeenCalledWith(instanceConfig.instanceId, mockEventEmitter);
       expect(PublisherManager).toHaveBeenCalled();
       expect(ConfigManager.get).toHaveBeenCalledWith('RABBIT_MQ_CONNECTION_STRING');
     });

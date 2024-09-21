@@ -3,7 +3,7 @@ import { Connection } from 'rabbitmq-client';
 import { getLogger } from '../util/logger';
 
 export default class ConnectionManager {
-  private static instance: ConnectionManager;
+  private static instance: ConnectionManager | null;
   private connection: Connection;
   private logger: Logger = getLogger('connection-manager');
 

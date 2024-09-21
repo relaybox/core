@@ -2,7 +2,7 @@ import { RedisClient } from 'src/lib/redis';
 import { Session } from 'src/types/session.types';
 import { KeyNamespace, KeyPrefix } from 'src/types/state.types';
 import { WebSocket } from 'uWebSockets.js';
-import { describe, expect, vi, it, beforeEach, afterEach, MockInstance } from 'vitest';
+import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import {
   bindSubscription,
   unbindAllSubscriptions,

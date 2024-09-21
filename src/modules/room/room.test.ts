@@ -44,7 +44,7 @@ describe('room.service', async () => {
     vi.resetAllMocks();
   });
 
-  describe('joinRoom', async () => {
+  describe('joinRoom', () => {
     beforeEach(() => {
       session = getMockSession({ connectionId: '12345' });
     });
@@ -72,7 +72,7 @@ describe('room.service', async () => {
     });
   });
 
-  describe('leaveRoom', async () => {
+  describe('leaveRoom', () => {
     beforeEach(() => {
       session = getMockSession({ connectionId: '12345' });
     });
@@ -100,7 +100,7 @@ describe('room.service', async () => {
     });
   });
 
-  describe('getCachedRooms', async () => {
+  describe('getCachedRooms', () => {
     const connectionId = '12345';
 
     beforeEach(() => {
@@ -130,7 +130,7 @@ describe('room.service', async () => {
     });
   });
 
-  describe('restoreCachedRooms', async () => {
+  describe('restoreCachedRooms', () => {
     beforeEach(() => {
       session = getMockSession({ connectionId: '12345' });
     });

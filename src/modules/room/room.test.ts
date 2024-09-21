@@ -9,13 +9,11 @@ import { KeyNamespace } from 'src/types/state.types';
 
 const logger = getLogger('');
 
-const mockRoomRepository = vi.hoisted(() => {
-  return {
-    setRoomJoin: vi.fn(),
-    setRoomLeave: vi.fn(),
-    getCachedRooms: vi.fn()
-  };
-});
+const mockRoomRepository = vi.hoisted(() => ({
+  setRoomJoin: vi.fn(),
+  setRoomLeave: vi.fn(),
+  getCachedRooms: vi.fn()
+}));
 
 vi.mock('./room.repository', () => mockRoomRepository);
 

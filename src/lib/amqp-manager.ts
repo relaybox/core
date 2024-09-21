@@ -1,3 +1,4 @@
+import { TemplatedApp } from 'uWebSockets.js';
 import { getLogger } from '../util/logger';
 import { Logger } from 'winston';
 import ConfigManager, { AmqpConfig } from './config-manager';
@@ -7,7 +8,6 @@ import MessageHandler from './message-handler';
 import ChannelManager from './channel-manager';
 import PublisherManager from './publisher-manager';
 import DispatchHandler from './dispatch-handler';
-import { TemplatedApp } from 'uWebSockets.js';
 
 export default class AmqpManager {
   private static instance: AmqpManager;
@@ -54,6 +54,8 @@ export default class AmqpManager {
       this.consumerManager.createConsumers(connection);
       const publisher = this.publisherManager.createPublisher(connection);
       this.dispatchHandler = new DispatchHandler(publisher);
+
+      return connection;
     } catch (err: any) {
       this.logger.error(`Failed to initialize AMQP manager`, { err });
       throw err;

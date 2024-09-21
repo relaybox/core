@@ -1,2 +1,2 @@
-src/test
 .DS_Store
+*.test.ts

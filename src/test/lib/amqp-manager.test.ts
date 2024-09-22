@@ -1,3 +1,4 @@
+import { mockApp } from 'src/test/__mocks__/external/uWebsockets';
 import AmqpManager from 'src/lib/amqp-manager';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { App } from 'uWebSockets.js';
@@ -34,7 +35,6 @@ vi.mock('../../lib/publisher-manager');
 vi.mock('../../lib/dispatch-handler');
 
 describe('amqp-manager', () => {
-  const app = App();
   const mockEventEmitter = new EventEmitter();
 
   const enqueueDeliveryMetrics = vi.fn();
@@ -45,7 +45,7 @@ describe('amqp-manager', () => {
   };
 
   beforeAll(() => {
-    AmqpManager.getInstance(app, mockEventEmitter, instanceConfig);
+    AmqpManager.getInstance(mockApp, mockEventEmitter, instanceConfig);
   });
 
   describe('getInstance', () => {
@@ -57,7 +57,7 @@ describe('amqp-manager', () => {
       expect(instance1['instanceId']).toBe(instanceConfig.instanceId);
       expect(mockLogger.getLogger).toHaveBeenCalledWith('amqp-manager');
       expect(ConnectionManager.getInstance).toHaveBeenCalled();
-      expect(MessageHandler).toHaveBeenCalledWith(app, instanceConfig.enqueueDeliveryMetrics);
+      expect(MessageHandler).toHaveBeenCalledWith(mockApp, instanceConfig.enqueueDeliveryMetrics);
       expect(ConfigManager.get).toHaveBeenCalledWith('RABBIT_MQ_CONNECTION_STRING');
       expect(ConsumerManager).toHaveBeenCalledWith(
         instanceConfig.instanceId,

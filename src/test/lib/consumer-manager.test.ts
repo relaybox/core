@@ -1,8 +1,8 @@
 import 'src/test/__mocks__/external/rabbitmq-client';
+import { mockApp } from 'src/test/__mocks__/external/uWebsockets';
 import ConnectionManager from 'src/lib/connection-manager';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import Connection from 'rabbitmq-client';
-import { App } from 'uWebSockets.js';
 import MessageHandler from 'src/lib/message-handler';
 import ConsumerManager, {
   AMQP_CONSUMER_CONCURRENCY,
@@ -15,7 +15,6 @@ describe('consumer-manager', () => {
   let originalEnv: NodeJS.ProcessEnv;
   let connection: Connection;
 
-  const app = App();
   const instanceId = 'test-instance';
   const enqueueDeliveryMetrics = vi.fn();
   const queueCount = 5;
@@ -44,7 +43,7 @@ describe('consumer-manager', () => {
 
   describe('createConsumers', () => {
     it('should create consumers for each queue', async () => {
-      const messageHandler = new MessageHandler(app, enqueueDeliveryMetrics);
+      const messageHandler = new MessageHandler(mockApp, enqueueDeliveryMetrics);
       const consumerManager = new ConsumerManager(instanceId, messageHandler);
 
       consumerManager.createConsumers(connection);

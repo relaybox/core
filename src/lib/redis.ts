@@ -23,7 +23,7 @@ export type RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScr
 export const tlsConnectionOptions = {
   tls: true,
   rejectUnauthorized: true,
-  cert: fs.readFileSync(path.join(__dirname, '../certs/AmazonRootCA1.pem'))
+  cert: 'hello' //fs.readFileSync(path.join(__dirname, '../certs/AmazonRootCA1.pem'))
 };
 
 export const socketOptions = {

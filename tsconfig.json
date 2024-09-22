@@ -7,16 +7,22 @@
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types"],
     "sourceMap": false,
-    "outDir": "build",
     "strict": true,
     "lib": ["esnext"],
-    "baseUrl": ".",
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "moduleResolution": "Node",
-    "skipLibCheck": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "baseUrl": "./",
+    "outDir": "build",
+    "paths": {
+      "src/*": ["src/*"],
+      "@/util/*": ["src/util/*"],
+      "@/types/*": ["src/types/*"],
+      "@/modules/*": ["src/modules/*"],
+      "@/lib/*": ["src/lib/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "src/tests"]
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

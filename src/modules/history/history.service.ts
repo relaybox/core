@@ -1,10 +1,10 @@
-import { RedisClient } from 'src/lib/redis';
+import { RedisClient } from '@/lib/redis';
 import * as historyRepository from './history.repository';
-import { getLogger } from '../../util/logger';
-import { KeyPrefix } from '../../types/state.types';
+import { getLogger } from '@/util/logger';
+import { KeyPrefix } from '@/types/state.types';
 import { Job } from 'bullmq';
 import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue';
-import { HistoryOrder, HistoryResponse } from '../../types/history.types';
+import { HistoryOrder, HistoryResponse } from '@/types/history.types';
 
 const logger = getLogger('history');
 

@@ -1,7 +1,6 @@
-import { mockApp } from 'src/test/__mocks__/external/uWebsockets';
-import AmqpManager from 'src/lib/amqp-manager';
+import { mockApp } from '../../test/__mocks__/external/uWebsockets';
+import AmqpManager from '../../lib/amqp-manager';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { App } from 'uWebSockets.js';
 import ConnectionManager from '../../lib/connection-manager';
 import ConfigManager from '../../lib/config-manager';
 import MessageHandler from '../../lib/message-handler';

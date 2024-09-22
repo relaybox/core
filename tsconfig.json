@@ -13,8 +13,6 @@
     "baseUrl": ".",
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "moduleResolution": "Node",
     "skipLibCheck": true,
     "strictPropertyInitialization": false

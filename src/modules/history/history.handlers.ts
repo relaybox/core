@@ -1,14 +1,14 @@
-import { RedisClient } from '../../lib/redis';
-import { Session } from '../../types/session.types';
-import { SocketAckHandler } from '../../types/socket.types';
+import { RedisClient } from '@/lib/redis';
+import { Session } from '@/types/session.types';
+import { SocketAckHandler } from '@/types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { getRoomHistoryMessages, HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
-import { formatErrorResponse } from '../../util/format';
-import { permissionsGuard } from '../guards/guards.service';
-import { DsPermission } from '../../types/permissions.types';
-import { extractRoomId } from '../../util/helpers';
-import { HistoryOrder } from '../../types/history.types';
+import { formatErrorResponse } from '@/util/format';
+import { permissionsGuard } from '@/modules/guards/guards.service';
+import { DsPermission } from '@/types/permissions.types';
+import { extractRoomId } from '@/util/helpers';
+import { HistoryOrder } from '@/types/history.types';
 
 export async function clientRoomHistoryGet(
   logger: Logger,

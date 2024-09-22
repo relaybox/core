@@ -8,9 +8,9 @@ import {
 } from './history.service';
 import * as historyService from './history.service';
 import * as historyRepository from './history.repository';
-import { KeyPrefix } from 'src/types/state.types';
-import { HistoryOrder } from 'src/types/history.types';
-import { RedisClient } from 'src/lib/redis';
+import { KeyPrefix } from '@/types/state.types';
+import { HistoryOrder } from '@/types/history.types';
+import { RedisClient } from '@/lib/redis';
 import { getMockHistoryMessagesRange } from './history.mock';
 
 describe('history.service', () => {

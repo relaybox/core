@@ -1,10 +1,10 @@
-import { getRedisClient } from '../../lib/redis';
+import { getRedisClient } from '@/lib/redis';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import * as historyService from './history.service';
-import { getLogger } from '../../util/logger';
-import { getJsonResponse } from '../../util/http';
+import { getLogger } from '@/util/logger';
+import { getJsonResponse } from '@/util/http';
 import { HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
-import { HistoryOrder } from '../../types/history.types';
+import { HistoryOrder } from '@/types/history.types';
 
 const logger = getLogger('history-http');
 

@@ -1,11 +1,11 @@
-import { Session } from 'src/types/session.types';
-import { getLogger } from 'src/util/logger';
+import { Session } from '../../types/session.types';
+import { getLogger } from '../../util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import { getMockSession } from '../session/session.mock';
 import { getCachedRooms, joinRoom, leaveRoom, restoreCachedRooms } from './room.service';
-import { RedisClient } from 'src/lib/redis';
-import { KeyNamespace } from 'src/types/state.types';
+import { RedisClient } from '../../lib/redis';
+import { KeyNamespace } from '../../types/state.types';
 
 const logger = getLogger('');
 

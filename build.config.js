@@ -10,12 +10,7 @@ esbuild
     platform: 'node',
     target: 'node20',
     outfile: 'build/server.js',
-    external: [
-      'uWebSockets.js',
-      './*.node',
-      ...Object.keys(pkg.dependencies || {}),
-      ...Object.keys(pkg.peerDependencies || {})
-    ],
+    external: ['uWebSockets.js', './*.node', ...Object.keys(pkg.dependencies || {})],
     plugins: [],
     minify: true
   })
@@ -24,7 +19,6 @@ esbuild
     const destCertsDir = path.resolve(__dirname, 'build', 'certs');
 
     try {
-      // Copy the certs directory recursively
       fs.cpSync(srcCertsDir, destCertsDir, { recursive: true });
       console.log('Certs directory copied successfully.');
     } catch (err) {

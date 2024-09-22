@@ -12,13 +12,13 @@ import {
   setSessionActive,
   unmarkSessionForDeletion
 } from './session.service';
-import { Session } from 'src/types/session.types';
+import { Session } from '@/types/session.types';
 import { getMockSession } from './session.mock';
-import { RedisClient } from 'src/lib/redis';
+import { RedisClient } from '@/lib/redis';
 import { WebSocket } from 'uWebSockets.js';
-import { getLogger } from 'src/util/logger';
+import { getLogger } from '@/util/logger';
 import { SessionJobName } from './session.queue';
-import { SocketConnectionEventType } from 'src/types/socket.types';
+import { SocketConnectionEventType } from '@/types/socket.types';
 
 const logger = getLogger('');
 
@@ -27,26 +27,26 @@ const mockRoomService = vi.hoisted(() => ({
   getCachedRooms: vi.fn()
 }));
 
-vi.mock('./../room/room.service', () => mockRoomService);
+vi.mock('@/modules/room/room.service', () => mockRoomService);
 
 const mockUserService = vi.hoisted(() => ({
   restoreCachedUsers: vi.fn()
 }));
 
-vi.mock('./../user/user.service', () => mockUserService);
+vi.mock('@/modules/user/user.service', () => mockUserService);
 
 const mockMetricsService = vi.hoisted(() => ({
   pushRoomLeaveMetrics: vi.fn()
 }));
 
-vi.mock('./../metrics/metrics.service', () => mockMetricsService);
+vi.mock('@/modules/metrics/metrics.service', () => mockMetricsService);
 
 const mockAuthService = vi.hoisted(() => ({
   verifyApiKey: vi.fn(),
   verifyAuthToken: vi.fn()
 }));
 
-vi.mock('./../auth/auth.service', () => mockAuthService);
+vi.mock('@/modules/auth/auth.service', () => mockAuthService);
 
 describe('session.service', () => {
   describe('initializeSession', () => {

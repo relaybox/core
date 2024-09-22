@@ -4,7 +4,7 @@ import { getLogger } from '../util/logger';
 
 export default class ConnectionManager {
   private static instance: ConnectionManager | null;
-  private connection: Connection;
+  private connection: Connection | null;
   private logger: Logger = getLogger('connection-manager');
 
   private constructor() {}
@@ -18,6 +18,10 @@ export default class ConnectionManager {
   }
 
   public static destroyInstance() {
+    if (ConnectionManager.instance) {
+      ConnectionManager.instance.connection = null;
+    }
+
     ConnectionManager.instance = null;
   }
 
@@ -31,7 +35,7 @@ export default class ConnectionManager {
     return this.connection;
   }
 
-  public getConnection(): Connection {
+  public getConnection(): Connection | null {
     return this.connection;
   }
 }

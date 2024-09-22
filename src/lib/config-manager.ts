@@ -4,6 +4,8 @@ export enum ExchangeType {
   TOPIC = 'topic'
 }
 
+export const AMQP_DEFAULT_EXCHANGE_NAME = 'ds.rooms.durable';
+
 export interface AmqpConfig {
   instanceId: string;
   exchange?: string;
@@ -12,7 +14,7 @@ export interface AmqpConfig {
 }
 
 export default class ConfigManager {
-  static AMQP_DEFAULT_EXCHANGE_NAME = 'ds.rooms.durable';
+  static AMQP_DEFAULT_EXCHANGE_NAME = AMQP_DEFAULT_EXCHANGE_NAME;
   static EXCHANGE_TYPE = ExchangeType.TOPIC;
 
   static get(key: string): string | undefined {

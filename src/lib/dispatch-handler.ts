@@ -6,7 +6,6 @@ import { Envelope, Publisher } from 'rabbitmq-client';
 import { v4 as uuid } from 'uuid';
 import ConfigManager from './config-manager';
 import { Message } from '../types/data.types';
-// import { getHashedRoomBindingId } from '../util/helpers';
 import ChannelManager from './channel-manager';
 
 interface Dispatcher {

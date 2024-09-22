@@ -48,15 +48,17 @@ describe('consumer-manager', () => {
 
       consumerManager.createConsumers(connection);
 
+      const expectedConsumerConfig = expect.objectContaining({
+        concurrency: AMQP_CONSUMER_CONCURRENCY,
+        queue: `${instanceId}-${AMQP_QUEUE_NAME_PREFIX}-1`,
+        queueOptions: expect.objectContaining({
+          autoDelete: true
+        })
+      });
+
       expect(connection.createConsumer).toHaveBeenCalledTimes(queueCount);
       expect(connection.createConsumer).toHaveBeenCalledWith(
-        expect.objectContaining({
-          concurrency: AMQP_CONSUMER_CONCURRENCY,
-          queue: `${instanceId}-${AMQP_QUEUE_NAME_PREFIX}-1`,
-          queueOptions: expect.objectContaining({
-            autoDelete: true
-          })
-        }),
+        expectedConsumerConfig,
         expect.any(Function)
       );
     });

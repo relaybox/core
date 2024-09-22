@@ -15,8 +15,6 @@ export default class PublisherManager {
   constructor() {
     this.exchange = ConfigManager.AMQP_DEFAULT_EXCHANGE_NAME;
     this.exchangeType = ConfigManager.EXCHANGE_TYPE;
-
-    console.log(this.exchange);
   }
 
   public createPublisher(connection: Connection): Publisher {

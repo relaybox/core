@@ -1,7 +1,6 @@
 import { TemplatedApp } from 'uWebSockets.js';
 import { getLogger } from '../util/logger';
 import { Logger } from 'winston';
-// import { eventEmitter } from './event-bus';
 import ConfigManager, { AmqpConfig } from './config-manager';
 import ConnectionManager from './connection-manager';
 import ConsumerManager from './consumer-manager';

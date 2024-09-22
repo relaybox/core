@@ -1,4 +1,3 @@
-import { send } from 'process';
 import { vi } from 'vitest';
 
 export const mockRabbitMQConnection = {

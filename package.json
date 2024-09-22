@@ -6,7 +6,7 @@
   "scripts": {
     "dev:verbose": "nodemon",
     "dev": "TZ=UTC LOGGING_ENABLED=false nodemon",
-    "build": "etsc --minify && cp -r ./src/certs ./build",
+    "build": "etsc && cp -r ./src/certs ./build",
     "start": "node ./build/app.js",
     "test": "vitest"
   },

@@ -14,8 +14,9 @@ vi.mock('src/lib/message-handler');
 describe('consumer-manager', () => {
   let originalEnv: NodeJS.ProcessEnv;
   let connection: Connection;
-  const instanceId = 'test-instance';
+
   const app = App();
+  const instanceId = 'test-instance';
   const enqueueDeliveryMetrics = vi.fn();
   const queueCount = 5;
 

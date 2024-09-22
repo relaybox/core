@@ -28,7 +28,7 @@ describe('dispatch-handler', () => {
   });
 
   describe('to', () => {
-    it('should return a dispatch handler instance', () => {
+    it('should dispatch a message using generated routing key', () => {
       const dispatchHandler = new DispatchHandler(publisher);
 
       const buildMessageSpy = vi.spyOn(dispatchHandler as any, 'buildMessage');

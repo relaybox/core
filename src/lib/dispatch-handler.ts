@@ -42,17 +42,22 @@ export default class DispatchHandler {
     session: ReducedSession,
     latencyLog: LatencyLog
   ): void {
-    const routingKey = ChannelManager.getRoutingKey(nspRoomId);
-    const envelope: Envelope = {
-      exchange: this.exchange,
-      routingKey
-    };
+    try {
+      const routingKey = ChannelManager.getRoutingKey(nspRoomId);
 
-    const message = this.buildMessage(nspRoomId, event, data, session, latencyLog);
+      const envelope: Envelope = {
+        exchange: this.exchange,
+        routingKey
+      };
 
-    this.logger.info('Dispatching message', { nspRoomId, event, session });
+      const message = this.buildMessage(nspRoomId, event, data, session, latencyLog);
 
-    this.publisher.send(envelope, message);
+      this.logger.info('Dispatching message', { nspRoomId, event, session });
+
+      this.publisher.send(envelope, message);
+    } catch (err: any) {
+      this.logger.error(`Failed to dispatch message`, { err });
+    }
   }
 
   private buildMessage(

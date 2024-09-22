@@ -8,7 +8,8 @@
     "dev": "TZ=UTC LOGGING_ENABLED=false nodemon",
     "build": "etsc && cp -r ./src/certs ./build",
     "start": "node ./build/app.js",
-    "test": "vitest"
+    "test": "vitest",
+    "build:prod": "tsc"
   },
   "keywords": [],
   "author": "",

@@ -2,6 +2,9 @@ import { vi } from 'vitest';
 
 export const mockRabbitMQConnection = {
   on: vi.fn(),
+  createConsumer: vi.fn().mockReturnValue({
+    on: vi.fn()
+  }),
   acquire: vi.fn().mockResolvedValue({
     on: vi.fn(),
     queueBind: vi.fn(),

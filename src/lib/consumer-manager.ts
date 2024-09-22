@@ -4,8 +4,8 @@ import { Logger } from 'winston';
 import ConfigManager, { ExchangeType } from './config-manager';
 import MessageHandler from './message-handler';
 
-const AMQP_QUEUE_NAME_PREFIX = 'queue';
-const AMQP_CONSUMER_CONCURRENCY = 5;
+export const AMQP_QUEUE_NAME_PREFIX = 'queue';
+export const AMQP_CONSUMER_CONCURRENCY = 5;
 const AMQP_CONSUMER_PREFETCH_COUNT = 20;
 
 export default class ConsumerManager {

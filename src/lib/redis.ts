@@ -19,11 +19,19 @@ const REDIS_TLS_DISABLED = process.env.REDIS_TLS_DISABLED === 'true';
 
 export type RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 
+function getCeritificate(): Buffer | undefined {
+  try {
+    return fs.readFileSync(path.join(__dirname, 'certs/AmazonRootCA1.pem'));
+  } catch (err) {
+    logger.error(`Failed to read certificate file: ${err}`);
+  }
+}
+
 // Node redis client options
 export const tlsConnectionOptions = {
   tls: true,
   rejectUnauthorized: true,
-  cert: 'hello' //fs.readFileSync(path.join(__dirname, '../certs/AmazonRootCA1.pem'))
+  cert: getCeritificate()
 };
 
 export const socketOptions = {

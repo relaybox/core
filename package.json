@@ -6,7 +6,7 @@
   "scripts": {
     "dev:verbose": "nodemon",
     "dev": "TZ=UTC LOGGING_ENABLED=false nodemon",
-    "build": "node build.config.js && cp -r ./src/certs ./build",
+    "build": "node build.config.js",
     "start": "node ./build/app.js",
     "test": "vitest",
     "build:prod": "tsc"
@@ -30,12 +30,9 @@
     "@types/uuid": "^9.0.8",
     "@vitest/coverage-v8": "^1.6.0",
     "esbuild": "^0.21.3",
-    "esbuild-node-tsc": "^2.0.5",
-    "esbuild-ts-paths": "^1.1.3",
     "json-colorizer": "^3.0.1",
     "nodemon": "^3.1.0",
     "typescript": "^5.4.5",
-    "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^1.6.0"
   }
 }

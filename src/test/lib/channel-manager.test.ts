@@ -1,3 +1,4 @@
+import 'src/test/__mocks__/rabbitmq-client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ChannelManager from 'src/lib/channel-manager';
 import ConfigManager from '../../lib/config-manager';
@@ -7,17 +8,6 @@ import ConnectionManager from 'src/lib/connection-manager';
 import Connection from 'rabbitmq-client';
 
 const mockEventEmitter = new EventEmitter();
-
-vi.mock('rabbitmq-client', () => ({
-  Connection: vi.fn().mockImplementation(() => ({
-    on: vi.fn(),
-    acquire: vi.fn().mockResolvedValue({
-      on: vi.fn(),
-      queueBind: vi.fn(),
-      queueUnbind: vi.fn()
-    })
-  }))
-}));
 
 vi.mock('../../lib/config-manager', () => ({
   default: {

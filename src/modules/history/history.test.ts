@@ -1,3 +1,4 @@
+import 'src/test/__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
 import {
   getPartitionKey,
@@ -11,22 +12,6 @@ import { KeyPrefix } from 'src/types/state.types';
 import { HistoryOrder } from 'src/types/history.types';
 import { RedisClient } from 'src/lib/redis';
 import { getMockHistoryMessagesRange } from './history.mock';
-
-const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
-  return {
-    mockBullMQAdd: vi.fn(),
-    mockBullMQGetJob: vi.fn()
-  };
-});
-
-vi.mock('bullmq', () => {
-  return {
-    Queue: vi.fn().mockImplementation(() => ({
-      add: mockBullMQAdd,
-      getJob: mockBullMQGetJob
-    }))
-  };
-});
 
 describe('history.service', () => {
   describe('getPartitionKey', async () => {

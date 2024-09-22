@@ -1,3 +1,4 @@
+import { mockQueue } from 'src/test/__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
 import {
   clearSessionMetrics,
@@ -20,15 +21,6 @@ import { SessionJobName } from './session.queue';
 import { SocketConnectionEventType } from 'src/types/socket.types';
 
 const logger = getLogger('');
-
-const mockQueue = vi.hoisted(() => ({
-  add: vi.fn(),
-  getJob: vi.fn()
-}));
-
-vi.mock('bullmq', () => ({
-  Queue: vi.fn().mockImplementation(() => mockQueue)
-}));
 
 const mockRoomService = vi.hoisted(() => ({
   restoreCachedRooms: vi.fn(),

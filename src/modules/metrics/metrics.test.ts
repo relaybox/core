@@ -1,3 +1,4 @@
+import { mockQueue } from 'src/test/__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import { getMockSession } from '../session/session.mock';
 import { getReducedSession } from '../session/session.service';
@@ -11,16 +12,6 @@ import {
 import { MetricType } from 'src/types/metric.types';
 import { MetricsJobName } from './metrics.queue';
 import { RedisClient } from 'src/lib/redis';
-import exp from 'constants';
-
-const mockQueue = vi.hoisted(() => ({
-  add: vi.fn(),
-  getJob: vi.fn()
-}));
-
-vi.mock('bullmq', () => ({
-  Queue: vi.fn().mockImplementation(() => mockQueue)
-}));
 
 const mockPresenceService = vi.hoisted(() => ({
   isActiveMember: vi.fn()

@@ -1,17 +1,9 @@
+import { mockQueue } from 'src/test/__mocks__/external/bullmq';
 import { describe, expect, vi, it, afterEach } from 'vitest';
 import { getMockSession } from '../session/session.mock';
 import { addActiveMember, removeActiveMember, updateActiveMember } from './presence.service';
 import { PresenceJobName } from './presence.queue';
 import { getReducedSession } from '../session/session.service';
-
-const mockQueue = vi.hoisted(() => ({
-  add: vi.fn(),
-  getJob: vi.fn()
-}));
-
-vi.mock('bullmq', () => ({
-  Queue: vi.fn().mockImplementation(() => mockQueue)
-}));
 
 describe('presence.service', () => {
   const clientId = '12345';

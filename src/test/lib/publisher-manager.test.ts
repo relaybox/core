@@ -3,6 +3,7 @@ import Connection, { Envelope } from 'rabbitmq-client';
 import ConnectionManager from 'src/lib/connection-manager';
 import PublisherManager, { MAX_DELIVERY_ATTEMPTS } from 'src/lib/publisher-manager';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import ConfigManager from 'src/lib/config-manager';
 
 describe('publisher-manager', () => {
   let connection: Connection;
@@ -25,11 +26,17 @@ describe('publisher-manager', () => {
     it('should create a publisher instance', () => {
       const publisherManager = new PublisherManager();
       const publisher = publisherManager.createPublisher(connection);
+      const exchange = ConfigManager.AMQP_DEFAULT_EXCHANGE_NAME;
 
       expect(connection.createPublisher).toHaveBeenCalledWith(
         expect.objectContaining({
           confirm: true,
-          maxAttempts: MAX_DELIVERY_ATTEMPTS
+          maxAttempts: MAX_DELIVERY_ATTEMPTS,
+          exchanges: expect.arrayContaining([
+            expect.objectContaining({
+              exchange
+            })
+          ])
         })
       );
       expect(connection.on).toHaveBeenCalledWith('error', expect.any(Function));
@@ -38,7 +45,7 @@ describe('publisher-manager', () => {
   });
 
   describe('publishMessage', () => {
-    it('should publish a message to a specified exchange and routing key', () => {
+    it('should publish a message based on provided envelope and body', () => {
       const publisherManager = new PublisherManager();
       const publisher = publisherManager.createPublisher(connection);
 

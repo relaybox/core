@@ -1,9 +1,9 @@
 import { WebSocket } from 'uWebSockets.js';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
-import { RedisClient } from '../../lib/redis';
-import { Session } from '../../types/session.types';
-import { KeyNamespace, KeyPrefix, KeySuffix } from '../../types/state.types';
-import { getLogger } from '../../util/logger';
+import { RedisClient } from '@/lib/redis';
+import { Session } from '@/types/session.types';
+import { KeyNamespace, KeyPrefix, KeySuffix } from '@/types/state.types';
+import { getLogger } from '@/util/logger';
 import {
   bindUserSubscription,
   getCachedUsers,
@@ -14,7 +14,7 @@ import {
   unbindUserSubscription
 } from './user.service';
 import { getMockSession } from '../session/session.mock';
-import ChannelManager from '../../lib/channel-manager';
+import ChannelManager from '@/lib/channel-manager';
 
 const logger = getLogger('');
 

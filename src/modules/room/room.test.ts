@@ -1,11 +1,11 @@
-import { Session } from '../../types/session.types';
-import { getLogger } from '../../util/logger';
+import { Session } from '@/types/session.types';
+import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
-import { getMockSession } from '../session/session.mock';
+import { getMockSession } from '@/modules/session/session.mock';
 import { getCachedRooms, joinRoom, leaveRoom, restoreCachedRooms } from './room.service';
-import { RedisClient } from '../../lib/redis';
-import { KeyNamespace } from '../../types/state.types';
+import { RedisClient } from '@/lib/redis';
+import { KeyNamespace } from '@/types/state.types';
 
 const logger = getLogger('');
 
@@ -15,13 +15,13 @@ const mockRoomRepository = vi.hoisted(() => ({
   getCachedRooms: vi.fn()
 }));
 
-vi.mock('./room.repository', () => mockRoomRepository);
+vi.mock('@/modules/room/room.repository', () => mockRoomRepository);
 
 const mockSubscriptionService = vi.hoisted(() => ({
   restoreRoomSubscriptions: vi.fn()
 }));
 
-vi.mock('./../subscription/subscription.service', () => mockSubscriptionService);
+vi.mock('@/modules/subscription/subscription.service', () => mockSubscriptionService);
 
 describe('room.service', async () => {
   let redisClient: RedisClient;

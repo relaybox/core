@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { DsPermission, DsPermissions } from '../../types/permissions.types';
+import { DsPermission, DsPermissions } from '@/types/permissions.types';
 import {
   activeMemberGuard,
   authenticatedSessionGuard,
   permissionsGuard,
   roomMemberGuard
 } from './guards.service';
-import { RedisClient } from '../../lib/redis';
-import { getMockSession } from '../session/session.mock';
+import { RedisClient } from '@/lib/redis';
+import { getMockSession } from '@/modules/session/session.mock';
 
 const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
   return {

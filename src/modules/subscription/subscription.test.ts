@@ -1,6 +1,6 @@
-import { RedisClient } from '../../lib/redis';
-import { Session } from '../../types/session.types';
-import { KeyNamespace, KeyPrefix } from '../../types/state.types';
+import { RedisClient } from '@/lib/redis';
+import { Session } from '@/types/session.types';
+import { KeyNamespace, KeyPrefix } from '@/types/state.types';
 import { WebSocket } from 'uWebSockets.js';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import {

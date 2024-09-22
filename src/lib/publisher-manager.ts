@@ -3,6 +3,8 @@ import { getLogger } from '../util/logger';
 import { Logger } from 'winston';
 import ConfigManager, { ExchangeType } from './config-manager';
 
+export const MAX_DELIVERY_ATTEMPTS = 2;
+
 export default class PublisherManager {
   private exchange: string;
   private exchangeType: ExchangeType;
@@ -15,10 +17,10 @@ export default class PublisherManager {
     this.exchangeType = ConfigManager.EXCHANGE_TYPE;
   }
 
-  public createPublisher(connection: Connection) {
+  public createPublisher(connection: Connection): Publisher {
     const publisherOptions: PublisherProps = {
       confirm: true,
-      maxAttempts: 2,
+      maxAttempts: MAX_DELIVERY_ATTEMPTS,
       exchanges: [
         {
           exchange: this.exchange,

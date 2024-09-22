@@ -6,7 +6,7 @@
     "removeComments": true,
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types"],
-    "sourceMap": true,
+    "sourceMap": false,
     "outDir": "build",
     "strict": true,
     "lib": ["esnext"],
@@ -20,5 +20,5 @@
     "strictPropertyInitialization": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

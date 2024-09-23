@@ -1,11 +1,11 @@
-import { getLogger } from '../util/logger';
+import { getLogger } from '@/util/logger';
 import { Logger } from 'winston';
-import { ReducedSession } from '../types/session.types';
-import { LatencyLog } from '../types/request.types';
+import { ReducedSession } from '@/types/session.types';
+import { LatencyLog } from '@/types/request.types';
 import { Envelope, Publisher } from 'rabbitmq-client';
 import { v4 as uuid } from 'uuid';
 import ConfigManager from './config-manager';
-import { Message } from '../types/data.types';
+import { Message } from '@/types/data.types';
 import ChannelManager from './channel-manager';
 
 interface Dispatcher {

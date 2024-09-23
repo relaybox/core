@@ -1,11 +1,11 @@
-import { RedisClient } from '../../lib/redis';
+import { RedisClient } from '@/lib/redis';
 import * as repository from './room.repository';
-import { Session } from '../../types/session.types';
-import { getLogger } from '../../util/logger';
+import { Session } from '@/types/session.types';
+import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import { Logger } from 'winston';
-import { KeyNamespace } from '../../types/state.types';
-import { restoreRoomSubscriptions } from '../subscription/subscription.service';
+import { KeyNamespace } from '@/types/state.types';
+import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 
 const logger = getLogger('room');
 

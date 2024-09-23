@@ -1,13 +1,13 @@
 import { Logger } from 'winston';
-import { RedisClient } from '../../lib/redis';
-import { Session } from '../../types/session.types';
-import { SocketAckHandler } from '../../types/socket.types';
-import { formatErrorResponse, formatMetricsSubscription } from '../../util/format';
-import { getNspRoomId } from '../../util/helpers';
-import { permissionsGuard } from '../guards/guards.service';
-import { DsPermission } from '../../types/permissions.types';
-import { bindSubscription, unbindSubscription } from '../subscription/subscription.service';
-import { KeyNamespace } from '../../types/state.types';
+import { RedisClient } from '@/lib/redis';
+import { Session } from '@/types/session.types';
+import { SocketAckHandler } from '@/types/socket.types';
+import { formatErrorResponse, formatMetricsSubscription } from '@/util/format';
+import { getNspRoomId } from '@/util/helpers';
+import { permissionsGuard } from '@/modules/guards/guards.service';
+import { DsPermission } from '@/types/permissions.types';
+import { bindSubscription, unbindSubscription } from '@/modules/subscription/subscription.service';
+import { KeyNamespace } from '@/types/state.types';
 import { WebSocket } from 'uWebSockets.js';
 
 export async function clientMetricsSubscribe(

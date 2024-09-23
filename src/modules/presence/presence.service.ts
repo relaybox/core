@@ -1,10 +1,10 @@
 import { PresenceJobName, defaultJobConfig, presenceQueue } from './presence.queue';
-import { getReducedSession } from '../session/session.service';
-import { Session } from '../../types/session.types';
+import { getReducedSession } from '@/modules/session/session.service';
+import { Session } from '@/types/session.types';
 import { Job } from 'bullmq';
-import { RedisClient } from '../../lib/redis';
+import { RedisClient } from '@/lib/redis';
 import * as repository from './presence.repository';
-import { LatencyLog } from '../../types/request.types';
+import { LatencyLog } from '@/types/request.types';
 
 export function addActiveMember(
   clientId: string,

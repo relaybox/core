@@ -1,5 +1,5 @@
-import { RedisClient } from '../../lib/redis';
-import { KeyPrefix, KeySuffix } from '../../types/state.types';
+import { RedisClient } from '@/lib/redis';
+import { KeyPrefix, KeySuffix } from '@/types/state.types';
 
 export async function setRoomJoin(
   redisClient: RedisClient,

@@ -1,15 +1,15 @@
-import { getLogger } from '../../util/logger';
-import { ReducedSession, Session } from '../../types/session.types';
-import { pushRoomLeaveMetrics } from '../metrics/metrics.service';
-import { verifyApiKey, verifyAuthToken } from '../auth/auth.service';
+import { getLogger } from '@/util/logger';
+import { ReducedSession, Session } from '@/types/session.types';
+import { pushRoomLeaveMetrics } from '@/modules/metrics/metrics.service';
+import { verifyApiKey, verifyAuthToken } from '@/modules/auth/auth.service';
 import { SessionJobName, defaultJobConfig, sessionQueue } from './session.queue';
 import { Job } from 'bullmq';
-import { RedisClient } from '../../lib/redis';
-import { restoreCachedRooms } from '../room/room.service';
-import { getCachedRooms } from '../room/room.service';
-import { SocketConnectionEventType } from '../../types/socket.types';
+import { RedisClient } from '@/lib/redis';
+import { restoreCachedRooms } from '@/modules/room/room.service';
+import { getCachedRooms } from '@/modules/room/room.service';
+import { SocketConnectionEventType } from '@/types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
-import { restoreCachedUsers } from '../user/user.service';
+import { restoreCachedUsers } from '@/modules/user/user.service';
 
 const logger = getLogger('session');
 

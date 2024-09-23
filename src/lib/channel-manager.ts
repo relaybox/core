@@ -1,7 +1,7 @@
 import { Logger } from 'winston';
 import { Connection, Channel } from 'rabbitmq-client';
 import { getLogger } from '../util/logger';
-import { SocketSubscriptionEvent } from '../types/socket.types';
+import { SocketSubscriptionEvent } from '@/types/socket.types';
 import ConfigManager from './config-manager';
 import EventEmitter from 'events';
 

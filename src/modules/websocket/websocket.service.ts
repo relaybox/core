@@ -8,22 +8,22 @@ import {
   recordConnnectionEvent,
   restoreSession,
   setSessionActive
-} from '../session/session.service';
-import { getLogger } from '../../util/logger';
+} from '@/modules/session/session.service';
+import { getLogger } from '@/util/logger';
 import { v4 as uuid } from 'uuid';
-import { Session } from '../../types/session.types';
-import { ClientEvent, ServerEvent } from '../../types/event.types';
+import { Session } from '@/types/session.types';
+import { ClientEvent, ServerEvent } from '@/types/event.types';
 import {
   SocketConnectionEventType,
   SocketDisconnectReason,
   SocketSubscriptionEvent
-} from '../../types/socket.types';
-import { getRedisClient } from '../../lib/redis';
+} from '@/types/socket.types';
+import { getRedisClient } from '@/lib/redis';
 import { clientPublish, clientRoomJoin, clientRoomLeave } from '../room/room.handlers';
 import {
   clientRoomSubscriptionBind,
   clientRoomSubscriptionUnbind
-} from '../subscription/subscription.handlers';
+} from '@/modules/subscription/subscription.handlers';
 import {
   clientPresenceCount,
   clientPresenceGet,
@@ -33,11 +33,14 @@ import {
   clientPresenceUnsubscribe,
   clientPresenceUnsubscribeAll,
   clientPresenceUpdate
-} from '../presence/presence.handlers';
-import { clientMetricsSubscribe, clientMetricsUnsubscribe } from '../metrics/metrics.handlers';
-import { DsErrorResponse } from '../../types/request.types';
-import { eventEmitter } from '../../lib/event-bus';
-import { getQueryParamRealValue } from '../../util/helpers';
+} from '@/modules/presence/presence.handlers';
+import {
+  clientMetricsSubscribe,
+  clientMetricsUnsubscribe
+} from '@/modules/metrics/metrics.handlers';
+import { DsErrorResponse } from '@/types/request.types';
+import { eventEmitter } from '@/lib/event-bus';
+import { getQueryParamRealValue } from '@/util/helpers';
 import {
   HttpRequest,
   HttpResponse,
@@ -45,14 +48,14 @@ import {
   us_socket_context_t,
   WebSocket
 } from 'uWebSockets.js';
-import ChannelManager from '../../lib/channel-manager';
-import { clientRoomHistoryGet } from '../history/history.handlers';
+import ChannelManager from '@/lib/channel-manager';
+import { clientRoomHistoryGet } from '@/modules/history/history.handlers';
 import {
   clientAuthUserStatusUpdate,
   clientAuthUserSubscribe,
   clientAuthUserUnsubscribe,
   clientAuthUserUnsubscribeAll
-} from '../user/user.handlers';
+} from '@/modules/user/user.handlers';
 
 const logger = getLogger('websocket');
 const redisClient = getRedisClient();

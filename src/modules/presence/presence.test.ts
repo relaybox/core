@@ -3,7 +3,7 @@ import { describe, expect, vi, it, afterEach } from 'vitest';
 import { getMockSession } from '@/modules/session/session.mock';
 import { addActiveMember, removeActiveMember, updateActiveMember } from './presence.service';
 import { PresenceJobName } from './presence.queue';
-import { getReducedSession } from '../session/session.service';
+import { getReducedSession } from '@/modules/session/session.service';
 
 describe('presence.service', () => {
   const clientId = '12345';

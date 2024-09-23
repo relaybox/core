@@ -1,6 +1,6 @@
 import { Session } from 'src/types/session.types';
-import { RedisClient } from '../../lib/redis';
-import { KeyPrefix, KeySuffix } from '../../types/state.types';
+import { RedisClient } from '@/lib/redis';
+import { KeyPrefix, KeySuffix } from '@/types/state.types';
 
 export function setSessionActive(
   redisClient: RedisClient,

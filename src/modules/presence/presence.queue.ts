@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { connectionOptionsIo } from '../../lib/redis';
+import { connectionOptionsIo } from '@/lib/redis';
 
 const PRESENCE_QUEUE_NAME = 'presence';
 

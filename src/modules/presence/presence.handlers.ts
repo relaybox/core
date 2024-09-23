@@ -1,24 +1,24 @@
 import { Logger } from 'winston';
 import { WebSocket } from 'uWebSockets.js';
-import { RedisClient } from '../../lib/redis';
-import { DsPermission } from '../../types/permissions.types';
-import { Session } from '../../types/session.types';
-import { SocketAckHandler } from '../../types/socket.types';
-import { formatErrorResponse, formatPresenceSubscription } from '../../util/format';
-import { getNspRoomId } from '../../util/helpers';
+import { RedisClient } from '@/lib/redis';
+import { DsPermission } from '@/types/permissions.types';
+import { Session } from '@/types/session.types';
+import { SocketAckHandler } from '@/types/socket.types';
+import { formatErrorResponse, formatPresenceSubscription } from '@/util/format';
+import { getNspRoomId } from '@/util/helpers';
 import {
   activeMemberGuard,
   authenticatedSessionGuard,
   permissionsGuard,
   roomMemberGuard
-} from '../guards/guards.service';
+} from '@/modules/guards/guards.service';
 import {
   bindSubscription,
   unbindAllSubscriptions,
   unbindSubscription
-} from '../subscription/subscription.service';
-import { KeyNamespace } from '../../types/state.types';
-import { SubscriptionType } from '../../types/subscription.types';
+} from '@/modules/subscription/subscription.service';
+import { KeyNamespace } from '@/types/state.types';
+import { SubscriptionType } from '@/types/subscription.types';
 import {
   addActiveMember,
   getActiveMemberCount,
@@ -26,8 +26,8 @@ import {
   removeActiveMember,
   updateActiveMember
 } from './presence.service';
-import { getLatencyLog, publishMetric, unpublishMetric } from '../metrics/metrics.service';
-import { MetricType } from '../../types/metric.types';
+import { getLatencyLog, publishMetric, unpublishMetric } from '@/modules/metrics/metrics.service';
+import { MetricType } from '@/types/metric.types';
 
 export async function clientPresenceSubscribe(
   logger: Logger,

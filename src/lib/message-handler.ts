@@ -1,7 +1,7 @@
-import { getLogger } from '../util/logger';
+import { getLogger } from '@/util/logger';
 import { Logger } from 'winston';
-import { ReducedSession } from '../types/session.types';
-import { LatencyLog } from '../types/request.types';
+import { ReducedSession } from '@/types/session.types';
+import { LatencyLog } from '@/types/request.types';
 import { TemplatedApp } from 'uWebSockets.js';
 
 export default class MessageHandler {

@@ -1,5 +1,5 @@
 import { Connection, Envelope, Publisher, PublisherProps } from 'rabbitmq-client';
-import { getLogger } from '../util/logger';
+import { getLogger } from '@/util/logger';
 import { Logger } from 'winston';
 import ConfigManager, { ExchangeType } from './config-manager';
 

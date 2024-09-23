@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { Connection } from 'rabbitmq-client';
-import { getLogger } from '../util/logger';
+import { getLogger } from '@/util/logger';
 
 export default class ConnectionManager {
   private static instance: ConnectionManager | null;

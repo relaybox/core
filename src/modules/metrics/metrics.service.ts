@@ -1,14 +1,14 @@
 import { Job } from 'bullmq';
-import { MetricType } from '../../types/metric.types';
-import { ReducedSession, Session } from '../../types/session.types';
-import { getLogger } from '../../util/logger';
-import { hasPermission, matchRoomPermissions } from '../permissions/permissions.service';
-import { DsPermission } from '../../types/permissions.types';
+import { MetricType } from '@/types/metric.types';
+import { ReducedSession, Session } from '@/types/session.types';
+import { getLogger } from '@/util/logger';
+import { hasPermission, matchRoomPermissions } from '@/modules/permissions/permissions.service';
+import { DsPermission } from '@/types/permissions.types';
 import { MetricsJobName, defaultJobConfig, metricsQueue } from './metrics.queue';
-import { getReducedSession } from '../session/session.service';
+import { getReducedSession } from '@/modules/session/session.service';
 import { LatencyLog } from 'src/types/request.types';
 import { RedisClient } from 'src/lib/redis';
-import { isActiveMember } from '../presence/presence.service';
+import { isActiveMember } from '@/modules/presence/presence.service';
 
 const logger = getLogger('metrics');
 

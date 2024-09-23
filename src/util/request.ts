@@ -1,4 +1,4 @@
-import { DsApiData, DsResponse } from '../types/request.types';
+import { DsApiData, DsResponse } from '@/types/request.types';
 
 /**
  * Parses and formats a fetch API response to a standardized response object.

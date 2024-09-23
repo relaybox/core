@@ -1,13 +1,13 @@
 import { WebSocket } from 'uWebSockets.js';
-import { KeyNamespace, KeyPrefix } from '../../types/state.types';
-import { getLogger } from '../../util/logger';
+import { KeyNamespace, KeyPrefix } from '@/types/state.types';
+import { getLogger } from '@/util/logger';
 import {
   createSubscription,
   deleteSubscription,
   getAllSubscriptions
 } from './subscription.repository';
-import { RedisClient } from 'src/lib/redis';
-import { Session } from 'src/types/session.types';
+import { RedisClient } from '@/lib/redis';
+import { Session } from '@/types/session.types';
 
 const logger = getLogger('subscription');
 

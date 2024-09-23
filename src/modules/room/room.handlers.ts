@@ -1,25 +1,25 @@
 import { Logger } from 'winston';
-import { SocketAckHandler } from '../../types/socket.types';
-import { Session } from '../../types/session.types';
-import { RedisClient } from '../../lib/redis';
-import { getNspEvent, getNspRoomId } from '../../util/helpers';
+import { SocketAckHandler } from '@/types/socket.types';
+import { Session } from '@/types/session.types';
+import { RedisClient } from '@/lib/redis';
+import { getNspEvent, getNspRoomId } from '@/util/helpers';
 import { joinRoom, leaveRoom } from './room.service';
 import { getReducedSession } from '../session/session.service';
 import {
   getLatencyLog,
   pushRoomJoinMetrics,
   pushRoomLeaveMetrics
-} from '../metrics/metrics.service';
-import { formatErrorResponse, formatPresenceSubscription } from '../../util/format';
-import { SubscriptionType } from '../../types/subscription.types';
+} from '@/modules/metrics/metrics.service';
+import { formatErrorResponse, formatPresenceSubscription } from '@/util/format';
+import { SubscriptionType } from '@/types/subscription.types';
 import { removeActiveMember } from '../presence/presence.service';
 import { unbindAllSubscriptions } from '../subscription/subscription.service';
-import { KeyNamespace } from '../../types/state.types';
+import { KeyNamespace } from '@/types/state.types';
 import { permissionsGuard } from '../guards/guards.service';
-import { DsPermission } from '../../types/permissions.types';
-import AmqpManager from '../../lib/amqp-manager';
+import { DsPermission } from '@/types/permissions.types';
+import AmqpManager from '@/lib/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
-import ChannelManager from '../../lib/channel-manager';
+import ChannelManager from '@/lib/channel-manager';
 import { addRoomHistoryMessage } from '../history/history.service';
 
 export async function clientRoomJoin(

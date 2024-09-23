@@ -1,5 +1,5 @@
-import { DsErrorResponse } from '../types/request.types';
-import { KeyNamespace } from '../types/state.types';
+import { DsErrorResponse } from '@/types/request.types';
+import { KeyNamespace } from '@/types/state.types';
 
 const PLATFORM_RESERVED_NAMESPACE = '$';
 

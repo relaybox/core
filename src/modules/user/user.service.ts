@@ -1,11 +1,11 @@
-import { RedisClient } from 'src/lib/redis';
-import { KeyNamespace, KeyPrefix } from '../../types/state.types';
+import { RedisClient } from '@/lib/redis';
+import { KeyNamespace, KeyPrefix } from '@/types/state.types';
 import { Logger } from 'winston';
 import * as repository from './user.repository';
 import { WebSocket } from 'uWebSockets.js';
-import { Session } from '../../types/session.types';
-import ChannelManager from '../../lib/channel-manager';
-import { getNspClientId } from '../../util/helpers';
+import { Session } from '@/types/session.types';
+import ChannelManager from '@/lib/channel-manager';
+import { getNspClientId } from '@/util/helpers';
 
 function getUserSubscriptionKeyName(connectionId: string, nspClientId?: string): string {
   return `${KeyPrefix.CONNECTION}:${connectionId}:${nspClientId}`;

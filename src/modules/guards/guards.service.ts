@@ -1,9 +1,9 @@
-import { DsPermission, DsPermissions } from '../../types/permissions.types';
-import { matchRoomPermissions } from '../permissions/permissions.service';
-import { Session } from '../../types/session.types';
+import { DsPermission, DsPermissions } from '@/types/permissions.types';
+import { matchRoomPermissions } from '@/modules/permissions/permissions.service';
+import { Session } from '@/types/session.types';
 import { RedisClient } from 'src/lib/redis';
-import { isActiveMember } from '../presence/presence.service';
-import { getRoomByConnectionId } from '../room/room.service';
+import { isActiveMember } from '@/modules/presence/presence.service';
+import { getRoomByConnectionId } from '@/modules/room/room.service';
 
 export function authenticatedSessionGuard(session: Session): boolean {
   if (!session.clientId) {

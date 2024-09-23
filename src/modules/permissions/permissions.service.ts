@@ -1,4 +1,4 @@
-import { DsPermission, DsPermissions } from '../../types/permissions.types';
+import { DsPermission, DsPermissions } from '@/types/permissions.types';
 
 export function matchRoomPermissions(roomId: string, permissions: DsPermissions): string[] {
   if (Array.isArray(permissions)) {

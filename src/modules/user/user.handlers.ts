@@ -1,10 +1,10 @@
 import { Logger } from 'winston';
 import { WebSocket } from 'uWebSockets.js';
-import { RedisClient } from '../../lib/redis';
-import { Session } from '../../types/session.types';
-import { SocketAckHandler } from '../../types/socket.types';
-import { formatErrorResponse, formatUserSubscription } from '../../util/format';
-import { ClientSubscription } from '../../types/subscription.types';
+import { RedisClient } from '@/lib/redis';
+import { Session } from '@/types/session.types';
+import { SocketAckHandler } from '@/types/socket.types';
+import { formatErrorResponse, formatUserSubscription } from '@/util/format';
+import { ClientSubscription } from '@/types/subscription.types';
 import {
   bindUserSubscription,
   getUserSubscriptions,
@@ -12,11 +12,11 @@ import {
   removeUserSubscription,
   unbindUserSubscription
 } from './user.service';
-import ChannelManager from '../../lib/channel-manager';
-import { getNspClientId } from '../../util/helpers';
-import { KeyNamespace } from '../../types/state.types';
-import AmqpManager from '../../lib/amqp-manager';
-import { getLatencyLog } from '../metrics/metrics.service';
+import ChannelManager from '@/lib/channel-manager';
+import { getNspClientId } from '@/util/helpers';
+import { KeyNamespace } from '@/types/state.types';
+import AmqpManager from '@/lib/amqp-manager';
+import { getLatencyLog } from '@/modules/metrics/metrics.service';
 
 export async function clientAuthUserSubscribe(
   logger: Logger,

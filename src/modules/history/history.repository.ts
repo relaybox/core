@@ -1,4 +1,4 @@
-import { RedisClient } from '../../lib/redis';
+import { RedisClient } from '@/lib/redis';
 
 export function addRoomHistoryMessage(
   redisClient: RedisClient,

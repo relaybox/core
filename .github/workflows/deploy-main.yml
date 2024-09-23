@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/20240919_tests__fix_paths
 
 jobs:
   deploy:

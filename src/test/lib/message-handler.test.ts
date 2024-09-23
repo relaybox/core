@@ -1,5 +1,5 @@
-import 'src/test/__mocks__/external/rabbitmq-client';
-import { mockApp } from 'src/test/__mocks__/external/uWebsockets';
+import '@/test/__mocks__/external/rabbitmq-client';
+import { mockApp } from '@/test/__mocks__/external/uWebsockets';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import MessageHandler from '@/lib/message-handler';
 import { getMockSession } from '@/modules/session/session.mock';

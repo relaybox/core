@@ -4,11 +4,7 @@ import { resolve } from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      src: resolve(__dirname, 'src'),
-      '@/util': resolve(__dirname, 'src/util'),
-      '@/types': resolve(__dirname, 'src/types'),
-      '@/modules': resolve(__dirname, 'src/modules'),
-      '@/lib': resolve(__dirname, 'src/lib')
+      '@': resolve(__dirname, 'src')
     }
   },
   test: {

@@ -16,11 +16,7 @@
     "baseUrl": "./",
     "outDir": "build",
     "paths": {
-      "src/*": ["src/*"],
-      "@/util/*": ["src/util/*"],
-      "@/types/*": ["src/types/*"],
-      "@/modules/*": ["src/modules/*"],
-      "@/lib/*": ["src/lib/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["src/**/*"],

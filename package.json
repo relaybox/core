@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "TZ=UTC LOGGING_ENABLED=false nodemon",
     "build": "node build.config.js",
+    "build:prod": "tsc --noEmit && node build.config.js",
     "test": "vitest"
   },
   "keywords": [],

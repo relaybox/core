@@ -1,4 +1,4 @@
-import 'src/test/__mocks__/external/rabbitmq-client';
+import '@/test/__mocks__/external/rabbitmq-client';
 import Connection, { Envelope } from 'rabbitmq-client';
 import ConnectionManager from '@/lib/connection-manager';
 import PublisherManager, { MAX_DELIVERY_ATTEMPTS } from '@/lib/publisher-manager';

@@ -1,4 +1,4 @@
-import { mockQueue } from 'src/test/__mocks__/external/bullmq';
+import { mockQueue } from '@/test/__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import { getMockSession } from '@/modules/session/session.mock';
 import { getReducedSession } from '@/modules/session/session.service';

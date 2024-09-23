@@ -17,7 +17,7 @@ jobs:
     secrets: inherit
 
   publish-multi-platform-image:
-    name: Publish multi-platform image
+    name: DockerHub / publish
     runs-on: ubuntu-latest
     needs:
       - deploy

@@ -15,8 +15,8 @@ const logger = getLogger('session');
 
 const SESSION_INACTIVE_JOB_DELAY_MS = 5000;
 
-// Set to *4 the idle timeout value to ensure session destroy works
-// in conjunction with socket heartbeat
+// Set to 4x the idle timeout value to ensure session destroy works
+// ...in conjunction with socket heartbeat
 const SESSION_DESTROY_JOB_DELAY_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) * 4;
 
 export async function initializeSession(connectionAuthParams: ConnectionAuth): Promise<Session> {

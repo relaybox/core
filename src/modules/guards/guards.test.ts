@@ -248,6 +248,12 @@ describe('guards.service', () => {
 
       expect(authenticatedSessionGuard(session)).toBe(true);
     });
+
+    it('should throw an error if the session is not authenticated (no client id provided)', () => {
+      const session = getMockSession({ clientId: undefined });
+
+      expect(() => authenticatedSessionGuard(session)).toThrow(`No client id provided`);
+    });
   });
 
   describe('roomMemberGuard', () => {

@@ -1,15 +1,15 @@
 import 'src/test/__mocks__/external/rabbitmq-client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import ChannelManager from 'src/lib/channel-manager';
-import ConfigManager from '../../lib/config-manager';
+import ChannelManager from '@/lib/channel-manager';
+import ConfigManager from '@/lib/config-manager';
 import { EventEmitter } from 'events';
-import { SocketSubscriptionEvent } from 'src/types/socket.types';
-import ConnectionManager from 'src/lib/connection-manager';
+import { SocketSubscriptionEvent } from '@/types/socket.types';
+import ConnectionManager from '@/lib/connection-manager';
 import Connection from 'rabbitmq-client';
 
 const mockEventEmitter = new EventEmitter();
 
-vi.mock('../../lib/config-manager', () => ({
+vi.mock('@/lib/config-manager', () => ({
   default: {
     getInt: vi.fn()
   }

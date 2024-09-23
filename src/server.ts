@@ -1,7 +1,8 @@
 import 'dotenv/config';
 
+import os from 'os';
 import { App, HttpResponse, HttpRequest, WebSocket } from 'uWebSockets.js';
-import { getLogger } from './util/logger';
+import { getLogger } from '@/util/logger';
 import {
   handleClientHeartbeat,
   handleConnectionUpgrade,
@@ -9,14 +10,13 @@ import {
   handleSocketMessage,
   handleSocketOpen,
   handleSubscriptionBindings
-} from './modules/websocket/websocket.service';
-import { Session } from './types/session.types';
-import { enqueueDeliveryMetrics } from './modules/metrics/metrics.service';
-import AmqpManager from './lib/amqp-manager';
-import os from 'os';
-import { getRoomHistoryMessages } from './modules/history/history.http';
-import { getCorsResponse } from './util/http';
-import { eventEmitter } from './lib/event-bus';
+} from '@/modules/websocket/websocket.service';
+import { Session } from '@/types/session.types';
+import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
+import AmqpManager from '@/lib/amqp-manager';
+import { getRoomHistoryMessages } from '@/modules/history/history.http';
+import { getCorsResponse } from '@/util/http';
+import { eventEmitter } from '@/lib/event-bus';
 
 const logger = getLogger('uws-socket-server');
 

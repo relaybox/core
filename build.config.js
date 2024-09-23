@@ -10,9 +10,10 @@ esbuild
     platform: 'node',
     target: 'node20',
     outfile: 'build/server.js',
-    external: ['uWebSockets.js', './*.node', ...Object.keys(pkg.dependencies || {})],
+    external: [...Object.keys(pkg.dependencies || {})],
     plugins: [],
-    minify: true
+    minify: true,
+    sourcemap: false
   })
   .then(() => {
     const srcCertsDir = path.resolve(__dirname, 'src', 'certs');

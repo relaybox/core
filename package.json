@@ -4,12 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev:verbose": "nodemon",
     "dev": "TZ=UTC LOGGING_ENABLED=false nodemon",
     "build": "node build.config.js",
-    "start": "node ./build/app.js",
-    "test": "vitest",
-    "build:prod": "tsc"
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",

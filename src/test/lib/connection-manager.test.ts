@@ -1,5 +1,5 @@
 import 'src/test/__mocks__/external/rabbitmq-client';
-import ConnectionManager from 'src/lib/connection-manager';
+import ConnectionManager from '@/lib/connection-manager';
 import { describe, expect, it } from 'vitest';
 
 describe('connection-manager', () => {

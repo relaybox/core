@@ -20,6 +20,8 @@ import { eventEmitter } from '@/lib/event-bus';
 
 const logger = getLogger('uws-socket-server');
 
+// FORCE DEPLOY TO ECS
+
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;

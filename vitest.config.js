@@ -8,7 +8,7 @@ export default defineConfig({
     }
   },
   test: {
-    // silent: true,
+    silent: true,
     globals: true,
     tsconfig: './tsconfig.json',
     include: ['**/*.test.ts'],

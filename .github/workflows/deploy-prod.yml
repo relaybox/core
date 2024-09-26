@@ -27,6 +27,8 @@ jobs:
   deploy:
     uses: ./.github/workflows/deploy.yml
     name: Deploy
+    needs:
+      - test
     with:
       environment: production
       app-name: relaybox

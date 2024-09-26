@@ -1,4 +1,4 @@
-import { mockQueue } from '@/test/__mocks__/external/bullmq';
+import { mockQueue } from '@/tests/__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
 import {
   clearSessionMetrics,

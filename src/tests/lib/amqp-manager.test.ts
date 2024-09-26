@@ -1,4 +1,4 @@
-import { mockApp } from '@/test/__mocks__/external/uWebsockets';
+import { mockApp } from '@/tests/__mocks__/external/uWebsockets';
 import AmqpManager from '@/lib/amqp-manager';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import ConnectionManager from '@/lib/connection-manager';

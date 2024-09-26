@@ -1,4 +1,4 @@
-import '@/test/__mocks__/external/bullmq';
+import '@/tests/__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
 import {
   getPartitionKey,

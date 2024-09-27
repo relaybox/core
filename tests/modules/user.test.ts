@@ -12,8 +12,8 @@ import {
   removeUserSubscription,
   restoreCachedUsers,
   unbindUserSubscription
-} from './user.service';
-import { getMockSession } from '../session/session.mock';
+} from '@/modules/user/user.service';
+import { getMockSession } from '@/modules/session/session.mock';
 import ChannelManager from '@/lib/channel-manager';
 
 const logger = getLogger('');
@@ -28,7 +28,7 @@ const mockUserRepository = vi.hoisted(() => ({
   getUserSubscriptionCount: vi.fn()
 }));
 
-vi.mock('./user.repository', () => mockUserRepository);
+vi.mock('@/modules/user/user.repository', () => mockUserRepository);
 
 describe('user.service', () => {
   let redisClient: RedisClient;

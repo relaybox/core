@@ -1,17 +1,17 @@
-import '@/tests/__mocks__/external/bullmq';
+import '../__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
 import {
   getPartitionKey,
   getPartitionRange,
   getRoomHistoryMessages,
   HISTORY_MAX_SECONDS
-} from './history.service';
-import * as historyService from './history.service';
-import * as historyRepository from './history.repository';
+} from '@/modules/history/history.service';
+import * as historyService from '@/modules/history/history.service';
+import * as historyRepository from '@/modules/history/history.repository';
 import { KeyPrefix } from '@/types/state.types';
 import { HistoryOrder } from '@/types/history.types';
 import { RedisClient } from '@/lib/redis';
-import { getMockHistoryMessagesRange } from './history.mock';
+import { getMockHistoryMessagesRange } from '@/modules/history/history.mock';
 
 describe('history.service', () => {
   describe('getPartitionKey', async () => {

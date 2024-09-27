@@ -7,7 +7,7 @@ import {
   bindSubscription,
   unbindAllSubscriptions,
   unbindSubscription
-} from './subscription.service';
+} from '@/modules/subscription/subscription.service';
 
 const mockSubscriptionRepository = vi.hoisted(() => ({
   createSubscription: vi.fn(),
@@ -15,7 +15,7 @@ const mockSubscriptionRepository = vi.hoisted(() => ({
   getAllSubscriptions: vi.fn()
 }));
 
-vi.mock('./subscription.repository', () => mockSubscriptionRepository);
+vi.mock('@/modules/subscription/subscription.repository', () => mockSubscriptionRepository);
 
 describe('subscription.service', () => {
   let redisClient: RedisClient;

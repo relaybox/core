@@ -1,4 +1,4 @@
-import '@/tests/__mocks__/external/rabbitmq-client';
+import '../__mocks__/external/rabbitmq-client';
 import ConnectionManager from '@/lib/connection-manager';
 import { describe, expect, it } from 'vitest';
 

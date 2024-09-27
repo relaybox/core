@@ -1,4 +1,4 @@
-import '@/tests/__mocks__/external/rabbitmq-client';
+import '../__mocks__/external/rabbitmq-client';
 import Connection, { Publisher } from 'rabbitmq-client';
 import PublisherManager from '@/lib/publisher-manager';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';

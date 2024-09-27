@@ -1,4 +1,4 @@
-import { mockQueue } from '@/tests/__mocks__/external/bullmq';
+import { mockQueue } from '../__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, MockInstance, afterEach } from 'vitest';
 import {
   clearSessionMetrics,
@@ -11,13 +11,13 @@ import {
   restoreSession,
   setSessionActive,
   unmarkSessionForDeletion
-} from './session.service';
+} from '@/modules/session/session.service';
 import { Session } from '@/types/session.types';
-import { getMockSession } from './session.mock';
+import { getMockSession } from '@/modules/session/session.mock';
 import { RedisClient } from '@/lib/redis';
 import { WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
-import { SessionJobName } from './session.queue';
+import { SessionJobName } from '@/modules/session/session.queue';
 import { SocketConnectionEventType } from '@/types/socket.types';
 
 const logger = getLogger('');

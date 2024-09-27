@@ -5,7 +5,7 @@ import {
   authenticatedSessionGuard,
   permissionsGuard,
   roomMemberGuard
-} from './guards.service';
+} from '@/modules/guards/guards.service';
 import { RedisClient } from '@/lib/redis';
 import { getMockSession } from '@/modules/session/session.mock';
 
@@ -31,7 +31,7 @@ const mockPresenceService = vi.hoisted(() => {
   };
 });
 
-vi.mock('./../presence/presence.service', () => mockPresenceService);
+vi.mock('@/modules/presence/presence.service', () => mockPresenceService);
 
 const mockRoomService = vi.hoisted(() => {
   return {
@@ -39,7 +39,7 @@ const mockRoomService = vi.hoisted(() => {
   };
 });
 
-vi.mock('./../room/room.service', () => mockRoomService);
+vi.mock('@/modules/room/room.service', () => mockRoomService);
 
 describe('guards.service', () => {
   describe('permissionsGuard', () => {

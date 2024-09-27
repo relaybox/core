@@ -1,4 +1,4 @@
-import { mockQueue } from '@/tests/__mocks__/external/bullmq';
+import { mockQueue } from '../__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import { getMockSession } from '@/modules/session/session.mock';
 import { getReducedSession } from '@/modules/session/session.service';
@@ -8,9 +8,9 @@ import {
   pushRoomJoinMetrics,
   pushRoomLeaveMetrics,
   unpublishMetric
-} from './metrics.service';
+} from '@/modules/metrics/metrics.service';
 import { MetricType } from '@/types/metric.types';
-import { MetricsJobName } from './metrics.queue';
+import { MetricsJobName } from '@/modules/metrics/metrics.queue';
 import { RedisClient } from '@/lib/redis';
 
 const mockPresenceService = vi.hoisted(() => ({

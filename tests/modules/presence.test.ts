@@ -1,8 +1,12 @@
-import { mockQueue } from '@/tests/__mocks__/external/bullmq';
+import { mockQueue } from '../__mocks__/external/bullmq';
 import { describe, expect, vi, it, afterEach } from 'vitest';
 import { getMockSession } from '@/modules/session/session.mock';
-import { addActiveMember, removeActiveMember, updateActiveMember } from './presence.service';
-import { PresenceJobName } from './presence.queue';
+import {
+  addActiveMember,
+  removeActiveMember,
+  updateActiveMember
+} from '@/modules/presence/presence.service';
+import { PresenceJobName } from '@/modules/presence/presence.queue';
 import { getReducedSession } from '@/modules/session/session.service';
 
 describe('presence.service', () => {

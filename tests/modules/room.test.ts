@@ -3,7 +3,12 @@ import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import { getMockSession } from '@/modules/session/session.mock';
-import { getCachedRooms, joinRoom, leaveRoom, restoreCachedRooms } from './room.service';
+import {
+  getCachedRooms,
+  joinRoom,
+  leaveRoom,
+  restoreCachedRooms
+} from '@/modules/room/room.service';
 import { RedisClient } from '@/lib/redis';
 import { KeyNamespace } from '@/types/state.types';
 

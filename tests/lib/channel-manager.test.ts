@@ -1,4 +1,4 @@
-import '@/tests/__mocks__/external/rabbitmq-client';
+import '../__mocks__/external/rabbitmq-client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ChannelManager from '@/lib/channel-manager';
 import ConfigManager from '@/lib/config-manager';

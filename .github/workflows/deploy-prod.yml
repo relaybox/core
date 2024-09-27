@@ -5,30 +5,9 @@ on:
     types: [published]
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Run Tests
-        run: npm run test
-
   deploy:
     uses: ./.github/workflows/deploy.yml
     name: Deploy
-    needs:
-      - test
     with:
       environment: production
       app-name: relaybox

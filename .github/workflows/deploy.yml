@@ -18,9 +18,17 @@ on:
         type: string
 
 jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/run-tests
+
   deploy:
     name: ECS (${{ inputs.environment }})
     runs-on: ubuntu-latest
+    needs: test
     environment:
       name: ${{ inputs.environment }}
     steps:

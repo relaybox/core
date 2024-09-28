@@ -17,10 +17,9 @@ import AmqpManager from '@/lib/amqp-manager';
 import { getRoomHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
+import { clientEventPublish } from './modules/event/event.handlers';
 
 const logger = getLogger('uws-socket-server');
-
-// FORCE DEPLOY TO ECS
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -37,6 +36,7 @@ const app = App()
     res.end(process.uptime().toString());
   })
   .get('/rooms/:nspRoomId/messages', getRoomHistoryMessages)
+  .post('/event/publish', clientEventPublish)
   .ws('/*', {
     maxLifetime: WS_MAX_LIFETIME_MINS,
     idleTimeout: WS_IDLE_TIMEOUT_MS,

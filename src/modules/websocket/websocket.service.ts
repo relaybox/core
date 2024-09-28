@@ -116,24 +116,20 @@ export function handleConnectionUpgrade(
       verifiedSession.socketId = uuid();
 
       if (!upgradeAborted.aborted) {
-        res.cork(() => {
-          res.upgrade(
-            verifiedSession,
-            secWebsocketKey,
-            secWebsocketProtocol,
-            secWebsocketExtensions,
-            context
-          );
-        });
+        res.upgrade(
+          verifiedSession,
+          secWebsocketKey,
+          secWebsocketProtocol,
+          secWebsocketExtensions,
+          context
+        );
       }
     })
     .catch((err) => {
       logger.error('Error during WebSocket session initialization:', err);
 
       if (!upgradeAborted.aborted) {
-        res.cork(() => {
-          res.writeStatus('500 Internal Server Error').end();
-        });
+        res.writeStatus('500 Internal Server Error').end();
       }
     });
 

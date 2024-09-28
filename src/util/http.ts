@@ -15,7 +15,7 @@ export function getCorsResponse(res: HttpResponse) {
   return res;
 }
 
-export function parseBody(res: HttpResponse): any {
+export function parseRequestBody(res: HttpResponse): any {
   return new Promise<string>((resolve) => {
     let buffer: Buffer;
 

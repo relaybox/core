@@ -57,28 +57,28 @@ export async function getSecretKey(
   return secretKey;
 }
 
-export function permissionsGuard(
-  roomId: string,
-  permission: DsPermission,
-  permissions: DsPermissions | string[]
-): boolean {
-  if (Array.isArray(permissions)) {
-    if (permissions.includes(permission) || permissions.includes('*')) {
-      return true;
-    }
-  } else {
-    const roomPermissions = matchRoomPermissions(roomId, permissions);
+// export function permissionsGuard(
+//   roomId: string,
+//   permission: DsPermission,
+//   permissions: DsPermissions | string[]
+// ): boolean {
+//   if (Array.isArray(permissions)) {
+//     if (permissions.includes(permission) || permissions.includes('*')) {
+//       return true;
+//     }
+//   } else {
+//     const roomPermissions = matchRoomPermissions(roomId, permissions);
 
-    if (
-      roomPermissions &&
-      (roomPermissions.includes('*') || roomPermissions.includes(permission))
-    ) {
-      return true;
-    }
-  }
+//     if (
+//       roomPermissions &&
+//       (roomPermissions.includes('*') || roomPermissions.includes(permission))
+//     ) {
+//       return true;
+//     }
+//   }
 
-  throw new ForbiddenError(`Client not permitted to perform "${permission}" in "${roomId}"`);
-}
+//   throw new ForbiddenError(`Client not permitted to perform "${permission}" in "${roomId}"`);
+// }
 
 export function matchRoomPermissions(roomId: string, permissions: DsPermissions): string[] {
   if (Array.isArray(permissions)) {

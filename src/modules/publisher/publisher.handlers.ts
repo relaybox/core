@@ -1,12 +1,26 @@
-import { getJsonResponse, parseBody } from '@/util/http';
+import { getJsonResponse, parseRequestBody } from '@/util/http';
 import { getLogger } from '@/util/logger';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { v4 as uuid } from 'uuid';
-import { defaultJobConfig, PublisherJobName, publisherQueue } from './publisher.queue';
 import { RedisClient } from '@/lib/redis';
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
+import AmqpManager from '@/lib/amqp-manager';
+import {
+  getLatencyLog,
+  getNspRoomId,
+  getPermissions,
+  getSecretKey,
+  verifySignature,
+  verifyTimestamp
+} from './publisher.service';
+import { DsPermission } from '@/types/permissions.types';
+import { permissionsGuard } from '../guards/guards.service';
+import { getNspEvent } from '@/util/helpers';
+import { addRoomHistoryMessage } from '../history/history.service';
 
 const logger = getLogger('event');
+
+const MAX_TIMESTAMP_DIFF_SECS = 30;
 
 export async function publishEventHandler(
   pgPool: Pool,
@@ -15,59 +29,117 @@ export async function publishEventHandler(
   req: HttpRequest
 ): Promise<void> {
   let aborted = false;
+  let pgClient: PoolClient | undefined;
 
-  const pgClient = await pgPool.connect();
+  res.onAborted(() => {
+    aborted = true;
+  });
+
+  const requestId = uuid();
+
+  logger.info('Publishing event', { requestId });
 
   try {
-    res.onAborted(() => {
-      aborted = true;
-    });
-
-    const requestId = uuid();
-
-    logger.info('Publishing event', { requestId });
-
     const publicKey = req.getHeader(`X-Ds-Public-Key`) || req.getHeader(`x-ds-public-key`);
     const signature = req.getHeader(`X-Ds-Req-Signature`) || req.getHeader(`x-ds-req-signature`);
 
     if (!publicKey || !signature) {
-      throw new Error('Public key and signature headers are required');
+      res.cork(() => {
+        getJsonResponse(res, '400 Bad Request').end(
+          JSON.stringify({
+            name: 'BadRequestError',
+            message: 'Public key and signature headers are required',
+            data: {
+              requestId
+            }
+          })
+        );
+      });
+
+      return;
     }
 
-    const body = await parseBody(res);
-    const timestamp = new Date().toISOString();
+    const body = await parseRequestBody(res);
 
-    const jobData = {
-      publicKey,
-      signature,
-      requestId,
-      timestamp,
-      body
+    // Capture all necessary request data (like headers) before introducing any async code.
+    // Reference: https://github.com/uNetworking/uWebSockets.js/discussions/84
+
+    pgClient = await pgPool.connect();
+
+    const [appPid, keyId] = publicKey.split('.');
+    const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
+
+    await verifySignature(body, signature, secretKey);
+
+    const { event, roomId, data, timestamp } = JSON.parse(body);
+    const verifiedTimestamp = verifyTimestamp(timestamp, MAX_TIMESTAMP_DIFF_SECS);
+    const permissions = await getPermissions(logger, pgClient, keyId);
+
+    permissionsGuard(roomId, DsPermission.PUBLISH, permissions);
+
+    const latencyLog = getLatencyLog(timestamp);
+    const nspRoomId = getNspRoomId(appPid, roomId);
+    const nspEvent = getNspEvent(nspRoomId, event);
+
+    const sender = {
+      clientId: null,
+      connectionId: null,
+      user: null
     };
 
-    publisherQueue.add(PublisherJobName.PUBLISH_EVENT, jobData, defaultJobConfig);
+    const session = {
+      appPid,
+      keyId,
+      uid: null,
+      clientId: null,
+      connectionId: null,
+      socketId: null
+    };
+
+    const extendedMessageData = {
+      body: data,
+      sender,
+      timestamp: new Date().getTime(),
+      event
+    };
+
+    const amqpManager = AmqpManager.getInstance();
+
+    amqpManager.dispatchHandler
+      .to(nspRoomId)
+      .dispatch(nspEvent, extendedMessageData, session, latencyLog);
+
+    await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
 
     if (!aborted) {
       res.cork(() => {
         getJsonResponse(res, '200 ok').end(
           JSON.stringify({
             requestId,
-            timestamp
+            timestamp: verifiedTimestamp,
+            nspRoomId,
+            nspEvent
           })
         );
       });
+
+      return;
     }
   } catch (err: any) {
-    logger.error(`Failed to get room history messages`, { err });
+    logger.error(`Failed to publish event`, { err });
 
     if (!aborted) {
       res.cork(() => {
-        getJsonResponse(res, '500 Internal Server Error').end(
+        getJsonResponse(res, '400 Bad Request').end(
           JSON.stringify({ status: 500, message: err.message })
         );
       });
+
+      return;
     }
   } finally {
-    pgClient.release();
+    if (pgClient) {
+      pgClient.release();
+    }
   }
 }

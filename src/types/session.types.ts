@@ -16,13 +16,11 @@ export interface AuthUser {
 export interface Session {
   uid: string;
   appPid: string;
-  // orgId: string;
   keyId: string;
   clientId: string;
   exp: number;
   timestamp: string;
   permissions: DsPermissions;
-  // anonymous: boolean;
   connectionId: string;
   socketId: string;
   user?: AuthUser;

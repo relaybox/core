@@ -22,6 +22,10 @@ const logger = getLogger('event');
 
 const MAX_TIMESTAMP_DIFF_SECS = 30;
 
+function getHeader(req: HttpRequest, key: string): string | undefined {
+  return req.getHeader(key) || req.getHeader(key.toLowerCase());
+}
+
 export async function publishEventHandler(
   pgPool: Pool,
   redisClient: RedisClient,
@@ -40,8 +44,8 @@ export async function publishEventHandler(
   logger.info('Publishing event', { requestId });
 
   try {
-    const publicKey = req.getHeader(`X-Ds-Public-Key`) || req.getHeader(`x-ds-public-key`);
-    const signature = req.getHeader(`X-Ds-Req-Signature`) || req.getHeader(`x-ds-req-signature`);
+    const publicKey = getHeader(req, `X-Ds-Public-Key`);
+    const signature = getHeader(req, `X-Ds-Req-Signature`);
 
     if (!publicKey || !signature) {
       res.cork(() => {

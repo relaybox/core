@@ -18,7 +18,7 @@ import {
   SocketDisconnectReason,
   SocketSubscriptionEvent
 } from '@/types/socket.types';
-import { getRedisClient } from '@/lib/redis';
+import { getRedisClient, RedisClient } from '@/lib/redis';
 import { clientPublish, clientRoomJoin, clientRoomLeave } from '../room/room.handlers';
 import {
   clientRoomSubscriptionBind,
@@ -58,7 +58,6 @@ import {
 } from '@/modules/user/user.handlers';
 
 const logger = getLogger('websocket');
-const redisClient = getRedisClient();
 
 const decoder = new TextDecoder('utf-8');
 
@@ -144,7 +143,10 @@ export function handleConnectionUpgrade(
   });
 }
 
-export async function handleSocketOpen(socket: WebSocket<Session>): Promise<void> {
+export async function handleSocketOpen(
+  socket: WebSocket<Session>,
+  redisClient: RedisClient
+): Promise<void> {
   try {
     const verifiedSession = socket.getUserData();
     const { uid, connectionId, clientId } = verifiedSession;
@@ -182,6 +184,7 @@ export function emit(socket: WebSocket<Session>, type: ServerEvent, body: any): 
 
 export async function handleSocketMessage(
   socket: WebSocket<Session>,
+  redisClient: RedisClient,
   message: ArrayBuffer,
   isBinary: boolean,
   app: TemplatedApp
@@ -228,6 +231,7 @@ export function handleByteLengthError(socket: WebSocket<Session>, ackId: string)
 
 export async function handleDisconnect(
   socket: WebSocket<Session>,
+  redisClient: RedisClient,
   code: number,
   message: ArrayBuffer,
   serverInstanceId: string

@@ -99,11 +99,14 @@ export function getRedisClient(): RedisClient {
   return redisClient;
 }
 
-process.on('SIGINT', async () => {
+async function closeRedisClient() {
   if (redisClient) {
     await redisClient.quit();
     logger.info('Redis client disconnected through app termination');
   }
 
   process.exit(0);
-});
+}
+
+process.on('SIGINT', closeRedisClient);
+process.on('SIGTERM', closeRedisClient);

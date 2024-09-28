@@ -3,11 +3,20 @@ import { getLogger } from '@/util/logger';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { v4 as uuid } from 'uuid';
 import { defaultJobConfig, PublisherJobName, publisherQueue } from './publisher.queue';
+import { RedisClient } from '@/lib/redis';
+import { Pool } from 'pg';
 
 const logger = getLogger('event');
 
-export async function publishEventHandler(res: HttpResponse, req: HttpRequest): Promise<void> {
+export async function publishEventHandler(
+  pgPool: Pool,
+  redisClient: RedisClient,
+  res: HttpResponse,
+  req: HttpRequest
+): Promise<void> {
   let aborted = false;
+
+  const pgClient = await pgPool.connect();
 
   try {
     res.onAborted(() => {
@@ -58,5 +67,7 @@ export async function publishEventHandler(res: HttpResponse, req: HttpRequest): 
         );
       });
     }
+  } finally {
+    pgClient.release();
   }
 }

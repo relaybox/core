@@ -18,14 +18,18 @@ import { getRoomHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
 import { publishEventHandler } from './modules/publisher/publisher.handlers';
-
-const logger = getLogger('uws-socket-server');
+import { getRedisClient } from './lib/redis';
+import { getPgPool } from './lib/pg';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
 const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
 const WS_MAX_LIFETIME_MINS = 60;
+
+const logger = getLogger('uws-socket-server');
+const pgPool = getPgPool();
+const redisClient = getRedisClient();
 
 const app = App()
   .options('/*', (res: HttpResponse, req: HttpRequest) => {
@@ -36,20 +40,22 @@ const app = App()
     res.end(process.uptime().toString());
   })
   .get('/rooms/:nspRoomId/messages', getRoomHistoryMessages)
-  .post('/publish/event', publishEventHandler)
+  .post('/publish/event', (res: HttpResponse, req: HttpRequest) =>
+    publishEventHandler(pgPool!, redisClient, res, req)
+  )
   .ws('/*', {
     maxLifetime: WS_MAX_LIFETIME_MINS,
     idleTimeout: WS_IDLE_TIMEOUT_MS,
     sendPingsAutomatically: true,
     subscription: handleSubscriptionBindings,
     upgrade: handleConnectionUpgrade,
-    open: handleSocketOpen,
+    open: (socket: WebSocket<Session>) => handleSocketOpen(socket, redisClient),
     pong: handleClientHeartbeat,
     message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
-      handleSocketMessage(socket, message, isBinary, app);
+      handleSocketMessage(socket, redisClient, message, isBinary, app);
     },
     close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
-      handleDisconnect(socket, code, message, CONTAINER_HOSTNAME);
+      handleDisconnect(socket, redisClient, code, message, CONTAINER_HOSTNAME);
     }
   });
 

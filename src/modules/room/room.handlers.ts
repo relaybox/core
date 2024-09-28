@@ -119,6 +119,7 @@ export async function clientPublish(
 
   try {
     permissionsGuard(roomId, DsPermission.PUBLISH, session.permissions);
+
     const reducedSession = getReducedSession(session);
 
     const sender = {

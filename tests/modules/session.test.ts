@@ -346,7 +346,7 @@ describe('session.service', () => {
       expect(existingJob.remove).toHaveBeenCalled();
     });
 
-    it('should throw an error if adding a session user active job fails', async () => {
+    it('should throw an error if adding mark session user active job fails', async () => {
       mockQueue.getJob.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(markSessionUserActive(uid)).rejects.toThrow('Failed to add job');
@@ -389,7 +389,7 @@ describe('session.service', () => {
       );
     });
 
-    it('should throw an error if adding a session active job fails', async () => {
+    it('should throw an error if adding set session active job fails', async () => {
       mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
       await expect(setSessionActive(session, socket)).rejects.toThrow('Failed to add job');

@@ -1,11 +1,12 @@
 import { createHmac } from 'crypto';
 import { PoolClient } from 'pg';
 import { Logger } from 'winston';
-import { DsPermission, DsPermissions } from '@/types/permissions.types';
+import { DsPermissions } from '@/types/permissions.types';
 import { LatencyLog } from '@/types/request.types';
 import { RedisClient } from '@/lib/redis';
 import { KeyPrefix } from '@/types/state.types';
 import { ForbiddenError, UnauthorizedError } from '@/lib/errors';
+import { getNspRoomId } from '@/util/helpers';
 import * as repository from './publisher.repository';
 import * as db from './publisher.db';
 
@@ -57,77 +58,6 @@ export async function getSecretKey(
   return secretKey;
 }
 
-// export function permissionsGuard(
-//   roomId: string,
-//   permission: DsPermission,
-//   permissions: DsPermissions | string[]
-// ): boolean {
-//   if (Array.isArray(permissions)) {
-//     if (permissions.includes(permission) || permissions.includes('*')) {
-//       return true;
-//     }
-//   } else {
-//     const roomPermissions = matchRoomPermissions(roomId, permissions);
-
-//     if (
-//       roomPermissions &&
-//       (roomPermissions.includes('*') || roomPermissions.includes(permission))
-//     ) {
-//       return true;
-//     }
-//   }
-
-//   throw new ForbiddenError(`Client not permitted to perform "${permission}" in "${roomId}"`);
-// }
-
-export function matchRoomPermissions(roomId: string, permissions: DsPermissions): string[] {
-  if (Array.isArray(permissions)) {
-    return permissions;
-  }
-
-  return permissions[roomId] || findWildcardMatch(roomId, permissions) || permissions['*'];
-}
-
-export function findWildcardMatch(
-  roomId: string,
-  permissions: DsPermissions
-): string[] | undefined {
-  const roomParts = roomId.split(':');
-
-  for (const key of Object.keys(permissions)) {
-    const keyParts = key.split(':');
-    let matches = true;
-
-    for (let i = 0; i < roomParts.length; i++) {
-      const keyPart = keyParts[i] || keyParts[keyParts.length - 1];
-
-      if (keyPart !== '*' && keyPart !== roomParts[i]) {
-        matches = false;
-        break;
-      }
-    }
-
-    if (matches) {
-      return permissions[key];
-    }
-  }
-
-  return undefined;
-}
-
-export function hasPermission(
-  permissions: string[],
-  requiredPermission: DsPermission | string[]
-): boolean {
-  for (const action of permissions) {
-    if (action === '*' || action === requiredPermission) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 export async function getPermissions(
   logger: Logger,
   pgClient: PoolClient,
@@ -169,10 +99,6 @@ export function getLatencyLog(createdAt: number): LatencyLog {
     createdAt: new Date(createdAt).toISOString(),
     receivedAt
   };
-}
-
-export function getNspRoomId(appPid: string, roomId: string): string {
-  return `${appPid}:${roomId}`;
 }
 
 export function getRoomHistoryKey(nspRoomId: string, timestamp: number): string {

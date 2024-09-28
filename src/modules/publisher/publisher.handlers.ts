@@ -7,7 +7,6 @@ import { Pool, PoolClient } from 'pg';
 import AmqpManager from '@/lib/amqp-manager';
 import {
   getLatencyLog,
-  getNspRoomId,
   getPermissions,
   getSecretKey,
   verifySignature,
@@ -15,7 +14,7 @@ import {
 } from './publisher.service';
 import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '../guards/guards.service';
-import { getNspEvent } from '@/util/helpers';
+import { getNspEvent, getNspRoomId } from '@/util/helpers';
 import { addRoomHistoryMessage } from '../history/history.service';
 
 const logger = getLogger('event');

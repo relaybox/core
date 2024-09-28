@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq';
 import { connectionOptionsIo } from '@/lib/redis';
 
-const EVENT_QUEUE_NAME = 'event';
+const PUBLISHER_QUEUE_NAME = 'publisher';
 
 const defaultQueueConfig = {
   streams: {
@@ -11,13 +11,13 @@ const defaultQueueConfig = {
   }
 };
 
-export enum BroadcastJobName {
-  EVENT_PUBLISH = 'event:publish'
+export enum PublisherJobName {
+  PUBLISH_EVENT = 'publish:event'
 }
 
 export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
 
-export const eventQueue = new Queue(EVENT_QUEUE_NAME, {
+export const publisherQueue = new Queue(PUBLISHER_QUEUE_NAME, {
   connection: connectionOptionsIo,
   prefix: 'queue',
   ...defaultQueueConfig

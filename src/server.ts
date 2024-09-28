@@ -17,7 +17,7 @@ import AmqpManager from '@/lib/amqp-manager';
 import { getRoomHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
-import { clientEventPublish } from './modules/event/event.handlers';
+import { publishEventHandler } from './modules/publisher/publisher.handlers';
 
 const logger = getLogger('uws-socket-server');
 
@@ -36,7 +36,7 @@ const app = App()
     res.end(process.uptime().toString());
   })
   .get('/rooms/:nspRoomId/messages', getRoomHistoryMessages)
-  .post('/event/publish', clientEventPublish)
+  .post('/publish/event', publishEventHandler)
   .ws('/*', {
     maxLifetime: WS_MAX_LIFETIME_MINS,
     idleTimeout: WS_IDLE_TIMEOUT_MS,

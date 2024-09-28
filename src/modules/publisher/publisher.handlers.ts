@@ -1,27 +1,12 @@
-import { getJsonResponse } from '@/util/http';
+import { getJsonResponse, parseBody } from '@/util/http';
 import { getLogger } from '@/util/logger';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { v4 as uuid } from 'uuid';
+import { defaultJobConfig, PublisherJobName, publisherQueue } from './publisher.queue';
 
 const logger = getLogger('event');
 
-const parseBody = (res: HttpResponse) => {
-  return new Promise<string>((resolve) => {
-    let buffer: Buffer;
-
-    res.onData((chunk, isLast) => {
-      const curBuf = Buffer.from(chunk);
-
-      buffer = buffer ? Buffer.concat([buffer, curBuf]) : isLast ? curBuf : Buffer.concat([curBuf]);
-
-      if (isLast) {
-        resolve(buffer.toString());
-      }
-    });
-  });
-};
-
-export async function clientEventPublish(res: HttpResponse, req: HttpRequest): Promise<void> {
+export async function publishEventHandler(res: HttpResponse, req: HttpRequest): Promise<void> {
   let aborted = false;
 
   try {
@@ -50,6 +35,8 @@ export async function clientEventPublish(res: HttpResponse, req: HttpRequest): P
       timestamp,
       body
     };
+
+    publisherQueue.add(PublisherJobName.PUBLISH_EVENT, jobData, defaultJobConfig);
 
     if (!aborted) {
       res.cork(() => {

@@ -14,3 +14,19 @@ export function getCorsResponse(res: HttpResponse) {
 
   return res;
 }
+
+export function parseBody(res: HttpResponse): any {
+  return new Promise<string>((resolve) => {
+    let buffer: Buffer;
+
+    res.onData((chunk, isLast) => {
+      const curBuf = Buffer.from(chunk);
+
+      buffer = buffer ? Buffer.concat([buffer, curBuf]) : isLast ? curBuf : Buffer.concat([curBuf]);
+
+      if (isLast) {
+        resolve(buffer.toString());
+      }
+    });
+  });
+}

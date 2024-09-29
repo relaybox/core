@@ -5,22 +5,40 @@ on:
     types: [published]
 
 jobs:
-  deploy:
-    uses: ./.github/workflows/deploy.yml
-    name: Deploy
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/run-tests
+
+  build-push-ecr:
+    name: Push
+    uses: ./.github/workflows/build-push-ecr.yml
+    needs: test
     with:
       environment: production
-      app-name: relaybox
       service-name: uws
-      service-suffix: C16JVYsXlXZG
+    secrets: inherit
+
+  deploy-ecs:
+    name: Deploy
+    uses: ./.github/workflows/deploy-ecs.yml
+    needs: build-push-ecr
+    with:
+      environment: production
+      ecr-image: ${{ needs.build-push-ecr.outputs.ecr-image }}
+      cluster-name: uws
+      service-name: uws
       cluster-suffix: vx1WorUhn0id
+      service-suffix: C16JVYsXlXZG
     secrets: inherit
 
   publish-multi-platform-image:
     name: Publish / DockerHub
     runs-on: ubuntu-latest
     needs:
-      - deploy
+      - deploy-ecs
     environment:
       name: production
 
@@ -59,7 +77,7 @@ jobs:
     name: Update package version
     runs-on: ubuntu-latest
     needs:
-      - deploy
+      - deploy-ecs
     permissions:
       contents: write
 

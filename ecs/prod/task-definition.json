@@ -1,11 +1,13 @@
 {
   "family": "relaybox-uws-prod",
-  "taskRoleArn": "arn:aws:iam::637423225170:role/relaybox-prod-ecs-roles-ECSTaskRole-Fl3Ty8kj1qEO",
+  "taskRoleArn": "${AWS_ECS_TASK_ROLE_ARN}",
+  "executionRoleArn": "${AWS_ECS_EXECUTION_ROLE_ARN}",
   "containerDefinitions": [
     {
       "name": "relaybox-uws-prod",
+      "image": "${IMAGE}",
       "essential": true,
-      "memoryReservation": "256",
+      "memoryReservation": 256,
       "portMappings": [
         {
           "containerPort": 4004,
@@ -21,7 +23,87 @@
           "awslogs-region": "eu-west-2",
           "awslogs-stream-prefix": "/aws/ecs"
         }
-      }
+      },
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "${AWS_REGION}"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "${LOG_LEVEL}"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "${DB_HOST}"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "${DB_NAME}"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "${DB_PORT}"
+        },
+        {
+          "name": "DB_PROXY_ENABLED",
+          "value": "${DB_PROXY_ENABLED}"
+        },
+        {
+          "name": "DB_IDLE_TIMEOUT_MS",
+          "value": "${DB_IDLE_TIMEOUT_MS}"
+        },
+        {
+          "name": "DB_MAX_CONNECTIONS",
+          "value": "${DB_MAX_CONNECTIONS}"
+        },
+        {
+          "name": "DB_USER",
+          "value": "${DB_USER}"
+        },
+        {
+          "name": "RABBIT_MQ_CONNECTION_STRING",
+          "value": "${RABBIT_MQ_CONNECTION_STRING}"
+        },
+        {
+          "name": "RABBIT_MQ_QUEUE_AUTO_DELETE",
+          "value": "${RABBIT_MQ_QUEUE_AUTO_DELETE}"
+        },
+        {
+          "name": "RABBIT_MQ_QUEUE_COUNT",
+          "value": "${RABBIT_MQ_QUEUE_COUNT}"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "${REDIS_HOST}"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "${REDIS_PORT}"
+        },
+        {
+          "name": "RELAYBOX_AUTH_SERVICE_URL",
+          "value": "${RELAYBOX_AUTH_SERVICE_URL}"
+        },
+        {
+          "name": "WS_IDLE_TIMEOUT_MS",
+          "value": "${WS_IDLE_TIMEOUT_MS}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "${DB_PASSWORD_ARN}"
+        },
+        {
+          "name": "RDS_ROOT_CERTIFICATE",
+          "valueFrom": "${RDS_ROOT_CERTIFICATE_ARN}"
+        },
+        {
+          "name": "REDIS_AUTH",
+          "valueFrom": "${REDIS_AUTH_ARN}"
+        }
+      ]
     }
   ]
 }

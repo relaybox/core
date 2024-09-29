@@ -7,8 +7,8 @@ import { RedisClient } from '@/lib/redis';
 import { KeyPrefix } from '@/types/state.types';
 import { ForbiddenError, UnauthorizedError } from '@/lib/errors';
 import { getNspRoomId } from '@/util/helpers';
-import * as repository from './publisher.repository';
-import * as db from './publisher.db';
+import * as repository from './events.repository';
+import * as db from './events.db';
 
 const SIGNATURE_HASHING_ALGORITHM = 'sha256';
 const SIGNATURE_BUFFER_ENCODING = 'utf-8';

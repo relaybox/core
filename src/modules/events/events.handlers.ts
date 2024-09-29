@@ -11,7 +11,7 @@ import {
   getSecretKey,
   verifySignature,
   verifyTimestamp
-} from './publisher.service';
+} from './events.service';
 import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '../guards/guards.service';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
@@ -25,7 +25,7 @@ function getHeader(req: HttpRequest, key: string): string | undefined {
   return req.getHeader(key) || req.getHeader(key.toLowerCase());
 }
 
-export async function publishEventHandler(
+export async function handleClientEvent(
   pgPool: Pool,
   redisClient: RedisClient,
   res: HttpResponse,

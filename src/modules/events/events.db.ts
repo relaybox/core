@@ -1,5 +1,4 @@
-import { QueryResult } from 'pg';
-import { PoolClient } from 'pg';
+import { QueryResult, PoolClient } from 'pg';
 
 export function getSecretKeybyKeyId(
   pgClient: PoolClient,

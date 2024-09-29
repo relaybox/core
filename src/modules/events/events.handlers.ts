@@ -1,6 +1,6 @@
+import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { getHeader, getJsonResponse, parseRequestBody } from '@/util/http';
 import { getLogger } from '@/util/logger';
-import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { v4 as uuid } from 'uuid';
 import { RedisClient } from '@/lib/redis';
 import { Pool, PoolClient } from 'pg';
@@ -13,7 +13,7 @@ import {
   verifyTimestamp
 } from './events.service';
 import { DsPermission } from '@/types/permissions.types';
-import { permissionsGuard } from '../guards/guards.service';
+import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
 import { addRoomHistoryMessage } from '../history/history.service';
 

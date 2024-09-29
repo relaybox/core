@@ -47,6 +47,8 @@ export async function getSecretKey(
   appPid: string,
   keyId: string
 ): Promise<string> {
+  logger.debug(`Getting secret key for key id ${keyId}`);
+
   const { rows } = await db.getSecretKeybyKeyId(pgClient, appPid, keyId);
 
   if (!rows.length) {
@@ -63,6 +65,8 @@ export async function getPermissions(
   pgClient: PoolClient,
   keyId: string
 ): Promise<DsPermissions | string[]> {
+  logger.debug(`Getting permissions for key id ${keyId}`);
+
   const { rows } = await db.getPermissionsByKeyId(pgClient, keyId);
 
   if (!rows.length) {
@@ -136,7 +140,7 @@ export async function addRoomHistoryMessage(
   const { timestamp } = messageData;
   const key = getRoomHistoryKey(nspRoomId, timestamp);
 
-  logger.info(`Adding message to history`, { key, timestamp });
+  logger.debug(`Adding message to history`, { key, timestamp });
 
   try {
     await repository.addRoomHistoryMessage(redisClient, key, timestamp, messageData);
@@ -165,7 +169,7 @@ export async function setRoomHistoryKeyTtl(
     if (rows[0].historyTtlHours) {
       const ttl = rows[0].historyTtlHours * 60 * 60;
 
-      logger.info(`Setting TTL for room history key`, { key, ttl });
+      logger.debug(`Setting TTL for room history key`, { key, ttl });
 
       await redisClient.expire(key, ttl);
     }

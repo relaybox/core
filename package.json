@@ -10,8 +10,8 @@
     "test": "vitest"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "RelayBox",
+  "license": "MIT",
   "dependencies": {
     "bullmq": "^5.7.15",
     "dotenv": "^16.4.5",

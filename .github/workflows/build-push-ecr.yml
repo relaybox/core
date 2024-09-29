@@ -1,0 +1,56 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      service-name:
+        required: true
+        type: string
+    outputs:
+      ecr-image:
+        value: ${{ jobs.build-push-ecr.outputs.ecr-image }}
+
+jobs:
+  build-push-ecr:
+    name: amd64 ECR
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    outputs:
+      ecr-image: ${{ steps.push-ecr.outputs.image }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_CI_DEPLOYER_ROLE_ARN }}
+
+      - name: Log in to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build amd64 Docker Image
+        run: |
+          npm ci
+          npm run build
+          docker build -t ${{ inputs.service-name }}:${{ github.sha }} .
+
+      - name: Tag and Push Image to Amazon ECR
+        id: push-ecr
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+          ECR_IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ECR_IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:$ECR_IMAGE_TAG"
+          echo $ECR_IMAGE
+          docker tag ${{ inputs.service-name }}:${{ github.sha }} $ECR_IMAGE
+          docker push $ECR_IMAGE
+          echo "image=$ECR_IMAGE" >> $GITHUB_OUTPUT

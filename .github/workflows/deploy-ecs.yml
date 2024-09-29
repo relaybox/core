@@ -1,0 +1,91 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      app-name:
+        required: false
+        type: string
+        default: relaybox
+      cluster-name:
+        required: false
+        type: string
+      cluster-suffix:
+        required: true
+        type: string
+      service-name:
+        required: false
+        type: string
+      service-suffix:
+        required: true
+        type: string
+      ecr-image:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: amd64 ECS
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_CI_DEPLOYER_ROLE_ARN }}
+
+      - name: Render task definition with environment variables and secrets
+        env:
+          IMAGE: ${{ inputs.ecr-image }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_ECS_EXECUTION_ROLE_ARN: ${{ vars.AWS_ECS_EXECUTION_ROLE_ARN }}
+          AWS_ECS_TASK_ROLE_ARN: ${{ vars.AWS_ECS_TASK_ROLE_ARN }}
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_NAME: ${{ vars.DB_NAME }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_PROXY_ENABLED: ${{ vars.DB_PROXY_ENABLED }}
+          DB_IDLE_TIMEOUT_MS: ${{ vars.DB_IDLE_TIMEOUT_MS }}
+          DB_MAX_CONNECTIONS: ${{ vars.DB_MAX_CONNECTIONS }}
+          DB_PASSWORD_ARN: ${{ vars.DB_PASSWORD_ARN }}
+          DB_TLS_DISABLED: ${{ vars.DB_TLS_DISABLED }}
+          DB_USER: ${{ vars.DB_USER }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+          RABBIT_MQ_CONNECTION_STRING: ${{ vars.RABBIT_MQ_CONNECTION_STRING }}
+          RABBIT_MQ_QUEUE_AUTO_DELETE: ${{ vars.RABBIT_MQ_QUEUE_AUTO_DELETE }}
+          RABBIT_MQ_QUEUE_COUNT: ${{ vars.RABBIT_MQ_QUEUE_COUNT }}
+          RDS_ROOT_CERTIFICATE_ARN: ${{ vars.RDS_ROOT_CERTIFICATE_ARN }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT: ${{ vars.REDIS_PORT }}
+          REDIS_AUTH_ARN: ${{ vars.REDIS_AUTH_ARN }}
+          RELAYBOX_AUTH_SERVICE_URL: ${{ vars.RELAYBOX_AUTH_SERVICE_URL }}
+          WS_IDLE_TIMEOUT_MS: ${{ vars.WS_IDLE_TIMEOUT_MS }}
+        run: |
+          envsubst < ecs/${{vars.STAGE}}/task-definition.json > ecs-task-definition.json
+
+      - name: Register ECS task definition
+        id: register-task
+        run: |
+          TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://ecs-task-definition.json \
+            --region ${{ vars.AWS_REGION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "task-definition-arn=$TASK_DEFINITION_ARN" >> $GITHUB_OUTPUT
+
+      - name: Deploy Amazon ECS service
+        run: |
+          aws ecs update-service \
+            --region ${{ vars.AWS_REGION }} \
+            --cluster ${{inputs.app-name}}-${{ inputs.cluster-name }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-${{inputs.cluster-suffix}} \
+            --service ${{inputs.app-name}}-${{ inputs.service-name }}-${{vars.STAGE}}-ecs-service-ECSService-${{inputs.service-suffix}} \
+            --task-definition ${{ steps.register-task.outputs.task-definition-arn }} \
+            --force-new-deployment

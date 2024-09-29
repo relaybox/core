@@ -3,7 +3,7 @@ name: Deploy development
 on:
   push:
     branches:
-      - main
+      - feature/20240928_events_endpoint_v2
 
 jobs:
   deploy:

@@ -1,4 +1,4 @@
-import { HttpResponse } from 'uWebSockets.js';
+import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
 export function getJsonResponse(res: HttpResponse, status: string) {
   res.writeStatus(status);
@@ -29,4 +29,8 @@ export function parseRequestBody(res: HttpResponse): any {
       }
     });
   });
+}
+
+export function getHeader(req: HttpRequest, key: string): string | undefined {
+  return req.getHeader(key) || req.getHeader(key.toLowerCase());
 }

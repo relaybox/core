@@ -1,4 +1,4 @@
-import { getJsonResponse, parseRequestBody } from '@/util/http';
+import { getHeader, getJsonResponse, parseRequestBody } from '@/util/http';
 import { getLogger } from '@/util/logger';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { v4 as uuid } from 'uuid';
@@ -20,10 +20,6 @@ import { addRoomHistoryMessage } from '../history/history.service';
 const logger = getLogger('event');
 
 const MAX_TIMESTAMP_DIFF_SECS = 30;
-
-function getHeader(req: HttpRequest, key: string): string | undefined {
-  return req.getHeader(key) || req.getHeader(key.toLowerCase());
-}
 
 export async function handleClientEvent(
   pgPool: Pool,

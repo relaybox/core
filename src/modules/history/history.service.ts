@@ -6,7 +6,7 @@ import { Job } from 'bullmq';
 import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue';
 import { HistoryOrder, HistoryResponse } from '@/types/history.types';
 
-const logger = getLogger('history');
+const logger = getLogger('history'); // TODO: MOVE ALL LOGGERS TO HANDLERS FILE
 
 export const HISTORY_PARTITION_RANGE_MS = 60 * 60 * 1000;
 export const HISTORY_MAX_SECONDS = 24 * 60 * 60;

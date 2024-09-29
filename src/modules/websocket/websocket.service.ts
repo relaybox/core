@@ -57,7 +57,7 @@ import {
   clientAuthUserUnsubscribeAll
 } from '@/modules/user/user.handlers';
 
-const logger = getLogger('websocket');
+const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
 
 const decoder = new TextDecoder('utf-8');
 

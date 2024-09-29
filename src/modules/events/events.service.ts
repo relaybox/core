@@ -3,11 +3,8 @@ import { PoolClient } from 'pg';
 import { Logger } from 'winston';
 import { DsPermissions } from '@/types/permissions.types';
 import { LatencyLog } from '@/types/request.types';
-import { RedisClient } from '@/lib/redis';
 import { KeyPrefix } from '@/types/state.types';
 import { ForbiddenError, UnauthorizedError } from '@/lib/errors';
-import { getNspRoomId } from '@/util/helpers';
-import * as repository from './events.repository';
 import * as db from './events.db';
 
 const SIGNATURE_HASHING_ALGORITHM = 'sha256';
@@ -126,55 +123,4 @@ export function getMessageData(systemEvent: any): any {
     timestamp,
     event
   };
-}
-
-export async function addRoomHistoryMessage(
-  logger: Logger,
-  pgClient: PoolClient,
-  redisClient: RedisClient,
-  systemEvent: any
-): Promise<void> {
-  const { appPid, roomId } = systemEvent;
-  const nspRoomId = getNspRoomId(appPid, roomId);
-  const messageData = getMessageData(systemEvent);
-  const { timestamp } = messageData;
-  const key = getRoomHistoryKey(nspRoomId, timestamp);
-
-  logger.debug(`Adding message to history`, { key, timestamp });
-
-  try {
-    await repository.addRoomHistoryMessage(redisClient, key, timestamp, messageData);
-
-    const ttl = await redisClient.ttl(key);
-
-    if (ttl < 0) {
-      await setRoomHistoryKeyTtl(logger, pgClient, redisClient, appPid, key);
-    }
-  } catch (err) {
-    logger.error(`Failed to add message to history`, { err });
-    throw err;
-  }
-}
-
-export async function setRoomHistoryKeyTtl(
-  logger: Logger,
-  pgClient: PoolClient,
-  redisClient: RedisClient,
-  appPid: string,
-  key: string
-): Promise<void> {
-  try {
-    const { rows } = await db.getHistoryTtlhours(pgClient, appPid);
-
-    if (rows[0].historyTtlHours) {
-      const ttl = rows[0].historyTtlHours * 60 * 60;
-
-      logger.debug(`Setting TTL for room history key`, { key, ttl });
-
-      await redisClient.expire(key, ttl);
-    }
-  } catch (err) {
-    logger.error(`Failed to set TTL for room history key`, { err });
-    throw err;
-  }
 }

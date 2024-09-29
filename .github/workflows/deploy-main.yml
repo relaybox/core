@@ -16,7 +16,7 @@ jobs:
   build-push-ecr:
     name: Push
     uses: ./.github/workflows/build-push-ecr.yml
-    needs: build-application
+    needs: test
     with:
       environment: development
       service-name: uws

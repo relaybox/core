@@ -115,9 +115,7 @@ export async function handleClientEvent(
         getJsonResponse(res, '200 ok').end(
           JSON.stringify({
             requestId,
-            timestamp: verifiedTimestamp,
-            nspRoomId,
-            nspEvent
+            timestamp: verifiedTimestamp
           })
         );
       });

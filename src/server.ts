@@ -23,7 +23,7 @@ import { handleClientEvent } from './modules/events/events.handlers';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
-const WS_IDLE_TIMEOUT_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
+const WS_IDLE_TIMEOUT_SECS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
 const WS_MAX_LIFETIME_MINS = 60;
 
@@ -45,7 +45,7 @@ const app = App()
   )
   .ws('/*', {
     maxLifetime: WS_MAX_LIFETIME_MINS,
-    idleTimeout: WS_IDLE_TIMEOUT_MS,
+    idleTimeout: WS_IDLE_TIMEOUT_SECS,
     sendPingsAutomatically: true,
     subscription: handleSubscriptionBindings,
     upgrade: handleConnectionUpgrade,

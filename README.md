@@ -1,68 +1,94 @@
-# Sesssion Management
+# UWS - Realtime Application Service Built on uWebSockets.js, by RelayBox
 
-## Session Destroy
+The UWS service is a relatime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
 
-Following a disconnection event the following actions take place...
+## Quick Start
 
-## socket.close -> handleDisconnect()
+Create a copy of .env.tempate in the root of the project and rename it to .env. Add the following configuration options...
 
-Following a socket disconnection the following events take plkace to manage cleanup but allow for reconnection within a certain time period.
+```
+# Local DB host
+DB_HOST=
 
-### Clearing session metrics
+# Local DB idle timeout
+DB_IDLE_TIMEOUT_MS=
 
-- **clearSessionMetrics -> MetricsJobName.METRICS_CLIENT_ROOM_LEAVE**
+# Local DB max connections
+DB_MAX_CONNECTIONS=
 
-Metric stats relating to the session are cleared immediately to provide immediate feedback to subscribers. A reconnection following a disconnection will emit new metrics.
+# Local DB name
+DB_NAME=
 
-A job is added to the session queue to be picked up by the session service which handles the following...
+# Local DB password
+DB_PASSWORD=
 
-- Unset all metrics including removing from metrics key lists by cached room id
-- Persist room_sessions setting "leftAt" to timsetamp attched to message
+# Local DB port
+DB_PORT=
 
-### Handling session data destroy
+# Local DB proxy enabled - Set to false for local development
+DB_PROXY_ENABLED=
 
-- **markSessionForDeletion -> SessionJobName.SESSION_DESTROY (([idleTimeout] \* 4) ms delayed job)**
+# Local DB user
+DB_USER=
 
-A delayed job is added to the session queue to clear cached room/subscription data. The delay is the length of the socket idle timeout \* 4.
+# Local DB TLS disabled - Set to true for local development unless connecttion over TLS
+DB_TLS_DISABLED=
 
-> Why socket idle timeout \* 4?
+# Local Redis host
+REDIS_HOST=
 
-This is because the session remains active as a redis key at "session:[connectionId]:active" for socket idle timeout \* 3. The length of time the cached data is kept is irrelevant so it's safer to ensure the active session has expired (through the use of redis key expiry) before processing the delayed job.
+# Local Redis port
+REDIS_PORT=
 
-When the job is processed by the session service, the following happens...
+# Local Redis TLS disabled - Set to true for local development unless connecttion over TLS
+REDIS_TLS_DISABLED=
 
-1. Check if active session exists as a value at session:connectionId:active (ie. reconnected after disconnection)
-2. If a session exists we can assume the socket reconnected following the disconnection - exit the process
-3. If no active session found, clear cached rooms and subscriptions
-4. Update DB with "disconnectedAt" timestamp (set to now() but maybe change to timestamp included with the job data)
+# Local RabbitMQ connection string
+RABBIT_MQ_CONNECTION_STRING=
 
-The session is now ended. The connection is dead and all cached session data is now purged
+# Local RabbitMQ queue auto delete - Set to true unless testing specific feature
+RABBIT_MQ_QUEUE_AUTO_DELETE=
 
-### Remove from presence and broadcast disconnection
+# Recommended setting "5" - This value needs to be synced across services
+RABBIT_MQ_QUEUE_COUNT=
 
-- **markSessionUserInactive -> SessionJobName.SESSION_USER_INACTIVE (5000ms delayed job)**
+# Local RelayBox Auth service URL
+RELAYBOX_AUTH_SERVICE_URL=
 
-Responsible for informing presence subscribers that the connection has been lost and is now inactive. Subscribers will be notifed that the connection has left the room even thought the session has not been cleared. A reconnection will not add the connection back to presence set after this job has run. This will need to be handled manually.
+# Localhost - Set to true for local development
+LOCALHOST=
 
-Currently, 5000ms is the grace period awaiting socket reconnection. The 5000ms delayed job will be processd by the session service, executing...
+# Recommended setting "30000" - This value needs to be synced across services
+WS_IDLE_TIMEOUT_MS=
 
-- Remove active presence member from all presence sets it is active in (by cached room id) (Redis)
-- Broadcast session destroy to interested presence subscriptions (RMQ)
+# Desired log level - recommended setting "debug" for local development
+LOG_LEVEL=
+```
 
-### Record the disconnection event (PG)
+> Recommended: Fork and clone [relaybox-local](https://github.com/relaybox/relaybox-local) to easily spin up the required resources for local development.
 
-- **recordConnnectionEvent -> SessionJobName.SESSION_SOCKET_CONNECTION_EVENT**
+## Installation
 
-Job added to session queue for immediate processing. This is to maintain the session DB with accurate connection/disconnection data. The session service will execute...
+To install the necessary packages, simply run...
 
-- Update sessions table saving "updatedAt" timestamp using "connectionid" conflict to run the update
-- Insert the disconnection event into connections table with corresponding connection event id (from the initial connection)
+```
+npm install
+```
 
-# Latency Log
+Once complete, the dev environment is ready to go. To start the service, run the following command...
 
-The latency log is a simple object that contains the timestamps of the following events:
+```
+SERVER_PORT=5004 npm run dev
+```
 
-- createdAt: Sent with the socket message (generated by the client)
-- receivedAt: Time the message was first received by the server
-- dispatchedAt: Added once the message has been recieved from AMQ following distribution from the source server
-- persistedAt: Time the message was persisted to the db
+> Please note: If you are using [relaybox-local](https://github.com/relaybox/relaybox-local), be sure that SERVER_PORT matches the upstream port defined in the proxy configuration (defaults to 5004).
+
+The websocket server should start on port 5004 and perform the necessary bootstrapping and config setup.
+
+## Testing
+
+Unit tests are built using `vitest`.
+
+```
+npm run test
+```

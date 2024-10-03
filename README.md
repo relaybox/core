@@ -2,7 +2,7 @@
 
 The UWS service is a relatime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
 
-## Quick Start
+## Getting Started
 
 Create a copy of .env.tempate in the root of the project and rename it to .env. Add the following configuration options...
 

@@ -1,4 +1,4 @@
-# UWS - Realtime Application Service Built on uWebSockets.js by RelayBox
+# UWS - Realtime Application Service Built on uWebSockets.js, by RelayBox
 
 The UWS service is a relatime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
 
@@ -75,12 +75,20 @@ To install the necessary packages, simply run...
 npm install
 ```
 
-Once complete, the dev envieonment is ready to go. To start the service, run the following command...
+Once complete, the dev environment is ready to go. To start the service, run the following command...
 
 ```
 SERVER_PORT=5004 npm run dev
 ```
 
-> Please note: If you are using [relaybox-local](https://github.com/relaybox/relaybox-local), be sure that SERVER_PORT matches the upstream port i the proxy configuration (defaults to 5004).
+> Please note: If you are using [relaybox-local](https://github.com/relaybox/relaybox-local), be sure that SERVER_PORT matches the upstream port defined in the proxy configuration (defaults to 5004).
 
 The websocket server should start on port 5004 and perform the necessary bootstrapping and config setup.
+
+## Testing
+
+Unit tests are built using `vitest`.
+
+```
+npm run test
+```

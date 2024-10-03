@@ -66,3 +66,21 @@ LOG_LEVEL=
 ```
 
 > Recommended: Fork and clone [relaybox-local](https://github.com/relaybox/relaybox-local) to easily spin up the required resources for local development.
+
+## Installation
+
+To install the necessary packages, simply run...
+
+```
+npm install
+```
+
+Once complete, the dev envieonment is ready to go. To start the service, run the following command...
+
+```
+SERVER_PORT=5004 npm run dev
+```
+
+> Please note: If you are using [relaybox-local](https://github.com/relaybox/relaybox-local), be sure that SERVER_PORT matches the upstream port i the proxy configuration (defaults to 5004).
+
+The websocket server should start on port 5004 and perform the necessary bootstrapping and config setup.

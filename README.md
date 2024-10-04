@@ -42,7 +42,7 @@ This service is split into various modules that handle different operations used
 
 Handles auth token and API key verification via the [RelayBox Auth Service](https://github.com/relaybox/auth). Works in conjunction with the "session" module to verify and control access to the system.
 
-- `events` - Handles event publishing and subscriptions.
+- `events`
 
 Handles external events published over http. Responsible for verifying the request signature and dispatching the event to appropriate subscribers.
 
@@ -50,7 +50,7 @@ Handles external events published over http. Responsible for verifying the reque
 
 Handles the retreival of historical messages for a specific room using the passed paramaters. For more information about event history and message retention, please refer to the technical documentation [here](https://relaybox.net/docs/api-reference/relaybox-client/rooms#room-history-get) or for an overview refer to [this section](https://relaybox.net/docs/history).
 
-- `metrics` - Handles metrics collection and publishing.
+- `metrics`
 
 Subscription handler for metrics events. The `metrics` module is responsible for handling metrics event subscriptions and enqueuing metrics data messages processed by the RelayBox [Metrics Service](https://github.com/relaybox/metrics).
 
@@ -60,8 +60,17 @@ Subscription handler for presence events. The `presence` module is responsible f
 
 For more information about "presence", please refer to the technical documentation [here](https://relaybox.net/docs/api-reference/relaybox-client/rooms#room-presence-join) or for an overview refer to [this section](https://relaybox.net/docs/presence).
 
-- `publisher` - Handles message publishing.
-- `room` - Handles room management.
-- `session` - Handles session management.
+- `room`
+
+Handles room events such as "join", "leave" and "publish". This module maintains the cached rooms for a given connection to enable restore functionality when a connection is re-established.
+
+It also handles publishing messages recieved from client input via `amqp-manager` (more on this shortly)
+
+- `session`
+
+Handles the session lifecycle from connection initialization to destroying the session on disconnect. This module works in conjunction with the auth module to verify auth tokens and allow access to the service.
+
+It also controls messages passed to the [Session Service](https://github.com/relaybox/presence) that handles session heartbeats and maintains the session database.
+
 - `subscription` - Handles subscription management.
 - `user` - Handles user management.

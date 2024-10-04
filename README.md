@@ -96,4 +96,4 @@ The websocket module is the entry point for access to the system. It's main resp
 
 It also handles the websocket handshake, subscription bindings, connection upgrade and disconnection events.
 
-![RelayBox system architecture](/assets/system/relaybox-system.png)
+![RelayBox system architecture](/assets/system/relaybox-system-uws.png)

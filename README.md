@@ -1,4 +1,4 @@
-# uWS - Realtime Application Service Built on uWebSockets.js by RelayBox
+# uWS - RelayBox Realtime Application Service Built on uWebSockets.js
 
 The uWS service is a relatime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
 
@@ -40,7 +40,7 @@ This service is split into various modules that handle different operations used
 
 - `auth`
 
-Handles auth token and API key verification via the [RelayBox Auth Service](https://github.com/relaybox/auth). Works in conjunction with the "session" module to verify and control access to the system.
+Handles auth token and API key verification via the [Auth Service](https://github.com/relaybox/auth). Works in conjunction with the "session" module to verify and control access to the system.
 
 - `events`
 
@@ -56,7 +56,7 @@ Subscription handler for metrics events. The `metrics` module is responsible for
 
 - `presence`
 
-Subscription handler for presence events. The `presence` module is responsible for hadling presence event subscriptions and enqueuing presence data messages processed by the RelayBox [Presence Service](https://github.com/relaybox/presence). It also emits responses to presence stats requests, such as `get()` and `getCount()`.
+Subscription handler for presence events. The `presence` module is responsible for hadling presence event subscriptions and enqueuing presence data messages processed by the RelayBox [Presence Service](https://github.com/relaybox/presence). It also emits responses to presence state requests, such as `get()` and `getCount()`.
 
 For more information about "presence", please refer to the technical documentation [here](https://relaybox.net/docs/api-reference/relaybox-client/rooms#room-presence-join) or for an overview refer to [this section](https://relaybox.net/docs/presence).
 
@@ -72,5 +72,20 @@ Handles the session lifecycle from connection initialization to destroying the s
 
 It also controls messages passed to the [Session Service](https://github.com/relaybox/presence) that handles session heartbeats and maintains the session database.
 
-- `subscription` - Handles subscription management.
-- `user` - Handles user management.
+- `subscription`
+
+The subscription module is a more generic module that handles the actual subscription binding and unbinding process used by the `room`, `presence` and `metrics` modules.
+
+Each time a subscripton is created, the service will subscribe the socket and create an entry at the relevant cache key. Likewise, when a subscription is deleted, the service will unsubscribe the socket and remove the entry from the cache.
+
+Essentially, the module acts as a central point for managing subscriptions.
+
+- `user`
+
+The user module handles subscriptions to individual user events and is responsible for dipsatching user status updates via `amqp-manager` (more on this shortly).
+
+- `guards`
+
+The guards module is a collection of helper functions that are used to verify the permissions of a given user or room prior to perfoming actions via the other modules in the system.
+
+Examples of guards include `authenticatedSessionGuard()` and `roomMemberGuard()`.

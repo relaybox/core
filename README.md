@@ -86,6 +86,12 @@ The user module handles subscriptions to individual user events and is responsib
 
 - `guards`
 
-The guards module is a collection of helper functions that are used to verify the permissions of a given user or room prior to perfoming actions via the other modules in the system.
+The guards module is a collection of helper functions that are used to verify the permissions of a given user prior to perfoming actions via the other modules in the system.
 
 Examples of guards include `authenticatedSessionGuard()` and `roomMemberGuard()`.
+
+- `websocket`
+
+The websocket module is the entry point for access to the system. It's main responsibility to to route incoming connections and messages to the appropriate module based on the message event type.
+
+It also handles the websocket handshake, connection upgrade and disconnection events.

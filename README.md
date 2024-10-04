@@ -40,6 +40,8 @@ The uWS service is the beating heart of the RelayBox system. Responsibilities in
 
 ![RelayBox system architecture](/assets/system/relaybox-system-uws.png)
 
+## Modular Architecture
+
 This service is split into various modules that handle different operations used by the system. The modules themselves are located in the `./src/modules` directory and consist of:
 
 - `auth`

@@ -95,3 +95,5 @@ Examples of guards include `authenticatedSessionGuard()` and `roomMemberGuard()`
 The websocket module is the entry point for access to the system. It's main responsibility to to route incoming connections and messages to the appropriate module based on the message event type.
 
 It also handles the websocket handshake, subscription bindings, connection upgrade and disconnection events.
+
+![RelayBox system architecture](/assets/system/relaybox-system.png)

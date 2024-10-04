@@ -2,6 +2,8 @@
 
 The uWS service is a relatime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
 
+![RelayBox system architecture](/assets/system/relaybox-system-uws.png)
+
 ## Getting Started
 
 Create a copy of `.env.template` in the root of the project and rename it to `.env`. Adjust the configuration settings to match your local environment. Further information about each environment variable can be found in `.env.template`.
@@ -95,5 +97,3 @@ Examples of guards include `authenticatedSessionGuard()` and `roomMemberGuard()`
 The websocket module is the entry point for access to the system. It's main responsibility to to route incoming connections and messages to the appropriate module based on the message event type.
 
 It also handles the websocket handshake, subscription bindings, connection upgrade and disconnection events.
-
-![RelayBox system architecture](/assets/system/relaybox-system-uws.png)

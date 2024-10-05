@@ -1,6 +1,6 @@
 # uWS - RelayBox Realtime Application Service Built on uWebSockets.js
 
-The uWS service is a relatime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
+The uWS service is a realtime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
 
 ## Getting Started
 

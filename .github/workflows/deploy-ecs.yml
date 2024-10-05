@@ -38,34 +38,34 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: ${{ vars.AWS_CI_DEPLOYER_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_CI_DEPLOYER_ROLE_ARN }}
 
       - name: Render task definition with environment variables and secrets
         env:
           IMAGE: ${{ inputs.ecr-image }}
           AWS_REGION: ${{ vars.AWS_REGION }}
-          AWS_ECS_EXECUTION_ROLE_ARN: ${{ vars.AWS_ECS_EXECUTION_ROLE_ARN }}
-          AWS_ECS_TASK_ROLE_ARN: ${{ vars.AWS_ECS_TASK_ROLE_ARN }}
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_NAME: ${{ vars.DB_NAME }}
-          DB_PORT: ${{ vars.DB_PORT }}
+          AWS_ECS_EXECUTION_ROLE_ARN: ${{ secrets.AWS_ECS_EXECUTION_ROLE_ARN }}
+          AWS_ECS_TASK_ROLE_ARN: ${{ secrets.AWS_ECS_TASK_ROLE_ARN }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
           DB_PROXY_ENABLED: ${{ vars.DB_PROXY_ENABLED }}
           DB_IDLE_TIMEOUT_MS: ${{ vars.DB_IDLE_TIMEOUT_MS }}
           DB_MAX_CONNECTIONS: ${{ vars.DB_MAX_CONNECTIONS }}
-          DB_PASSWORD_ARN: ${{ vars.DB_PASSWORD_ARN }}
+          DB_PASSWORD_ARN: ${{ secrets.DB_PASSWORD_ARN }}
           DB_TLS_DISABLED: ${{ vars.DB_TLS_DISABLED }}
-          DB_USER: ${{ vars.DB_USER }}
+          DB_USER: ${{ secrets.DB_USER }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL }}
-          RABBIT_MQ_CONNECTION_STRING: ${{ vars.RABBIT_MQ_CONNECTION_STRING }}
+          RABBIT_MQ_CONNECTION_STRING: ${{ secrets.RABBIT_MQ_CONNECTION_STRING }}
           RABBIT_MQ_QUEUE_AUTO_DELETE: ${{ vars.RABBIT_MQ_QUEUE_AUTO_DELETE }}
           RABBIT_MQ_QUEUE_COUNT: ${{ vars.RABBIT_MQ_QUEUE_COUNT }}
-          RDS_ROOT_CERTIFICATE_ARN: ${{ vars.RDS_ROOT_CERTIFICATE_ARN }}
-          REDIS_HOST: ${{ vars.REDIS_HOST }}
-          REDIS_PORT: ${{ vars.REDIS_PORT }}
-          REDIS_AUTH_ARN: ${{ vars.REDIS_AUTH_ARN }}
+          RDS_ROOT_CERTIFICATE_ARN: ${{ secrets.RDS_ROOT_CERTIFICATE_ARN }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_AUTH_ARN: ${{ secrets.REDIS_AUTH_ARN }}
           RELAYBOX_AUTH_SERVICE_URL: ${{ vars.RELAYBOX_AUTH_SERVICE_URL }}
           WS_IDLE_TIMEOUT_MS: ${{ vars.WS_IDLE_TIMEOUT_MS }}
         run: |

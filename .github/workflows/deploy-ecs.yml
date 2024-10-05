@@ -88,4 +88,4 @@ jobs:
             --cluster ${{inputs.app-name}}-${{ inputs.cluster-name }}-${{vars.STAGE}}-ecs-cluster-ECSCluster-${{inputs.cluster-suffix}} \
             --service ${{inputs.app-name}}-${{ inputs.service-name }}-${{vars.STAGE}}-ecs-service-ECSService-${{inputs.service-suffix}} \
             --task-definition ${{ steps.register-task.outputs.task-definition-arn }} \
-            --force-new-deployment
+            --force-new-deployment > /dev/null

@@ -101,3 +101,11 @@ Examples of guards include `authenticatedSessionGuard()` and `roomMemberGuard()`
 The websocket module is the entry point for access to the system. It's main responsibility to to route incoming connections and messages to the appropriate module based on the message event type.
 
 It also handles the websocket handshake, subscription bindings, connection upgrade and disconnection events.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+### Third-Party Licenses
+
+This project includes components licensed under the Apache License 2.0. See [`LICENSE-APACHE-2.0.txt`](LICENSE-APACHE-2.0.txt) for details.

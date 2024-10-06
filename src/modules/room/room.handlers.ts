@@ -48,7 +48,7 @@ export async function clientRoomJoin(
 
     res(nspRoomId);
   } catch (err: any) {
-    logger.error({ message: err.message, roomId, session });
+    logger.error(`Failed to join room "${roomId}"`, { err, roomId, session });
     res(null, formatErrorResponse(err));
   }
 }
@@ -89,11 +89,7 @@ export async function clientRoomLeave(
 
     res(nspRoomId);
   } catch (err: any) {
-    logger.error(`Leave room failed`, {
-      message: err.message,
-      roomId,
-      session
-    });
+    logger.error(`Failed to leave room "${roomId}"`, { err, roomId, session });
 
     res(null, formatErrorResponse(err));
   }

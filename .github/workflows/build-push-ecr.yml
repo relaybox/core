@@ -38,7 +38,6 @@ jobs:
 
       - name: Build amd64 Docker Image
         run: |
-          echo ${{ vars.DOCKERHUB_USERNAME }}
           npm ci
           npm run build
           docker build -t ${{ inputs.service-name }}:${{ github.sha }} .

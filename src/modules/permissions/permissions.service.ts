@@ -36,7 +36,7 @@ export function findWildcardMatch(
 }
 
 export function hasPermission(
-  permissions: string[],
+  permissions: string[] = [],
   requiredPermission: DsPermission | string[]
 ): boolean {
   for (const permission of permissions) {

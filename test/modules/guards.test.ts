@@ -45,15 +45,17 @@ describe('guards.service', () => {
   describe('permissionsGuard', () => {
     describe('success', () => {
       it('returns true if global permissions include the specific requested permission', () => {
-        const permissions = ['subscribe'];
+        const permissions = ['subscribe', 'publish'];
 
         expect(permissionsGuard('room1', DsPermission.SUBSCRIBE, permissions)).toBe(true);
+        expect(permissionsGuard('room1', DsPermission.PUBLISH, permissions)).toBe(true);
       });
 
       it('returns true if global permissions include a wildcard allowing all permissions', () => {
         const permissions = ['*'];
 
         expect(permissionsGuard('room1', DsPermission.SUBSCRIBE, permissions)).toBe(true);
+        expect(permissionsGuard('room1', DsPermission.PUBLISH, permissions)).toBe(true);
       });
 
       it('returns true if room-specific permissions include the requested permission', () => {
@@ -134,6 +136,14 @@ describe('guards.service', () => {
     });
 
     describe('error', () => {
+      it('throws an error if permissions do not include the specific requested permission', () => {
+        const permissions = ['subscribe', 'publish'];
+
+        expect(() => permissionsGuard('room1', DsPermission.HISTORY, permissions)).toThrow(
+          /not permitted/
+        );
+      });
+
       it('throws an error if the wildcard pattern does not match the queried room structure', () => {
         const permissions: DsPermissions = {
           'room1:*:user': ['subscribe', 'publish']
@@ -214,6 +224,16 @@ describe('guards.service', () => {
         expect(() =>
           permissionsGuard('room1:one:test', DsPermission.PRESENCE, permissions)
         ).toThrow(/not permitted/);
+      });
+
+      it('should something', () => {
+        const permissions: DsPermissions = {
+          'chat:one:test': ['subscribe']
+        };
+
+        expect(() => permissionsGuard('config', DsPermission.PRESENCE, permissions)).toThrow(
+          /not permitted/
+        );
       });
     });
   });

@@ -38,7 +38,7 @@ npm run test
 
 The Core service is the beating heart of the RelayBox system. Responsibilities include orchestrating realtime components from subscription bindings to generating and managing message broker queues and routing keys. It interacts with the auth service directly to define access parameters and guards against unauthorized access to operations based on complex permissions rules.
 
-![RelayBox system architecture](/assets/system/relaybox-system-uws.png)
+<!-- ![RelayBox system architecture](/assets/system/relaybox-system-uws.png) -->
 
 ## Modular Architecture
 

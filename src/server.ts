@@ -27,7 +27,7 @@ const WS_IDLE_TIMEOUT_SECS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;
 const LISTEN_EXCLUSIVE_PORT = 1;
 const WS_MAX_LIFETIME_MINS = 60;
 
-const logger = getLogger('uws-socket-server');
+const logger = getLogger('core-socket-server');
 const pgPool = getPgPool();
 const redisClient = getRedisClient();
 

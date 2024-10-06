@@ -1,6 +1,6 @@
-# UWS - RelayBox Realtime Application Service Built on uWebSockets.js
+# Core - RelayBox Realtime Application Service Built on uWebSockets.js
 
-The UWS service is a realtime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
+The Core service is a realtime websocket server written in NodeJS, built on top of the powerful uWebSockets.js by [uNetworking](https://github.com/uNetworking). The service is designed to provide a reliable and scalable websocket server for realtime applications.
 
 ## Getting Started
 
@@ -34,9 +34,9 @@ The service unit tests can be found in the `./test` directory. Tests are run usi
 npm run test
 ```
 
-## About "UWS"
+## About "Core"
 
-The UWS service is the beating heart of the RelayBox system. Responsibilities include orchestrating realtime components from subscription bindings to generating and managing message broker queues and routing keys. It interacts with the auth service directly to define access parameters and guards against unauthorized access to operations based on complex permissions rules.
+The Core service is the beating heart of the RelayBox system. Responsibilities include orchestrating realtime components from subscription bindings to generating and managing message broker queues and routing keys. It interacts with the auth service directly to define access parameters and guards against unauthorized access to operations based on complex permissions rules.
 
 ![RelayBox system architecture](/assets/system/relaybox-system-uws.png)
 

@@ -70,8 +70,8 @@ jobs:
           docker buildx create --use
           docker buildx build \
             --platform linux/amd64,linux/arm64/v8 \
-            -t relaybox/uws:${{ steps.extract-version.outputs.version }} \
-            -t relaybox/uws:latest \
+            -t relaybox/core:${{ steps.extract-version.outputs.version }} \
+            -t relaybox/core:latest \
             --push .
 
   update-package-version:

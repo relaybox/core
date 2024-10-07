@@ -21,6 +21,8 @@ import AmqpManager from '@/lib/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
 import ChannelManager from '@/lib/channel-manager';
 import { addRoomHistoryMessage } from '../history/history.service';
+import { enqueueWebhookEvent } from '../webhook/webhook.service';
+import { WebhookEvent } from '@/types/webhook.types';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -39,11 +41,15 @@ export async function clientRoomJoin(
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
+    const webhookdata = {
+      nspRoomId
+    };
 
     await Promise.all([
       joinRoom(redisClient, session, nspRoomId, socket),
       joinRoom(redisClient, session, nspRoomRoutingKey, socket),
-      pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId)
+      pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId),
+      enqueueWebhookEvent(WebhookEvent.ROOM_JOIN, webhookdata, session)
     ]);
 
     res(nspRoomId);
@@ -131,6 +137,11 @@ export async function clientPublish(
       event
     };
 
+    const webhookData = {
+      ...extendedMessageData,
+      roomId
+    };
+
     const amqpManager = AmqpManager.getInstance();
 
     amqpManager.dispatchHandler
@@ -138,6 +149,7 @@ export async function clientPublish(
       .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
 
     await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
+    await enqueueWebhookEvent(WebhookEvent.ROOM_PUBLISH, webhookData, session);
 
     res(extendedMessageData);
   } catch (err: any) {

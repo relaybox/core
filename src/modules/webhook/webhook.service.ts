@@ -10,7 +10,8 @@ const logger = getLogger('webhook');
 export async function enqueueWebhookEvent(
   event: WebhookEvent,
   data: any,
-  session: Session
+  session: Session,
+  filterAttributes?: Record<string, unknown>
 ): Promise<Job> {
   const id = uuid();
 
@@ -20,7 +21,8 @@ export async function enqueueWebhookEvent(
     id,
     event,
     data,
-    session
+    session,
+    filterAttributes
   };
 
   return webhookQueue.add(WebhookJobName.WEBHOOK_DISPATCH, jobData, defaultJobConfig);

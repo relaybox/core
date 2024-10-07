@@ -142,6 +142,11 @@ export async function clientPublish(
       roomId
     };
 
+    const webhookFilterAttributes = {
+      roomId,
+      ...messageData
+    };
+
     const amqpManager = AmqpManager.getInstance();
 
     amqpManager.dispatchHandler
@@ -149,7 +154,12 @@ export async function clientPublish(
       .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
 
     await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
-    await enqueueWebhookEvent(WebhookEvent.ROOM_PUBLISH, webhookData, session);
+    await enqueueWebhookEvent(
+      WebhookEvent.ROOM_PUBLISH,
+      webhookData,
+      session,
+      webhookFilterAttributes
+    );
 
     res(extendedMessageData);
   } catch (err: any) {

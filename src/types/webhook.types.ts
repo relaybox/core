@@ -5,6 +5,7 @@ export interface WebhookPayload {
   event: string;
   data: any;
   session: Session;
+  filterAttributes?: Record<string, unknown>;
 }
 
 export enum WebhookEvent {

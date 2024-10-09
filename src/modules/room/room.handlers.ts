@@ -76,6 +76,9 @@ export async function clientRoomLeave(
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
     const presenceSubsciption = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
+    const webhookdata = {
+      nspRoomId
+    };
 
     await Promise.all([
       leaveRoom(redisClient, session, nspRoomId, socket),
@@ -90,7 +93,8 @@ export async function clientRoomLeave(
       ),
       unbindAllSubscriptions(redisClient, connectionId, nspRoomId, KeyNamespace.PRESENCE, socket),
       unbindAllSubscriptions(redisClient, connectionId, nspRoomId, KeyNamespace.METRICS, socket),
-      pushRoomLeaveMetrics(uid, nspRoomId, session)
+      pushRoomLeaveMetrics(uid, nspRoomId, session),
+      enqueueWebhookEvent(WebhookEvent.ROOM_LEAVE, webhookdata, session)
     ]);
 
     res(nspRoomId);

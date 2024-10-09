@@ -1,7 +1,7 @@
-import { Queue } from 'bullmq';
+import { JobsOptions, Queue } from 'bullmq';
 import { connectionOptionsIo } from '@/lib/redis';
 
-const WEBHOOK_QUEUE_NAME = 'webhook';
+const WEBHOOK_QUEUE_NAME = 'webhook-process';
 
 const defaultQueueConfig = {
   streams: {
@@ -12,10 +12,13 @@ const defaultQueueConfig = {
 };
 
 export enum WebhookJobName {
-  WEBHOOK_DISPATCH = 'webhook:dispatch'
+  WEBHOOK_PROCESS = 'webhook:process'
 }
 
-export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
+export const defaultJobConfig: JobsOptions = {
+  removeOnComplete: true,
+  removeOnFail: false
+};
 
 export const webhookQueue = new Queue(WEBHOOK_QUEUE_NAME, {
   connection: connectionOptionsIo,

@@ -1,4 +1,4 @@
-import { Queue } from 'bullmq';
+import { JobsOptions, Queue } from 'bullmq';
 import { connectionOptionsIo } from '@/lib/redis';
 
 const PRESENCE_QUEUE_NAME = 'presence';
@@ -17,7 +17,10 @@ export enum PresenceJobName {
   PRESENCE_UPDATE = 'presence:update'
 }
 
-export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
+export const defaultJobConfig: JobsOptions = {
+  removeOnComplete: true,
+  removeOnFail: false
+};
 
 export const presenceQueue = new Queue(PRESENCE_QUEUE_NAME, {
   connection: connectionOptionsIo,

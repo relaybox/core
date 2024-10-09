@@ -15,7 +15,7 @@ export async function enqueueWebhookEvent(
 ): Promise<Job> {
   const id = uuid();
 
-  logger.debug(`Enqueueing webhook event ${id}, "${event}"`, { id, event, session });
+  logger.debug(`Enqueuing webhook event ${id}, "${event}"`, { id, event, session });
 
   const jobData: WebhookPayload = {
     id,
@@ -25,5 +25,5 @@ export async function enqueueWebhookEvent(
     filterAttributes
   };
 
-  return webhookQueue.add(WebhookJobName.WEBHOOK_DISPATCH, jobData, defaultJobConfig);
+  return webhookQueue.add(WebhookJobName.WEBHOOK_PROCESS, jobData, defaultJobConfig);
 }

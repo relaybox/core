@@ -30,3 +30,7 @@ export const sessionQueue = new Queue(SESSION_QUEUE_NAME, {
   prefix: 'queue',
   ...defaultQueueConfig
 });
+
+sessionQueue.on('error', (err) => {
+  console.log(`BULLMQ ERROR >>>>>>>>>>>>>>>>>>>>>>>> Session queue error`, { err });
+});

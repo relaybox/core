@@ -28,6 +28,8 @@ import {
 } from './presence.service';
 import { getLatencyLog, publishMetric, unpublishMetric } from '@/modules/metrics/metrics.service';
 import { MetricType } from '@/types/metric.types';
+import { enqueueWebhookEvent } from '../webhook/webhook.service';
+import { WebhookEvent } from '@/types/webhook.types';
 
 export async function clientPresenceSubscribe(
   logger: Logger,
@@ -177,14 +179,19 @@ export async function clientPresenceJoin(
     user
   };
 
+  const webhookData = {
+    roomId,
+    timestamp
+  };
+
   try {
     authenticatedSessionGuard(session);
     await roomMemberGuard(redisClient, connectionId, nspRoomId);
 
     await Promise.all([
       addActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog),
-      publishMetric(clientId, nspRoomId, MetricType.PRESENCE_MEMBER, session)
-      // setSessionActive(session, socket)
+      publishMetric(clientId, nspRoomId, MetricType.PRESENCE_MEMBER, session),
+      enqueueWebhookEvent(WebhookEvent.PRESENCE_JOIN, webhookData, session)
     ]);
 
     logger.info('Client joined presence', { session, subscription });
@@ -210,6 +217,7 @@ export async function clientPresenceLeave(
 
   const nspRoomId = getNspRoomId(appPid, roomId);
   const subscription = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
+  const timestamp = new Date().toISOString();
   const latencyLog = getLatencyLog(createdAt);
 
   const message = {
@@ -219,12 +227,18 @@ export async function clientPresenceLeave(
     user
   };
 
+  const webhookData = {
+    roomId,
+    timestamp
+  };
+
   try {
     authenticatedSessionGuard(session);
 
     await Promise.all([
       removeActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog),
-      unpublishMetric(clientId, nspRoomId, MetricType.PRESENCE_MEMBER, session)
+      unpublishMetric(clientId, nspRoomId, MetricType.PRESENCE_MEMBER, session),
+      enqueueWebhookEvent(WebhookEvent.PRESENCE_LEAVE, webhookData, session)
     ]);
 
     logger.info('Client left presence', { session, subscription });
@@ -261,6 +275,11 @@ export async function clientPresenceUpdate(
     user
   };
 
+  const webhookData = {
+    roomId,
+    timestamp
+  };
+
   try {
     authenticatedSessionGuard(session);
 
@@ -268,6 +287,7 @@ export async function clientPresenceUpdate(
     await activeMemberGuard(redisClient, uid, nspRoomId);
 
     updateActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog);
+    enqueueWebhookEvent(WebhookEvent.PRESENCE_UPDATE, webhookData, session);
 
     logger.info('Client updated presence', {
       session,

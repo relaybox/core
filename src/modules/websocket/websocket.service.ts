@@ -56,6 +56,7 @@ import {
   clientAuthUserUnsubscribe,
   clientAuthUserUnsubscribeAll
 } from '@/modules/user/user.handlers';
+import { WebhookEvent } from '@/types/webhook.types';
 
 const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
 

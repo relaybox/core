@@ -10,6 +10,8 @@ import { getCachedRooms } from '@/modules/room/room.service';
 import { SocketConnectionEventType } from '@/types/socket.types';
 import { WebSocket } from 'uWebSockets.js';
 import { restoreCachedUsers } from '@/modules/user/user.service';
+import { enqueueWebhookEvent } from '../webhook/webhook.service';
+import { WebhookEvent } from '@/types/webhook.types';
 
 const logger = getLogger('session');
 
@@ -28,6 +30,8 @@ export async function initializeSession(connectionAuthParams: ConnectionAuth): P
       : await verifyAuthToken(token!, connectionId);
 
     logger.info(`Initializing verified session ${connectionId}`, { clientId, connectionId });
+
+    enqueueWebhookEvent(WebhookEvent.SESSION_INITIALIZE, verifiedSession, verifiedSession);
 
     return verifiedSession;
   } catch (err: any) {

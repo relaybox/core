@@ -181,7 +181,7 @@ export async function clientPresenceJoin(
 
   const webhookData = {
     roomId,
-    timestamp
+    userData
   };
 
   try {
@@ -229,7 +229,7 @@ export async function clientPresenceLeave(
 
   const webhookData = {
     roomId,
-    timestamp
+    userData
   };
 
   try {
@@ -277,7 +277,7 @@ export async function clientPresenceUpdate(
 
   const webhookData = {
     roomId,
-    timestamp
+    userData
   };
 
   try {

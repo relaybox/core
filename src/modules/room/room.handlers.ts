@@ -42,7 +42,7 @@ export async function clientRoomJoin(
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
     const webhookdata = {
-      nspRoomId
+      roomId
     };
 
     await Promise.all([
@@ -77,7 +77,7 @@ export async function clientRoomLeave(
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
     const presenceSubsciption = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
     const webhookdata = {
-      nspRoomId
+      roomId
     };
 
     await Promise.all([
@@ -142,8 +142,9 @@ export async function clientPublish(
     };
 
     const webhookData = {
-      ...extendedMessageData,
-      roomId
+      ...messageData,
+      roomId,
+      event
     };
 
     const webhookFilterAttributes = {

@@ -31,7 +31,7 @@ export async function initializeSession(connectionAuthParams: ConnectionAuth): P
 
     logger.info(`Initializing verified session ${connectionId}`, { clientId, connectionId });
 
-    enqueueWebhookEvent(WebhookEvent.SESSION_INITIALIZE, verifiedSession, verifiedSession);
+    await enqueueWebhookEvent(WebhookEvent.AUTH_SESSION_INITIALIZE, null, verifiedSession);
 
     return verifiedSession;
   } catch (err: any) {

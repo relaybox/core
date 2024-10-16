@@ -1,10 +1,22 @@
-import { Session } from './session.types';
+import { AuthUser, Session } from './session.types';
+
+export interface ReducedWebhookSessionData {
+  appPid: string;
+  keyId: string;
+  clientId: string | null;
+  connectionId: string;
+  socketId: string;
+  timestamp: string;
+  user: AuthUser | null;
+  exp: number;
+}
 
 export interface WebhookPayload {
   id: string;
   event: string;
   data: any;
-  session: Session;
+  session: ReducedWebhookSessionData;
+  timestamp: string;
   filterAttributes?: Record<string, unknown>;
 }
 

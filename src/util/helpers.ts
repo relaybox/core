@@ -27,3 +27,7 @@ export function getQueryParamRealValue(queryParam: string | undefined): string |
 
   return queryParam;
 }
+
+export function getExternalClientId(clientId: string): string | null {
+  return clientId?.split(':')[1] || null;
+}

@@ -191,17 +191,22 @@ export async function clientAuthUserStatusUpdate(
     const subscription = formatUserSubscription(nspClientId, event);
     const amqpManager = AmqpManager.getInstance();
     const latencyLog = getLatencyLog(createdAt);
+
     const messageData = {
       status,
       updatedAt: new Date().toISOString(),
       user: session.user
     };
 
+    const webhookData = {
+      status
+    };
+
     amqpManager.dispatchHandler
       .to(nspClientId)
       .dispatch(subscription, messageData, session, latencyLog);
 
-    await enqueueWebhookEvent(WebhookEvent.USER_STATUS_UPDATE, messageData, session);
+    await enqueueWebhookEvent(WebhookEvent.USER_STATUS_UPDATE, webhookData, session);
 
     res(messageData);
   } catch (err: any) {

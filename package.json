@@ -1,6 +1,6 @@
 {
   "name": "relaybox-core",
-  "version": "2.7.0",
+  "version": "2.7.2",
   "description": "",
   "main": "index.js",
   "scripts": {

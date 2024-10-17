@@ -1,4 +1,4 @@
-import { Queue } from 'bullmq';
+import { JobsOptions, Queue } from 'bullmq';
 import { connectionOptionsIo } from '@/lib/redis';
 
 const SESSION_QUEUE_NAME = 'session';
@@ -20,10 +20,17 @@ export enum SessionJobName {
   SESSION_HEARTBEAT = 'session:heartbeat'
 }
 
-export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
+export const defaultJobConfig: JobsOptions = {
+  removeOnComplete: true,
+  removeOnFail: false
+};
 
 export const sessionQueue = new Queue(SESSION_QUEUE_NAME, {
   connection: connectionOptionsIo,
   prefix: 'queue',
   ...defaultQueueConfig
+});
+
+sessionQueue.on('error', (err) => {
+  console.log(`BULLMQ ERROR >>>>>>>>>>>>>>>>>>>>>>>> Session queue error`, { err });
 });

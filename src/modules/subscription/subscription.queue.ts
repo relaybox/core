@@ -1,4 +1,4 @@
-import { Queue } from 'bullmq';
+import { JobsOptions, Queue } from 'bullmq';
 
 const connectionOpts = {
   host: process.env.REDIS_HOST!,
@@ -21,7 +21,10 @@ export enum SubscriptionJobName {
   SUBSCRIPTION_DELETE_BATCH = 'subscription:delete:batch'
 }
 
-export const defaultJobConfig = { removeOnComplete: true, removeOnFail: false };
+export const defaultJobConfig: JobsOptions = {
+  removeOnComplete: true,
+  removeOnFail: false
+};
 
 export const subscriptionQueue = new Queue(SUBSCRIPTION_QUEUE_NAME, {
   connection: connectionOpts,

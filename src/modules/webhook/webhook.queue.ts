@@ -1,7 +1,7 @@
 import { JobsOptions, Queue } from 'bullmq';
 import { connectionOptionsIo } from '@/lib/redis';
 
-const PRESENCE_QUEUE_NAME = 'presence';
+const WEBHOOK_QUEUE_NAME = 'webhook-process';
 
 const defaultQueueConfig = {
   streams: {
@@ -11,10 +11,8 @@ const defaultQueueConfig = {
   }
 };
 
-export enum PresenceJobName {
-  PRESENCE_JOIN = 'presence:join',
-  PRESENCE_LEAVE = 'presence:leave',
-  PRESENCE_UPDATE = 'presence:update'
+export enum WebhookJobName {
+  WEBHOOK_PROCESS = 'webhook:process'
 }
 
 export const defaultJobConfig: JobsOptions = {
@@ -22,7 +20,7 @@ export const defaultJobConfig: JobsOptions = {
   removeOnFail: false
 };
 
-export const presenceQueue = new Queue(PRESENCE_QUEUE_NAME, {
+export const webhookQueue = new Queue(WEBHOOK_QUEUE_NAME, {
   connection: connectionOptionsIo,
   prefix: 'queue',
   ...defaultQueueConfig

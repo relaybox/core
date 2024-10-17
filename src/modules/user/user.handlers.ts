@@ -17,6 +17,8 @@ import { getNspClientId } from '@/util/helpers';
 import { KeyNamespace } from '@/types/state.types';
 import AmqpManager from '@/lib/amqp-manager';
 import { getLatencyLog } from '@/modules/metrics/metrics.service';
+import { enqueueWebhookEvent } from '../webhook/webhook.service';
+import { WebhookEvent } from '@/types/webhook.types';
 
 export async function clientAuthUserSubscribe(
   logger: Logger,
@@ -189,15 +191,22 @@ export async function clientAuthUserStatusUpdate(
     const subscription = formatUserSubscription(nspClientId, event);
     const amqpManager = AmqpManager.getInstance();
     const latencyLog = getLatencyLog(createdAt);
+
     const messageData = {
       status,
       updatedAt: new Date().toISOString(),
       user: session.user
     };
 
+    const webhookData = {
+      status
+    };
+
     amqpManager.dispatchHandler
       .to(nspClientId)
       .dispatch(subscription, messageData, session, latencyLog);
+
+    await enqueueWebhookEvent(WebhookEvent.USER_STATUS_UPDATE, webhookData, session);
 
     res(messageData);
   } catch (err: any) {

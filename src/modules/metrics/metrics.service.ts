@@ -20,16 +20,14 @@ export function publishMetric(
 ): Promise<Job> {
   const reducedSession = getReducedSession(session);
 
-  return metricsQueue.add(
-    MetricsJobName.METRICS_PUSH,
-    {
-      uid,
-      nspRoomId,
-      metricType,
-      session: reducedSession
-    },
-    { ...defaultJobConfig }
-  );
+  const jobData = {
+    uid,
+    nspRoomId,
+    metricType,
+    session: reducedSession
+  };
+
+  return metricsQueue.add(MetricsJobName.METRICS_PUSH, jobData, defaultJobConfig);
 }
 
 export function unpublishMetric(
@@ -40,16 +38,14 @@ export function unpublishMetric(
 ): Promise<Job> {
   const reducedSession = getReducedSession(session);
 
-  return metricsQueue.add(
-    MetricsJobName.METRICS_SHIFT,
-    {
-      uid,
-      nspRoomId,
-      metricType,
-      session: reducedSession
-    },
-    { ...defaultJobConfig }
-  );
+  const jobData = {
+    uid,
+    nspRoomId,
+    metricType,
+    session: reducedSession
+  };
+
+  return metricsQueue.add(MetricsJobName.METRICS_SHIFT, jobData, defaultJobConfig);
 }
 
 export async function pushRoomJoinMetrics(
@@ -86,17 +82,15 @@ export async function pushRoomJoinMetrics(
     metrics.push(MetricType.PRESENCE_MEMBER);
   }
 
-  metricsQueue.add(
-    MetricsJobName.METRICS_CLIENT_ROOM_JOIN,
-    {
-      uid,
-      nspRoomId,
-      metrics,
-      timestamp,
-      session: reducedSession
-    },
-    { ...defaultJobConfig }
-  );
+  const jobData = {
+    uid,
+    nspRoomId,
+    metrics,
+    timestamp,
+    session: reducedSession
+  };
+
+  metricsQueue.add(MetricsJobName.METRICS_CLIENT_ROOM_JOIN, jobData, defaultJobConfig);
 }
 
 export function pushRoomLeaveMetrics(
@@ -114,17 +108,15 @@ export function pushRoomLeaveMetrics(
     MetricType.PRESENCE_MEMBER
   ];
 
-  return metricsQueue.add(
-    MetricsJobName.METRICS_CLIENT_ROOM_LEAVE,
-    {
-      uid,
-      nspRoomId,
-      metrics,
-      timestamp,
-      ...(session && { session: getReducedSession(session) })
-    },
-    { ...defaultJobConfig }
-  );
+  const jobData = {
+    uid,
+    nspRoomId,
+    metrics,
+    timestamp,
+    ...(session && { session: getReducedSession(session) })
+  };
+
+  return metricsQueue.add(MetricsJobName.METRICS_CLIENT_ROOM_LEAVE, jobData, defaultJobConfig);
 }
 
 export function enqueueDeliveryMetrics(
@@ -151,9 +143,7 @@ export function enqueueDeliveryMetrics(
     listener
   };
 
-  return metricsQueue.add(MetricsJobName.METRICS_DELIVERY_DATA, deliveryData, {
-    ...defaultJobConfig
-  });
+  return metricsQueue.add(MetricsJobName.METRICS_DELIVERY_DATA, deliveryData, defaultJobConfig);
 }
 
 export function getLatencyLog(createdAt: string): LatencyLog {

@@ -1,4 +1,4 @@
-import { Queue } from 'bullmq';
+import { JobsOptions, Queue } from 'bullmq';
 import { connectionOptionsIo } from '@/lib/redis';
 
 const HISTORY_QUEUE_NAME = 'history';
@@ -15,7 +15,7 @@ export enum HistoryJobName {
   HISTORY_TTL = 'history:ttl'
 }
 
-export const defaultJobConfig = {
+export const defaultJobConfig: JobsOptions = {
   removeOnComplete: true,
   removeOnFail: false
 };

@@ -21,6 +21,8 @@ import { getRedisClient } from './lib/redis';
 import { getPgPool } from './lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
 
+// Force v1
+
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
 const WS_IDLE_TIMEOUT_SECS = Number(process.env.WS_IDLE_TIMEOUT_MS) / 1000;

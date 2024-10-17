@@ -36,16 +36,21 @@ export async function enqueueWebhookEvent(
 
   logger.debug(`Enqueuing webhook event ${id}, "${event}"`, { id, event, session });
 
-  const reducedWebhookSessionData = getReducedWebhookSessionData(session);
+  try {
+    const reducedWebhookSessionData = getReducedWebhookSessionData(session);
 
-  const jobData: WebhookPayload = {
-    id,
-    event,
-    timestamp,
-    data,
-    session: reducedWebhookSessionData,
-    filterAttributes
-  };
+    const jobData: WebhookPayload = {
+      id,
+      event,
+      timestamp,
+      data,
+      session: reducedWebhookSessionData,
+      filterAttributes
+    };
 
-  return webhookQueue.add(WebhookJobName.WEBHOOK_PROCESS, jobData, defaultJobConfig);
+    return webhookQueue.add(WebhookJobName.WEBHOOK_PROCESS, jobData, defaultJobConfig);
+  } catch (err: any) {
+    logger.error(`Failed to enqueue webhook event`, { err });
+    throw err;
+  }
 }

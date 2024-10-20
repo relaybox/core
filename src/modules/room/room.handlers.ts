@@ -116,8 +116,6 @@ export async function clientPublish(
 ): Promise<void> {
   const session = socket.getUserData();
 
-  // await handleRateLimit(redisClient, socket);
-
   logger.debug(`Client publish event`, { session });
 
   const { roomId, event, data: messageData } = data;

@@ -1,4 +1,5 @@
 import { ClientEvent } from '@/types/event.types';
+import { rateLimitMiddleware } from './websocket.middleware';
 import {
   clientAuthUserStatusUpdate,
   clientAuthUserSubscribe,
@@ -25,7 +26,6 @@ import {
   clientMetricsSubscribe,
   clientMetricsUnsubscribe
 } from '@/modules/metrics/metrics.handlers';
-import { rateLimitMiddleware } from './websocket.middleware';
 
 export const eventHandlersMap = {
   [ClientEvent.ROOM_JOIN]: clientRoomJoin,

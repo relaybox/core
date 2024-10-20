@@ -6,6 +6,9 @@ import { formatErrorResponse } from '@/util/format';
 import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
 
+const RATE_LIMIT_EVALAUTION_PERIOD_MS = 5000;
+const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 10;
+
 export function rateLimitMiddleware(handler: SocketAckHandler): SocketAckHandler {
   return async (
     logger: Logger,
@@ -18,7 +21,12 @@ export function rateLimitMiddleware(handler: SocketAckHandler): SocketAckHandler
     const session = socket.getUserData();
 
     try {
-      const requestAllowed = await rateLimitGuard(redisClient, session.connectionId);
+      const requestAllowed = await rateLimitGuard(
+        redisClient,
+        session.connectionId,
+        RATE_LIMIT_EVALAUTION_PERIOD_MS,
+        RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD
+      );
 
       if (!requestAllowed) {
         throw new Error('Rate limit exceeded');

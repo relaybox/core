@@ -14,7 +14,6 @@ import { v4 as uuid } from 'uuid';
 import { Session } from '@/types/session.types';
 import { ClientEvent, ServerEvent } from '@/types/event.types';
 import {
-  SocketAckHandler,
   SocketConnectionEventType,
   SocketDisconnectReason,
   SocketSubscriptionEvent
@@ -33,8 +32,6 @@ import {
 import ChannelManager from '@/lib/channel-manager';
 import { KeyPrefix, KeySuffix } from '@/types/state.types';
 import { eventHandlersMap } from './websocket.handlers';
-import { Logger } from 'winston';
-import { formatErrorResponse } from '@/util/format';
 import * as repository from './websocket.repository';
 
 const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
@@ -42,8 +39,6 @@ const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD 
 const decoder = new TextDecoder('utf-8');
 
 const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
-const RATE_LIMIT_EVALAUTION_PERIOD_MS = 5000;
-const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 10;
 
 export function handleConnectionUpgrade(
   res: HttpResponse,
@@ -263,14 +258,11 @@ export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise
 
 export async function rateLimitGuard(
   redisClient: RedisClient,
-  connectionId: string
+  connectionId: string,
+  evaluationPeriodMs: number,
+  entryLimit: number
 ): Promise<number> {
   const key = `${KeyPrefix.RATE}:messages:${connectionId}:${KeySuffix.COUNT}`;
 
-  return repository.evaluateRateLimit(
-    redisClient,
-    key,
-    `${RATE_LIMIT_EVALAUTION_PERIOD_MS}`,
-    `${RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD}`
-  );
+  return repository.evaluateRateLimit(redisClient, key, `${evaluationPeriodMs}`, `${entryLimit}`);
 }

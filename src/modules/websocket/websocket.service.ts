@@ -56,13 +56,16 @@ import {
   clientAuthUserUnsubscribe,
   clientAuthUserUnsubscribeAll
 } from '@/modules/user/user.handlers';
-import { WebhookEvent } from '@/types/webhook.types';
+import { KeyPrefix, KeySuffix } from '@/types/state.types';
+import { incRateLimitCount } from './websocket.repository';
 
 const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
 
 const decoder = new TextDecoder('utf-8');
 
 const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
+const RATE_LIMIT_MAX_MESSAGES_PER_MIN = 60;
+const RATE_LIMIT_COUNT_TTL_SECS = 60;
 
 const eventHandlersMap = {
   [ClientEvent.ROOM_JOIN]: clientRoomJoin,
@@ -187,6 +190,8 @@ export async function handleSocketMessage(
   app: TemplatedApp
 ): Promise<void> {
   try {
+    // await handleRateLimit(redisClient, socket);
+
     const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
 
     if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {
@@ -297,4 +302,21 @@ export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise
   } catch (err: any) {
     logger.error(`Failed to set session heartbeat`, { session });
   }
+}
+
+export async function handleRateLimit(
+  redisClient: RedisClient,
+  socket: WebSocket<Session>
+): Promise<number> {
+  const session = socket.getUserData();
+
+  const key = `${KeyPrefix.RATE}:messages:${session.connectionId}:${KeySuffix.COUNT}`;
+
+  const count = await incRateLimitCount(redisClient, key, RATE_LIMIT_COUNT_TTL_SECS);
+
+  if (count > 10) {
+    throw new Error(`Rate limit exceeded`);
+  }
+
+  return count;
 }

@@ -42,8 +42,8 @@ const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD 
 const decoder = new TextDecoder('utf-8');
 
 const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
-const RATE_LIMIT_EVALAUTION_PERIOD_MS = 30000;
-const RATE_LIMIT_MAX_MESSAGES = 10;
+const RATE_LIMIT_EVALAUTION_PERIOD_MS = 5000;
+const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 30;
 
 export function handleConnectionUpgrade(
   res: HttpResponse,
@@ -306,6 +306,6 @@ export async function handleRateLimit(
     redisClient,
     key,
     `${RATE_LIMIT_EVALAUTION_PERIOD_MS}`,
-    `${RATE_LIMIT_MAX_MESSAGES}`
+    `${RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD}`
   );
 }

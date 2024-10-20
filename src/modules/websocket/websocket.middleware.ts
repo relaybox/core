@@ -7,7 +7,7 @@ import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
 
 const RATE_LIMIT_EVALAUTION_PERIOD_MS = 5000;
-const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 10;
+const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 30;
 
 export function rateLimitMiddleware(handler: SocketAckHandler): SocketAckHandler {
   return async (

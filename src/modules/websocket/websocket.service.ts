@@ -191,7 +191,7 @@ export async function handleDisconnect(
   serverInstanceId: string
 ): Promise<Job | void> {
   const session = socket.getUserData();
-  const decodedMessage = decoder.decode(message);
+  // const decodedMessage = decoder.decode(message);
 
   if (!session.uid) {
     return;

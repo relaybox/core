@@ -23,7 +23,6 @@ import ChannelManager from '@/lib/channel-manager';
 import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
-import { handleRateLimit } from '../websocket/websocket.service';
 
 export async function clientRoomJoin(
   logger: Logger,

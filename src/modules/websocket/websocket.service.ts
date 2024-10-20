@@ -43,7 +43,7 @@ const decoder = new TextDecoder('utf-8');
 
 const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
 const RATE_LIMIT_EVALAUTION_PERIOD_MS = 5000;
-const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 30;
+const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 10;
 
 export function handleConnectionUpgrade(
   res: HttpResponse,
@@ -158,16 +158,9 @@ export async function handleSocketMessage(
       return;
     }
 
-    return rateLimitedRequestHandler(
-      logger,
-      redisClient,
-      socket,
-      type,
-      body,
-      ackId,
-      createdAt,
-      handler
-    );
+    const res = ackHandler(socket, ackId);
+
+    return handler(logger, redisClient, socket, body, res, createdAt);
   } catch (err: any) {
     logger.error(`Failed to handle socket message`, { err });
   }
@@ -268,35 +261,7 @@ export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise
   }
 }
 
-export async function rateLimitedRequestHandler(
-  logger: Logger,
-  redisClient: RedisClient,
-  socket: WebSocket<Session>,
-  type: ClientEvent,
-  body: any,
-  ackId: string,
-  createdAt: string,
-  handler: SocketAckHandler
-): Promise<void> {
-  const session = socket.getUserData();
-
-  const res = ackHandler(socket, ackId);
-
-  try {
-    const requestAllowed = await handleRateLimit(redisClient, session.connectionId);
-
-    if (!requestAllowed) {
-      throw new Error('Rate limit exceeded');
-    }
-
-    return handler(logger, redisClient, socket, body, res, createdAt);
-  } catch (err: any) {
-    logger.error(`Failed to handle socket message`, { err, session });
-    res(null, formatErrorResponse(err));
-  }
-}
-
-export async function handleRateLimit(
+export async function rateLimitGuard(
   redisClient: RedisClient,
   connectionId: string
 ): Promise<number> {

@@ -25,11 +25,12 @@ import {
   clientMetricsSubscribe,
   clientMetricsUnsubscribe
 } from '@/modules/metrics/metrics.handlers';
+import { rateLimitMiddleware } from './websocket.middleware';
 
 export const eventHandlersMap = {
   [ClientEvent.ROOM_JOIN]: clientRoomJoin,
   [ClientEvent.ROOM_LEAVE]: clientRoomLeave,
-  [ClientEvent.PUBLISH]: clientPublish,
+  [ClientEvent.PUBLISH]: rateLimitMiddleware(clientPublish),
   [ClientEvent.ROOM_SUBSCRIPTION_BIND]: clientRoomSubscriptionBind,
   [ClientEvent.ROOM_SUBSCRIPTION_UNBIND]: clientRoomSubscriptionUnbind,
   [ClientEvent.ROOM_PRESENCE_SUBSCRIBE]: clientPresenceSubscribe,
@@ -37,7 +38,7 @@ export const eventHandlersMap = {
   [ClientEvent.ROOM_PRESENCE_UNSUBSCRIBE_ALL]: clientPresenceUnsubscribeAll,
   [ClientEvent.ROOM_PRESENCE_JOIN]: clientPresenceJoin,
   [ClientEvent.ROOM_PRESENCE_LEAVE]: clientPresenceLeave,
-  [ClientEvent.ROOM_PRESENCE_UPDATE]: clientPresenceUpdate,
+  [ClientEvent.ROOM_PRESENCE_UPDATE]: rateLimitMiddleware(clientPresenceUpdate),
   [ClientEvent.ROOM_PRESENCE_GET]: clientPresenceGet,
   [ClientEvent.ROOM_PRESENCE_COUNT]: clientPresenceCount,
   [ClientEvent.ROOM_METRICS_SUBSCRIBE]: clientMetricsSubscribe,

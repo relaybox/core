@@ -6,7 +6,8 @@ export enum KeyPrefix {
   SESSION = 'session',
   CONNECTION = 'connection',
   HEARTBEAT = 'heartbeat',
-  HISTORY = 'history'
+  HISTORY = 'history',
+  RATE = 'rate'
 }
 
 export enum KeySuffix {
@@ -18,7 +19,8 @@ export enum KeySuffix {
   MEMBERS = 'members',
   ACTIVE = 'active',
   KEEP_ALIVE = 'keepalive',
-  USERS = 'users'
+  USERS = 'users',
+  COUNT = 'count'
 }
 
 export enum KeyNamespace {

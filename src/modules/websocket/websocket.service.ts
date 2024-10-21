@@ -18,26 +18,7 @@ import {
   SocketDisconnectReason,
   SocketSubscriptionEvent
 } from '@/types/socket.types';
-import { getRedisClient, RedisClient } from '@/lib/redis';
-import { clientPublish, clientRoomJoin, clientRoomLeave } from '../room/room.handlers';
-import {
-  clientRoomSubscriptionBind,
-  clientRoomSubscriptionUnbind
-} from '@/modules/subscription/subscription.handlers';
-import {
-  clientPresenceCount,
-  clientPresenceGet,
-  clientPresenceJoin,
-  clientPresenceLeave,
-  clientPresenceSubscribe,
-  clientPresenceUnsubscribe,
-  clientPresenceUnsubscribeAll,
-  clientPresenceUpdate
-} from '@/modules/presence/presence.handlers';
-import {
-  clientMetricsSubscribe,
-  clientMetricsUnsubscribe
-} from '@/modules/metrics/metrics.handlers';
+import { RedisClient } from '@/lib/redis';
 import { DsErrorResponse } from '@/types/request.types';
 import { eventEmitter } from '@/lib/event-bus';
 import { getQueryParamRealValue } from '@/util/helpers';
@@ -49,43 +30,15 @@ import {
   WebSocket
 } from 'uWebSockets.js';
 import ChannelManager from '@/lib/channel-manager';
-import { clientRoomHistoryGet } from '@/modules/history/history.handlers';
-import {
-  clientAuthUserStatusUpdate,
-  clientAuthUserSubscribe,
-  clientAuthUserUnsubscribe,
-  clientAuthUserUnsubscribeAll
-} from '@/modules/user/user.handlers';
-import { WebhookEvent } from '@/types/webhook.types';
+import { KeyPrefix, KeySuffix } from '@/types/state.types';
+import { eventHandlersMap } from './websocket.handlers';
+import * as repository from './websocket.repository';
 
 const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
 
 const decoder = new TextDecoder('utf-8');
 
 const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
-
-const eventHandlersMap = {
-  [ClientEvent.ROOM_JOIN]: clientRoomJoin,
-  [ClientEvent.ROOM_LEAVE]: clientRoomLeave,
-  [ClientEvent.PUBLISH]: clientPublish,
-  [ClientEvent.ROOM_SUBSCRIPTION_BIND]: clientRoomSubscriptionBind,
-  [ClientEvent.ROOM_SUBSCRIPTION_UNBIND]: clientRoomSubscriptionUnbind,
-  [ClientEvent.ROOM_PRESENCE_SUBSCRIBE]: clientPresenceSubscribe,
-  [ClientEvent.ROOM_PRESENCE_UNSUBSCRIBE]: clientPresenceUnsubscribe,
-  [ClientEvent.ROOM_PRESENCE_UNSUBSCRIBE_ALL]: clientPresenceUnsubscribeAll,
-  [ClientEvent.ROOM_PRESENCE_JOIN]: clientPresenceJoin,
-  [ClientEvent.ROOM_PRESENCE_LEAVE]: clientPresenceLeave,
-  [ClientEvent.ROOM_PRESENCE_UPDATE]: clientPresenceUpdate,
-  [ClientEvent.ROOM_PRESENCE_GET]: clientPresenceGet,
-  [ClientEvent.ROOM_PRESENCE_COUNT]: clientPresenceCount,
-  [ClientEvent.ROOM_METRICS_SUBSCRIBE]: clientMetricsSubscribe,
-  [ClientEvent.ROOM_METRICS_UNSUBSCRIBE]: clientMetricsUnsubscribe,
-  [ClientEvent.ROOM_HISTORY_GET]: clientRoomHistoryGet,
-  [ClientEvent.AUTH_USER_SUBSCRIBE]: clientAuthUserSubscribe,
-  [ClientEvent.AUTH_USER_UNSUBSCRIBE]: clientAuthUserUnsubscribe,
-  [ClientEvent.AUTH_USER_UNSUBSCRIBE_ALL]: clientAuthUserUnsubscribeAll,
-  [ClientEvent.AUTH_USER_STATUS_UPDATE]: clientAuthUserStatusUpdate
-};
 
 export function handleConnectionUpgrade(
   res: HttpResponse,
@@ -195,11 +148,14 @@ export async function handleSocketMessage(
 
     const handler = eventHandlersMap[type as ClientEvent];
 
-    if (handler) {
-      handler(logger, redisClient, socket, body, ackHandler(socket, ackId), createdAt);
-    } else {
+    if (!handler) {
       logger.error(`Event ${type} not recognized`, { type, ackId });
+      return;
     }
+
+    const res = ackHandler(socket, ackId);
+
+    return handler(logger, redisClient, socket, body, res, createdAt);
   } catch (err: any) {
     logger.error(`Failed to handle socket message`, { err });
   }
@@ -217,6 +173,7 @@ export function ackHandler(socket: WebSocket<Session>, ackId: string) {
 
 export function handleByteLengthError(socket: WebSocket<Session>, ackId: string) {
   const res = ackHandler(socket, ackId);
+
   const message = `Message size exceeds maximum allowed size (${MESSAGE_MAX_BYTE_LENGTH})`;
 
   if (res) {
@@ -234,7 +191,7 @@ export async function handleDisconnect(
   serverInstanceId: string
 ): Promise<Job | void> {
   const session = socket.getUserData();
-  const decodedMessage = decoder.decode(message);
+  // const decodedMessage = decoder.decode(message);
 
   if (!session.uid) {
     return;
@@ -297,4 +254,15 @@ export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise
   } catch (err: any) {
     logger.error(`Failed to set session heartbeat`, { session });
   }
+}
+
+export async function rateLimitGuard(
+  redisClient: RedisClient,
+  connectionId: string,
+  evaluationPeriodMs: number,
+  entryLimit: number
+): Promise<number> {
+  const key = `${KeyPrefix.RATE}:messages:${connectionId}:${KeySuffix.COUNT}`;
+
+  return repository.evaluateRateLimit(redisClient, key, `${evaluationPeriodMs}`, `${entryLimit}`);
 }

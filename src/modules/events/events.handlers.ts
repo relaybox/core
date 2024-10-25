@@ -9,6 +9,7 @@ import {
   getLatencyLog,
   getPermissions,
   getSecretKey,
+  getUserByClientId,
   verifySignature,
   verifyTimestamp
 } from './events.service';
@@ -70,32 +71,35 @@ export async function handleClientEvent(
 
     await verifySignature(body, signature, secretKey);
 
-    const { event, roomId, data, timestamp } = JSON.parse(body);
+    const { event, roomId, data, timestamp, clientId } = JSON.parse(body);
     const verifiedTimestamp = verifyTimestamp(timestamp, MAX_TIMESTAMP_DIFF_SECS);
     const permissions = await getPermissions(logger, pgClient, keyId);
 
     permissionsGuard(roomId, DsPermission.PUBLISH, permissions);
+
+    const user = clientId ? await getUserByClientId(logger, pgClient, clientId) : null;
 
     const latencyLog = getLatencyLog(timestamp);
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspEvent = getNspEvent(nspRoomId, event);
 
     const sender = {
-      clientId: null,
+      clientId,
       connectionId: null,
-      user: null
+      user
     };
 
     const session = {
       appPid,
       keyId,
       uid: null,
-      clientId: null,
+      clientId,
       connectionId: null,
       socketId: null
     };
 
     const extendedMessageData = {
+      id: requestId,
       body: data,
       sender,
       timestamp: new Date().getTime(),

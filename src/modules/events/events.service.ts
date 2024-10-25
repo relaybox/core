@@ -125,3 +125,19 @@ export function getMessageData(systemEvent: any): any {
     event
   };
 }
+
+export async function getUserByClientId(
+  logger: Logger,
+  pgClient: PoolClient,
+  clientId: string
+): Promise<any> {
+  logger.debug(`Getting user by client id ${clientId}`);
+
+  const { rows } = await db.getUserByClientId(pgClient, clientId);
+
+  if (!rows.length) {
+    return null;
+  }
+
+  return rows[0];
+}

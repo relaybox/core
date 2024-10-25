@@ -23,6 +23,7 @@ import ChannelManager from '@/lib/channel-manager';
 import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
+import { v4 as uuid } from 'uuid';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -134,7 +135,10 @@ export async function clientPublish(
       user: reducedSession.user
     };
 
+    const messageId = uuid();
+
     const extendedMessageData = {
+      id: messageId,
       body: messageData,
       sender,
       timestamp: new Date().getTime(),

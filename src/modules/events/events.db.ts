@@ -35,3 +35,25 @@ export function getHistoryTtlhours(pgClient: PoolClient, appPid: string): Promis
 
   return pgClient.query(query, [appPid]);
 }
+
+export function getUserByClientId(pgClient: PoolClient, clientId: string): Promise<QueryResult> {
+  const query = `
+    SELECT 
+      id, 
+      "appId", 
+      "blockedAt", 
+      "clientId", 
+      "createdAt", 
+      "firstName", 
+      "lastName", 
+      "isOnline", 
+      "lastOnline", 
+      "orgId", 
+      "updatedAt", 
+      "username"
+    FROM authentication_users
+    WHERE "clientId" = $1;
+  `;
+
+  return pgClient.query(query, [clientId]);
+}

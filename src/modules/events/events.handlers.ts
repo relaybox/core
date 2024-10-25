@@ -15,7 +15,7 @@ import {
 } from './events.service';
 import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
-import { getNspEvent, getNspRoomId } from '@/util/helpers';
+import { getNspClientId, getNspEvent, getNspRoomId } from '@/util/helpers';
 import { addRoomHistoryMessage } from '../history/history.service';
 
 const logger = getLogger('event');
@@ -93,7 +93,7 @@ export async function handleClientEvent(
       appPid,
       keyId,
       uid: null,
-      clientId,
+      clientId: getNspClientId(appPid, clientId),
       connectionId: null,
       socketId: null
     };

@@ -139,7 +139,7 @@ export async function clientPublish(
     const reducedSession = getReducedSession(session);
 
     const sender = {
-      clientId: reducedSession.clientId?.split(':')[1] || null,
+      clientId: reducedSession.clientId || null,
       connectionId: reducedSession.connectionId,
       user: reducedSession.user
     };

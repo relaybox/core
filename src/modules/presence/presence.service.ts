@@ -25,6 +25,8 @@ export function addActiveMember(
     latencyLog
   };
 
+  console.log('JOIN JOB DATA', jobData);
+
   return presenceQueue.add(PresenceJobName.PRESENCE_JOIN, jobData, defaultJobConfig);
 }
 
@@ -46,6 +48,8 @@ export function removeActiveMember(
     ...(message && { message }),
     latencyLog
   };
+
+  console.log('LEAVE JOB DATA', jobData, message);
 
   return presenceQueue.add(PresenceJobName.PRESENCE_LEAVE, jobData, defaultJobConfig);
 }

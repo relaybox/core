@@ -5,7 +5,7 @@ import { DsPermission } from '@/types/permissions.types';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { formatErrorResponse, formatPresenceSubscription } from '@/util/format';
-import { getNspRoomId } from '@/util/helpers';
+import { getNspRoomId, getPublicClientId } from '@/util/helpers';
 import {
   activeMemberGuard,
   authenticatedSessionGuard,
@@ -172,7 +172,7 @@ export async function clientPresenceJoin(
   const latencyLog = getLatencyLog(createdAt);
 
   const message = {
-    id: clientId,
+    clientId: getPublicClientId(clientId),
     data: userData,
     timestamp,
     event: SubscriptionType.JOIN,
@@ -221,8 +221,9 @@ export async function clientPresenceLeave(
   const latencyLog = getLatencyLog(createdAt);
 
   const message = {
-    id: clientId,
+    clientId: getPublicClientId(clientId),
     data: userData,
+    timestamp,
     event: SubscriptionType.LEAVE,
     user
   };
@@ -268,7 +269,7 @@ export async function clientPresenceUpdate(
   const latencyLog = getLatencyLog(createdAt);
 
   const message = {
-    id: clientId,
+    clientId: getPublicClientId(clientId),
     data: userData,
     timestamp,
     event: SubscriptionType.UPDATE,

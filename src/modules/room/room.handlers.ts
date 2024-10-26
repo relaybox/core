@@ -2,7 +2,7 @@ import { Logger } from 'winston';
 import { SocketAckHandler } from '@/types/socket.types';
 import { Session } from '@/types/session.types';
 import { RedisClient } from '@/lib/redis';
-import { getNspEvent, getNspRoomId } from '@/util/helpers';
+import { getNspEvent, getNspRoomId, getPublicClientId } from '@/util/helpers';
 import { joinRoom, leaveRoom } from './room.service';
 import { getReducedSession } from '../session/session.service';
 import {
@@ -71,12 +71,21 @@ export async function clientRoomLeave(
   const session = socket.getUserData();
 
   const { roomId } = data;
-  const { uid, connectionId } = session;
+  const { uid, connectionId, user } = session;
 
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
     const presenceSubsciption = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
+    const timestamp = new Date().toISOString();
+
+    const message = {
+      clientId: getPublicClientId(uid),
+      event: SubscriptionType.LEAVE,
+      user,
+      timestamp
+    };
+
     const webhookdata = {
       roomId
     };
@@ -84,7 +93,7 @@ export async function clientRoomLeave(
     await Promise.all([
       leaveRoom(redisClient, session, nspRoomId, socket),
       leaveRoom(redisClient, session, nspRoomRoutingKey, socket),
-      removeActiveMember(uid, nspRoomId, presenceSubsciption, session),
+      removeActiveMember(uid, nspRoomId, presenceSubsciption, session, message),
       unbindAllSubscriptions(
         redisClient,
         connectionId,

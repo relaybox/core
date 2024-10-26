@@ -4,14 +4,14 @@ import { Session } from '@/types/session.types';
 import { v4 as uuid } from 'uuid';
 import { ReducedWebhookSessionData, WebhookEvent, WebhookPayload } from '@/types/webhook.types';
 import { Job } from 'bullmq';
-import { getExternalClientId } from '@/util/helpers';
+import { getPublicClientId } from '@/util/helpers';
 
 const logger = getLogger('webhook');
 
 function getReducedWebhookSessionData(session: Session): ReducedWebhookSessionData {
   const { appPid, keyId, clientId, connectionId, socketId, timestamp, user, exp } = session;
 
-  const externalClientId = getExternalClientId(clientId);
+  const externalClientId = getPublicClientId(clientId);
 
   return {
     appPid,

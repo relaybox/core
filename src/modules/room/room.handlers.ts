@@ -80,7 +80,8 @@ export async function clientRoomLeave(
     const timestamp = new Date().toISOString();
 
     const message = {
-      clientId: getPublicClientId(uid),
+      // clientId: getPublicClientId(uid),
+      clientId: uid,
       event: SubscriptionType.LEAVE,
       user,
       timestamp

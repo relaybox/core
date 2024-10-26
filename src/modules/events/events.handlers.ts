@@ -93,7 +93,8 @@ export async function handleClientEvent(
       appPid,
       keyId,
       uid: null,
-      clientId: getNspClientId(appPid, clientId),
+      // clientId: getNspClientId(appPid, clientId),
+      clientId,
       connectionId: null,
       socketId: null
     };

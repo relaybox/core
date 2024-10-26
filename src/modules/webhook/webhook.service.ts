@@ -11,12 +11,13 @@ const logger = getLogger('webhook');
 function getReducedWebhookSessionData(session: Session): ReducedWebhookSessionData {
   const { appPid, keyId, clientId, connectionId, socketId, timestamp, user, exp } = session;
 
-  const externalClientId = getPublicClientId(clientId);
+  // const externalClientId = getPublicClientId(clientId);
 
   return {
     appPid,
     keyId,
-    clientId: externalClientId,
+    // clientId: externalClientId,
+    clientId,
     connectionId,
     socketId,
     timestamp,

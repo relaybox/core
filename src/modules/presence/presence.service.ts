@@ -25,8 +25,6 @@ export function addActiveMember(
     latencyLog
   };
 
-  console.log('JOIN JOB DATA', jobData);
-
   return presenceQueue.add(PresenceJobName.PRESENCE_JOIN, jobData, defaultJobConfig);
 }
 

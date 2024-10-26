@@ -172,7 +172,8 @@ export async function clientPresenceJoin(
   const latencyLog = getLatencyLog(createdAt);
 
   const message = {
-    clientId: getPublicClientId(clientId),
+    // clientId: getPublicClientId(clientId),
+    clientId,
     data: userData,
     timestamp,
     event: SubscriptionType.JOIN,
@@ -221,7 +222,8 @@ export async function clientPresenceLeave(
   const latencyLog = getLatencyLog(createdAt);
 
   const message = {
-    clientId: getPublicClientId(clientId),
+    // clientId: getPublicClientId(clientId),
+    clientId,
     data: userData,
     timestamp,
     event: SubscriptionType.LEAVE,
@@ -269,7 +271,8 @@ export async function clientPresenceUpdate(
   const latencyLog = getLatencyLog(createdAt);
 
   const message = {
-    clientId: getPublicClientId(clientId),
+    // clientId: getPublicClientId(clientId),
+    clientId,
     data: userData,
     timestamp,
     event: SubscriptionType.UPDATE,

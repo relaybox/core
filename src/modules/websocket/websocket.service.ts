@@ -21,7 +21,7 @@ import {
 import { RedisClient } from '@/lib/redis';
 import { DsErrorResponse } from '@/types/request.types';
 import { eventEmitter } from '@/lib/event-bus';
-import { getPublicClientId, getQueryParamRealValue } from '@/util/helpers';
+import { getQueryParamRealValue } from '@/util/helpers';
 import {
   HttpRequest,
   HttpResponse,
@@ -115,7 +115,6 @@ export async function handleSocketOpen(
 
     emit(socket, ServerEvent.CONNECTION_ACKNOWLEDGED, {
       uid,
-      // clientId: getPublicClientId(clientId),
       clientId,
       connectionId
     });

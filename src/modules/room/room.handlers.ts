@@ -2,7 +2,7 @@ import { Logger } from 'winston';
 import { SocketAckHandler } from '@/types/socket.types';
 import { Session } from '@/types/session.types';
 import { RedisClient } from '@/lib/redis';
-import { getNspEvent, getNspRoomId, getPublicClientId } from '@/util/helpers';
+import { getNspEvent, getNspRoomId } from '@/util/helpers';
 import { joinRoom, leaveRoom } from './room.service';
 import { getReducedSession } from '../session/session.service';
 import {
@@ -80,7 +80,6 @@ export async function clientRoomLeave(
     const timestamp = new Date().toISOString();
 
     const message = {
-      // clientId: getPublicClientId(uid),
       clientId: uid,
       event: SubscriptionType.LEAVE,
       user,

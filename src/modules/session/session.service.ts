@@ -12,7 +12,7 @@ import { WebSocket } from 'uWebSockets.js';
 import { restoreCachedUsers } from '@/modules/user/user.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
-import { getNspClientId } from '@/util/helpers';
+import { getNspClientId, getNspJobId } from '@/util/helpers';
 
 const logger = getLogger('session');
 
@@ -123,7 +123,7 @@ export async function markSessionUserInactive(
     instanceId
   };
 
-  const jobId = getNspClientId(appPid, uid);
+  const jobId = getNspJobId(appPid, uid);
 
   const jobConfig = {
     jobId,
@@ -135,8 +135,6 @@ export async function markSessionUserInactive(
     // },
     ...defaultJobConfig
   };
-
-  console.log('JOB', jobData);
 
   return sessionQueue.add(SessionJobName.SESSION_USER_INACTIVE, jobData, jobConfig);
 }
@@ -156,7 +154,7 @@ export async function markSessionUserActive(appPid: string, uid: string): Promis
   logger.debug('Setting session user as active', { appPid, uid });
 
   try {
-    const jobId = getNspClientId(appPid, uid);
+    const jobId = getNspJobId(appPid, uid);
     await clearDelayedSessionJob(jobId);
   } catch (err) {
     logger.error(`Failed to delete job with ID ${uid}:`, { err });

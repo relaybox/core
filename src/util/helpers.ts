@@ -6,6 +6,10 @@ export function getNspClientId(appPid: string, clientId: string): string {
   return `${appPid}:${clientId}`;
 }
 
+export function getNspJobId(appPid: string, id: string): string {
+  return `${appPid}:${id}`;
+}
+
 export function extractRoomId(nspRoomId: string): string {
   const [_, roomId] = nspRoomId.split(/:(.+)/);
   return roomId;

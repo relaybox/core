@@ -47,8 +47,6 @@ export function removeActiveMember(
     latencyLog
   };
 
-  console.log('LEAVE JOB DATA', jobData, message);
-
   return presenceQueue.add(PresenceJobName.PRESENCE_LEAVE, jobData, defaultJobConfig);
 }
 

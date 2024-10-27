@@ -71,7 +71,7 @@ export async function clientRoomLeave(
   const session = socket.getUserData();
 
   const { roomId } = data;
-  const { uid, connectionId, user } = session;
+  const { uid, connectionId, user, clientId } = session;
 
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
@@ -79,8 +79,8 @@ export async function clientRoomLeave(
     const presenceSubsciption = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
     const timestamp = new Date().toISOString();
 
-    const message = {
-      clientId: uid,
+    const presenceLeaveMessage = {
+      clientId,
       event: SubscriptionType.LEAVE,
       user,
       timestamp
@@ -93,7 +93,7 @@ export async function clientRoomLeave(
     await Promise.all([
       leaveRoom(redisClient, session, nspRoomId, socket),
       leaveRoom(redisClient, session, nspRoomRoutingKey, socket),
-      removeActiveMember(uid, nspRoomId, presenceSubsciption, session, message),
+      removeActiveMember(uid, nspRoomId, presenceSubsciption, session, presenceLeaveMessage),
       unbindAllSubscriptions(
         redisClient,
         connectionId,

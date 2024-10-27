@@ -74,6 +74,14 @@
           "value": "${RABBIT_MQ_QUEUE_COUNT}"
         },
         {
+          "name": "RATE_LIMIT_EVALUATION_PERIOD_MS",
+          "value": "${RATE_LIMIT_EVALUATION_PERIOD_MS}"
+        },
+        {
+          "name": "RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD",
+          "value": "${RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD}"
+        },
+        {
           "name": "REDIS_HOST",
           "value": "${REDIS_HOST}"
         },

@@ -13,11 +13,13 @@ const connection = new Connection(AMQP_CONNECTION_STRING);
 
 let publisher: Publisher | null = null;
 
-export function createPublisher(): Publisher {
+export function getPublisher(): Publisher {
   if (publisher) {
     logger.error(`Publisher already initialized`);
     return publisher;
   }
+
+  logger.info('Creating amqp publisher');
 
   const publisherOptions: PublisherProps = {
     confirm: true,
@@ -57,5 +59,18 @@ export async function enqueueMessage(data: any): Promise<void> {
     await publisher.send(envelope, message);
   } catch (err: unknown) {
     logger.error(`Failed to enqueue message`, { err });
+  }
+}
+
+export async function cleanupAmqpPublisher() {
+  if (publisher) {
+    try {
+      await publisher.close();
+    } catch (err) {
+      logger.error('Error ending amqp publisher', { err });
+    } finally {
+      logger.info('Amqp publisher disconnected through app termination');
+      publisher = null;
+    }
   }
 }

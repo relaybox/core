@@ -17,9 +17,10 @@ import AmqpManager from '@/lib/topic-exchange/amqp-manager';
 import { getRoomHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
-import { getRedisClient } from './lib/redis';
-import { getPgPool } from './lib/pg';
+import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
+import { cleanupPgPool, getPgPool } from '@/lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
+import { getPublisher, cleanupAmqpPublisher } from '@/lib/publisher';
 
 // Force v1
 
@@ -32,6 +33,7 @@ const WS_MAX_LIFETIME_MINS = 60;
 const logger = getLogger('core-socket-server');
 const pgPool = getPgPool();
 const redisClient = getRedisClient();
+const publisher = getPublisher();
 
 const app = App()
   .options('/*', (res: HttpResponse, req: HttpRequest) => {
@@ -77,3 +79,28 @@ amqpManager.connect().then((_) => {
     }
   });
 });
+
+async function shutdown(signal: string): Promise<void> {
+  logger.info(`${signal} received, shutting down...`);
+
+  const shutdownTimeout = setTimeout(() => {
+    logger.error('Graceful shutdown timed out, forcing exit');
+    process.exit(1);
+  }, 20000);
+
+  try {
+    await Promise.all([cleanupRedisClient(), cleanupPgPool(), cleanupAmqpPublisher()]);
+
+    clearTimeout(shutdownTimeout);
+
+    logger.info('Graceful shutdown completed');
+
+    process.exit(0);
+  } catch (err) {
+    logger.error('Error during graceful shutdown', { err });
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

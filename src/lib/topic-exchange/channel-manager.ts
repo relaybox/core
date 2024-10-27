@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { Connection, Channel } from 'rabbitmq-client';
-import { getLogger } from '../util/logger';
+import { getLogger } from '@/util/logger';
 import { SocketSubscriptionEvent } from '@/types/socket.types';
 import ConfigManager from './config-manager';
 import EventEmitter from 'events';
@@ -15,7 +15,7 @@ export default class ChannelManager {
   private connection: Connection;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
-  private reconnectDelay: number = 5000; // 5 seconds
+  private reconnectDelayMs: number = 5000;
   private bindings: Map<string, string> = new Map();
   private eventEmitter: EventEmitter;
 
@@ -77,8 +77,8 @@ export default class ChannelManager {
   private scheduleChannelReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      this.logger.info(`Reconnecting in ${this.reconnectDelay / 1000} seconds...`);
-      setTimeout(() => this.createChannel(this.connection), this.reconnectDelay);
+      this.logger.info(`Reconnecting in ${this.reconnectDelayMs / 1000} seconds...`);
+      setTimeout(() => this.createChannel(this.connection), this.reconnectDelayMs);
     } else {
       this.logger.error('Max reconnect attempts reached. Failed to acquire channel');
     }

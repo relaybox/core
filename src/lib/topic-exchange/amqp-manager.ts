@@ -1,5 +1,5 @@
 import { TemplatedApp } from 'uWebSockets.js';
-import { getLogger } from '../util/logger';
+import { getLogger } from '@/util/logger';
 import { Logger } from 'winston';
 import ConfigManager, { AmqpConfig } from './config-manager';
 import ConnectionManager from './connection-manager';

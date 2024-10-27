@@ -1,11 +1,11 @@
 import '../__mocks__/external/rabbitmq-client';
 import Connection, { Publisher } from 'rabbitmq-client';
-import PublisherManager from '@/lib/publisher-manager';
+import PublisherManager from '@/lib/topic-exchange/publisher-manager';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import ConnectionManager from '@/lib/connection-manager';
-import DispatchHandler from '@/lib/dispatch-handler';
+import ConnectionManager from '@/lib/topic-exchange/connection-manager';
+import DispatchHandler from '@/lib/topic-exchange/dispatch-handler';
 import { getMockSession } from '@/modules/session/session.mock';
-import ChannelManager from '@/lib/channel-manager';
+import ChannelManager from '@/lib/topic-exchange/channel-manager';
 
 describe('dispatch-handler', () => {
   let publisher: Publisher;

@@ -71,12 +71,21 @@ export async function clientRoomLeave(
   const session = socket.getUserData();
 
   const { roomId } = data;
-  const { uid, connectionId } = session;
+  const { uid, connectionId, user, clientId } = session;
 
   try {
     const nspRoomId = getNspRoomId(session.appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
     const presenceSubsciption = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
+    const timestamp = new Date().toISOString();
+
+    const presenceLeaveMessage = {
+      clientId,
+      event: SubscriptionType.LEAVE,
+      user,
+      timestamp
+    };
+
     const webhookdata = {
       roomId
     };
@@ -84,7 +93,7 @@ export async function clientRoomLeave(
     await Promise.all([
       leaveRoom(redisClient, session, nspRoomId, socket),
       leaveRoom(redisClient, session, nspRoomRoutingKey, socket),
-      removeActiveMember(uid, nspRoomId, presenceSubsciption, session),
+      removeActiveMember(uid, nspRoomId, presenceSubsciption, session, presenceLeaveMessage),
       unbindAllSubscriptions(
         redisClient,
         connectionId,
@@ -130,7 +139,7 @@ export async function clientPublish(
     const reducedSession = getReducedSession(session);
 
     const sender = {
-      clientId: reducedSession.clientId?.split(':')[1] || null,
+      clientId: reducedSession.clientId || null,
       connectionId: reducedSession.connectionId,
       user: reducedSession.user
     };

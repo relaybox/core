@@ -12,6 +12,7 @@ import { WebSocket } from 'uWebSockets.js';
 import { restoreCachedUsers } from '@/modules/user/user.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
+import { getNspJobId } from '@/util/helpers';
 
 const logger = getLogger('session');
 
@@ -113,7 +114,7 @@ export async function markSessionUserInactive(
 ): Promise<Job> {
   logger.debug('Marking session user as inactive', { session });
 
-  const { uid } = session;
+  const { appPid, uid } = session;
 
   const reducedSession = getReducedSession(session);
 
@@ -122,8 +123,10 @@ export async function markSessionUserInactive(
     instanceId
   };
 
+  const jobId = getNspJobId(appPid, uid);
+
   const jobConfig = {
-    jobId: uid,
+    jobId,
     delay: SESSION_INACTIVE_JOB_DELAY_MS,
     // attempts: SESSION_DESTROY_JOB_MAX_ATTEMPTS,
     // backoff: {
@@ -147,11 +150,12 @@ export async function unmarkSessionForDeletion(connectionId: string): Promise<an
   }
 }
 
-export async function markSessionUserActive(uid: string): Promise<any> {
-  logger.debug('Setting session user as active', { uid });
+export async function markSessionUserActive(appPid: string, uid: string): Promise<any> {
+  logger.debug('Setting session user as active', { appPid, uid });
 
   try {
-    await clearDelayedSessionJob(uid);
+    const jobId = getNspJobId(appPid, uid);
+    await clearDelayedSessionJob(jobId);
   } catch (err) {
     logger.error(`Failed to delete job with ID ${uid}:`, { err });
     throw err;

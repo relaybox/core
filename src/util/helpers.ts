@@ -6,6 +6,10 @@ export function getNspClientId(appPid: string, clientId: string): string {
   return `${appPid}:${clientId}`;
 }
 
+export function getNspJobId(appPid: string, id: string): string {
+  return `${appPid}:${id}`;
+}
+
 export function extractRoomId(nspRoomId: string): string {
   const [_, roomId] = nspRoomId.split(/:(.+)/);
   return roomId;
@@ -28,6 +32,7 @@ export function getQueryParamRealValue(queryParam: string | undefined): string |
   return queryParam;
 }
 
-export function getExternalClientId(clientId: string): string | null {
-  return clientId?.split(':')[1] || null;
-}
+// export function getPublicClientId(clientId: string): string | null {
+//   return clientId;
+//   return clientId?.split(':')[1] || null;
+// }

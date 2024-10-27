@@ -6,8 +6,9 @@ import { formatErrorResponse } from '@/util/format';
 import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
 
-const RATE_LIMIT_EVALAUTION_PERIOD_MS = 5000;
-const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD = 30;
+const RATE_LIMIT_EVALUATION_PERIOD_MS = Number(process.env.RATE_LIMIT_EVALUATION_PERIOD_MS) || 5000;
+const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD =
+  Number(process.env.RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD) || 30;
 
 export function rateLimitMiddleware(handler: SocketAckHandler): SocketAckHandler {
   return async (
@@ -24,7 +25,7 @@ export function rateLimitMiddleware(handler: SocketAckHandler): SocketAckHandler
       const requestAllowed = await rateLimitGuard(
         redisClient,
         session.connectionId,
-        RATE_LIMIT_EVALAUTION_PERIOD_MS,
+        RATE_LIMIT_EVALUATION_PERIOD_MS,
         RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD
       );
 

@@ -99,12 +99,12 @@ export async function handleSocketOpen(
 ): Promise<void> {
   try {
     const verifiedSession = socket.getUserData();
-    const { uid, connectionId, clientId } = verifiedSession;
+    const { appPid, uid, connectionId, clientId } = verifiedSession;
 
     logger.debug(`Socket connect event, ${connectionId}`, verifiedSession);
 
     await setSessionActive(verifiedSession, socket);
-    await markSessionUserActive(uid);
+    await markSessionUserActive(appPid, uid);
     await restoreSession(redisClient, verifiedSession, socket);
     await recordConnnectionEvent(verifiedSession, socket, SocketConnectionEventType.CONNECT);
 
@@ -205,7 +205,7 @@ export async function handleDisconnect(
     await markSessionUserInactive(session, serverInstanceId);
     await recordConnnectionEvent(session, socket, SocketConnectionEventType.DISCONNECT);
   } catch (err: any) {
-    logger.error(`Failed to perform session clean up`, err);
+    logger.error(`Failed to perform session clean up`, { err });
   }
 }
 

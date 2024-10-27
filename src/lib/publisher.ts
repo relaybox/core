@@ -1,13 +1,13 @@
 import { getLogger } from '@/util/logger';
 import { Connection, Envelope, Publisher, PublisherProps } from 'rabbitmq-client';
 
+const logger = getLogger('publisher');
+
 const AMQP_CONNECTION_STRING = process.env.RABBIT_MQ_CONNECTION_STRING;
 const AMQP_EXCHANGE_NAME = 'ds.persistence.durable';
 const AMQP_QUEUE_TYPE = 'direct';
 const AMQP_MAX_RETRY_ATTEMPTS = 2;
-const AMQP_ROUTING_KEY = 'persist';
-
-const logger = getLogger('publisher');
+const AMQP_ROUTING_KEY = 'message.persist';
 
 const connection = new Connection(AMQP_CONNECTION_STRING);
 

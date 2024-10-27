@@ -24,6 +24,7 @@ import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { v4 as uuid } from 'uuid';
+import { enqueueMessage } from '@/lib/publisher';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -127,14 +128,15 @@ export async function clientPublish(
 
   logger.debug(`Client publish event`, { session });
 
+  const { appPid, permissions, uid, keyId } = session;
   const { roomId, event, data: messageData } = data;
 
-  const nspRoomId = getNspRoomId(session.appPid, roomId);
+  const nspRoomId = getNspRoomId(appPid, roomId);
   const nspEvent = getNspEvent(nspRoomId, event);
   const latencyLog = getLatencyLog(createdAt);
 
   try {
-    permissionsGuard(roomId, DsPermission.PUBLISH, session.permissions);
+    permissionsGuard(roomId, DsPermission.PUBLISH, permissions);
 
     const reducedSession = getReducedSession(session);
 
@@ -152,6 +154,13 @@ export async function clientPublish(
       sender,
       timestamp: new Date().getTime(),
       event
+    };
+
+    const persistedMessageData = {
+      appPid,
+      uid,
+      keyId,
+      data: extendedMessageData
     };
 
     const webhookData = {
@@ -172,6 +181,7 @@ export async function clientPublish(
       .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
 
     await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
+    await enqueueMessage(persistedMessageData);
     await enqueueWebhookEvent(
       WebhookEvent.ROOM_PUBLISH,
       webhookData,

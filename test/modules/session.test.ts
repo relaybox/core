@@ -19,6 +19,7 @@ import { WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { SessionJobName } from '@/modules/session/session.queue';
 import { SocketConnectionEventType } from '@/types/socket.types';
+import { getNspJobId } from '@/util/helpers';
 
 const logger = getLogger('');
 
@@ -281,11 +282,13 @@ describe('session.service', () => {
 
       await markSessionUserInactive(session, instanceId);
 
+      const jobId = getNspJobId(session.appPid, uid);
+
       expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_USER_INACTIVE,
         jobData,
         expect.objectContaining({
-          jobId: uid,
+          jobId,
           delay: expect.any(Number)
         })
       );
@@ -329,6 +332,7 @@ describe('session.service', () => {
 
   describe('markSessionUserActive', () => {
     const uid = '12345';
+    const session = getMockSession({ uid });
 
     afterEach(() => {
       vi.resetAllMocks();
@@ -341,15 +345,21 @@ describe('session.service', () => {
 
       mockQueue.getJob.mockResolvedValueOnce(existingJob);
 
-      await markSessionUserActive(uid);
+      const appPid = session.appPid;
+      const jobId = getNspJobId(appPid, uid);
 
+      await markSessionUserActive(appPid, uid);
+
+      expect(mockQueue.getJob).toHaveBeenCalledWith(jobId);
       expect(existingJob.remove).toHaveBeenCalled();
     });
 
     it('should throw an error if adding mark session user active job fails', async () => {
       mockQueue.getJob.mockRejectedValueOnce(new Error('Failed to add job'));
 
-      await expect(markSessionUserActive(uid)).rejects.toThrow('Failed to add job');
+      const appPid = session.appPid;
+
+      await expect(markSessionUserActive(appPid, uid)).rejects.toThrow('Failed to add job');
     });
   });
 

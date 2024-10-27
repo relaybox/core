@@ -20,9 +20,9 @@ const DEFAULT_SESSION = {
     lastOnline: '2024-09-20T09:29:42.455Z',
     blockedAt: null
   },
-  uid: 'Fef8GnS7C5zN:rHg5Gd5VGMdv',
+  uid: 'rHg5Gd5VGMdv',
   connectionId: 'Fef8GnS7C5zN:U7JWOF-5XgfF',
-  clientId: 'Fef8GnS7C5zN:rHg5Gd5VGMdv',
+  clientId: 'rHg5Gd5VGMdv',
   socketId: '63836bc5-e304-415a-a93e-230fe5f32c64'
 };
 

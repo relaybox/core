@@ -12,7 +12,7 @@ import { WebSocket } from 'uWebSockets.js';
 import { restoreCachedUsers } from '@/modules/user/user.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
-import { getNspClientId, getNspJobId } from '@/util/helpers';
+import { getNspJobId } from '@/util/helpers';
 
 const logger = getLogger('session');
 

@@ -15,7 +15,7 @@ import { SubscriptionType } from '@/types/subscription.types';
 import { removeActiveMember } from '../presence/presence.service';
 import { unbindAllSubscriptions } from '../subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
-import { permissionsGuard } from '../guards/guards.service';
+import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
@@ -128,7 +128,7 @@ export async function clientPublish(
 
   logger.debug(`Client publish event`, { session });
 
-  const { appPid, permissions, uid, keyId, connectionId, socketId } = session;
+  const { appPid, permissions } = session;
   const { roomId, event, data: messageData } = data;
 
   const nspRoomId = getNspRoomId(appPid, roomId);
@@ -178,8 +178,6 @@ export async function clientPublish(
       event,
       message: processedMessageData
     };
-
-    console.log(persistedMessageData);
 
     await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
     await enqueueMessage(persistedMessageData);

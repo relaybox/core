@@ -128,7 +128,7 @@ export async function clientPublish(
 
   logger.debug(`Client publish event`, { session });
 
-  const { appPid, permissions, uid, keyId } = session;
+  const { appPid, permissions, uid, keyId, connectionId, socketId } = session;
   const { roomId, event, data: messageData } = data;
 
   const nspRoomId = getNspRoomId(appPid, roomId);
@@ -156,13 +156,6 @@ export async function clientPublish(
       event
     };
 
-    const persistedMessageData = {
-      appPid,
-      uid,
-      keyId,
-      data: extendedMessageData
-    };
-
     const webhookData = {
       ...messageData,
       roomId,
@@ -176,9 +169,17 @@ export async function clientPublish(
 
     const amqpManager = AmqpManager.getInstance();
 
-    amqpManager.dispatchHandler
+    const processedMessageData = amqpManager.dispatchHandler
       .to(nspRoomId)
       .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
+
+    const persistedMessageData = {
+      roomId,
+      event,
+      message: processedMessageData
+    };
+
+    console.log(persistedMessageData);
 
     await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
     await enqueueMessage(persistedMessageData);

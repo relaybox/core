@@ -9,7 +9,12 @@ import { Message } from '@/types/data.types';
 import ChannelManager from './channel-manager';
 
 interface Dispatcher {
-  dispatch: (event: string, data: any, session: ReducedSession, latancyLog: LatencyLog) => void;
+  dispatch: (
+    event: string,
+    data: any,
+    session: ReducedSession,
+    latancyLog: LatencyLog
+  ) => Message | undefined;
 }
 
 export default class DispatchHandler {
@@ -41,7 +46,7 @@ export default class DispatchHandler {
     data: any,
     session: ReducedSession,
     latencyLog: LatencyLog
-  ): void {
+  ): Message | undefined {
     try {
       const routingKey = ChannelManager.getRoutingKey(nspRoomId);
 
@@ -55,6 +60,8 @@ export default class DispatchHandler {
       this.logger.info('Dispatching message', { nspRoomId, event, session });
 
       this.publisher.send(envelope, message);
+
+      return message;
     } catch (err: any) {
       this.logger.error(`Failed to dispatch message`, { err });
     }

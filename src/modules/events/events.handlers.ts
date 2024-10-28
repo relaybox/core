@@ -17,6 +17,7 @@ import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getNspClientId, getNspEvent, getNspRoomId } from '@/util/helpers';
 import { addRoomHistoryMessage } from '../history/history.service';
+import { enqueueMessage } from '@/lib/publisher';
 
 const logger = getLogger('event');
 
@@ -109,11 +110,18 @@ export async function handleClientEvent(
 
     const amqpManager = AmqpManager.getInstance();
 
-    amqpManager.dispatchHandler
+    const processedMessageData = amqpManager.dispatchHandler
       .to(nspRoomId)
       .dispatch(nspEvent, extendedMessageData, session, latencyLog);
 
+    const persistedMessageData = {
+      roomId,
+      event,
+      message: processedMessageData
+    };
+
     await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
+    await enqueueMessage(persistedMessageData);
 
     if (!aborted) {
       res.cork(() => {

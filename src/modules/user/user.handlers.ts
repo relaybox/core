@@ -12,10 +12,10 @@ import {
   removeUserSubscription,
   unbindUserSubscription
 } from './user.service';
-import ChannelManager from '@/lib/topic-exchange/channel-manager';
+import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { getNspClientId } from '@/util/helpers';
 import { KeyNamespace } from '@/types/state.types';
-import AmqpManager from '@/lib/topic-exchange/amqp-manager';
+import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { getLatencyLog } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';

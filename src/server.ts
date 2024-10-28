@@ -13,7 +13,7 @@ import {
 } from '@/modules/websocket/websocket.service';
 import { Session } from '@/types/session.types';
 import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
-import AmqpManager from '@/lib/topic-exchange/amqp-manager';
+import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { getRoomHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';

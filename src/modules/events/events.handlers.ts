@@ -4,7 +4,7 @@ import { getLogger } from '@/util/logger';
 import { v4 as uuid } from 'uuid';
 import { RedisClient } from '@/lib/redis';
 import { Pool, PoolClient } from 'pg';
-import AmqpManager from '@/lib/topic-exchange/amqp-manager';
+import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import {
   getLatencyLog,
   getPermissions,

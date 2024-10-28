@@ -14,7 +14,7 @@ import {
   unbindUserSubscription
 } from '@/modules/user/user.service';
 import { getMockSession } from '@/modules/session/session.mock';
-import ChannelManager from '@/lib/topic-exchange/channel-manager';
+import ChannelManager from '@/lib/amqp-manager/channel-manager';
 
 const logger = getLogger('');
 

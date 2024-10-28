@@ -29,7 +29,7 @@ import {
   us_socket_context_t,
   WebSocket
 } from 'uWebSockets.js';
-import ChannelManager from '@/lib/topic-exchange/channel-manager';
+import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { KeyPrefix, KeySuffix } from '@/types/state.types';
 import { eventHandlersMap } from './websocket.handlers';
 import * as repository from './websocket.repository';

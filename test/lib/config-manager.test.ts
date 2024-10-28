@@ -1,7 +1,7 @@
 import ConfigManager, {
   AMQP_DEFAULT_EXCHANGE_NAME,
   ExchangeType
-} from '@/lib/topic-exchange/config-manager';
+} from '@/lib/amqp-manager/config-manager';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 describe('config-manager', () => {

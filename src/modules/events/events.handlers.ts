@@ -93,8 +93,7 @@ export async function handleClientEvent(
     const session = {
       appPid,
       keyId,
-      uid: null,
-      // clientId: getNspClientId(appPid, clientId),
+      uid: clientId || null,
       clientId,
       connectionId: null,
       socketId: null

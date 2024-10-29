@@ -1,4 +1,4 @@
-import { BadRequestError } from '@/lib/errors';
+import { BadRequestError, TimeoutError } from '@/lib/errors';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
 interface ErrorResponseBody {
@@ -17,9 +17,7 @@ export type HttpHandler = (res: HttpResponse, req: ParsedHttpRequest) => void | 
 
 export type HttpMiddleware = (handler: HttpHandler) => HttpHandler;
 
-export function compose(middlewares: HttpMiddleware[], handler: HttpHandler): HttpHandler {
-  return middlewares.reduceRight((next, middleware) => middleware(next), handler);
-}
+export type HttpMiddlewareNext = (req?: ParsedHttpRequest) => void;
 
 export function getJsonResponse(res: HttpResponse, status: string) {
   res.writeStatus(status);
@@ -68,6 +66,12 @@ export function getErrorResponse(res: HttpResponse, err: unknown): HttpResponse 
   if (err instanceof BadRequestError) {
     return getJsonResponse(res, '400 Bad Request').end(
       JSON.stringify(formatErrorResponseBody(400, err))
+    );
+  }
+
+  if (err instanceof TimeoutError) {
+    return getJsonResponse(res, '408 Request Timeout').end(
+      JSON.stringify(formatErrorResponseBody(408, err))
     );
   }
 
@@ -166,4 +170,85 @@ export function sessionTokenGuard(handler: Function) {
 //   };
 // };
 
-export function requestPipe(middlewares: any[], handler: Function) {}
+export function compose(...middlewares: any[]) {
+  return (res: HttpResponse, req: HttpRequest) => {
+    let aborted = false;
+
+    res.onAborted(() => {
+      res.cork(() => res.end());
+    });
+
+    const method = req.getMethod();
+    const query = getQueryParams(req);
+    const params = getPathParams(req);
+
+    const parsedRequest: ParsedHttpRequest = {
+      method,
+      query,
+      params
+    };
+
+    const dispatch = async (i: number, currentRequest: ParsedHttpRequest) => {
+      if (aborted) {
+        return;
+      }
+
+      const nextMiddleware = middlewares[i];
+
+      try {
+        await Promise.race([
+          timeoutRace(),
+          nextMiddleware(res, currentRequest, (updatedRequest: ParsedHttpRequest) =>
+            dispatch(i + 1, updatedRequest || currentRequest)
+          )
+        ]);
+      } catch (err: unknown) {
+        aborted = true;
+        res.cork(() => getErrorResponse(res, err));
+        return;
+      }
+    };
+
+    dispatch(0, parsedRequest);
+  };
+}
+
+export function timeoutRace() {
+  return new Promise((_, reject) => setTimeout(() => reject(new TimeoutError('Timeout')), 5000));
+}
+
+export async function middlewareOne(
+  res: HttpResponse,
+  req: ParsedHttpRequest,
+  next: HttpMiddlewareNext
+): Promise<void> {
+  console.log(1, req);
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  next();
+}
+
+export function middlewareTwo(
+  res: HttpResponse,
+  req: ParsedHttpRequest,
+  next: HttpMiddlewareNext
+): void {
+  console.log(2, req);
+
+  next();
+}
+
+export function finalHandler(res: HttpResponse, req: ParsedHttpRequest, next: HttpMiddlewareNext) {
+  console.log('Final');
+
+  res.cork(() => getSuccessResponse(res, { message: 'Hello, World!' }));
+}
+
+export function inject(handler: Function) {
+  return (res: HttpResponse, req: ParsedHttpRequest) => {
+    console.log('Injected');
+
+    return handler;
+  };
+}

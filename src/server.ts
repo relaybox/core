@@ -15,7 +15,15 @@ import { Session } from '@/types/session.types';
 import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { getHistoryMessages } from '@/modules/history/history.http';
-import { compose, getCorsResponse, ParsedHttpRequest, sessionTokenGuard } from '@/util/http';
+import {
+  compose,
+  finalHandler,
+  getCorsResponse,
+  middlewareOne,
+  middlewareTwo,
+  ParsedHttpRequest,
+  sessionTokenGuard
+} from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
 import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
 import { cleanupPgPool, getPgPool } from '@/lib/pg';
@@ -57,7 +65,7 @@ app.post('/events', (res: HttpResponse, req: HttpRequest) =>
 
 app.get(
   '/history/:roomId/messages',
-  sessionTokenGuard((res: HttpResponse, req: ParsedHttpRequest) =>
+  compose(middlewareOne, middlewareTwo, (res: HttpResponse, req: ParsedHttpRequest) =>
     getHistoryMessages(pgPool!, res, req)
   )
 );

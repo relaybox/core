@@ -14,15 +14,13 @@ import {
 import { Session } from '@/types/session.types';
 import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
-import { getHistoryMessages, getRoomHistoryMessages } from '@/modules/history/history.http';
-import { getCorsResponse } from '@/util/http';
+import { getHistoryMessages } from '@/modules/history/history.http';
+import { compose, getCorsResponse, ParsedHttpRequest, sessionTokenGuard } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
 import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
 import { cleanupPgPool, getPgPool } from '@/lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
-import { getPublisher, cleanupAmqpPublisher } from '@/lib/publisher';
-
-// Force v1
+import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -35,36 +33,50 @@ const pgPool = getPgPool();
 const redisClient = getRedisClient();
 const publisher = getPublisher();
 
-const app = App()
-  .options('/*', (res: HttpResponse, req: HttpRequest) => {
-    const corsReponse = getCorsResponse(res);
-    corsReponse.end();
-  })
-  .get('/', (res: HttpResponse, req: HttpRequest) => {
-    res.end(process.uptime().toString());
-  })
-  .get('/rooms/:nspRoomId/messages', getRoomHistoryMessages)
-  .post('/events', (res: HttpResponse, req: HttpRequest) =>
-    handleClientEvent(pgPool!, redisClient, res, req)
-  )
-  .get('/history/:nspRoomId/messages', (res: HttpResponse, req: HttpRequest) =>
+const app = App();
+
+app.options('/*', (res: HttpResponse) => {
+  const corsReponse = getCorsResponse(res);
+  corsReponse.end();
+});
+
+app.get('/', (res: HttpResponse) => {
+  res.end(process.uptime().toString());
+});
+
+app.post('/events', (res: HttpResponse, req: HttpRequest) =>
+  handleClientEvent(pgPool!, redisClient, res, req)
+);
+
+// app.get(
+//   '/history/:roomId/messages',
+//   compose([sessionTokenGuard], (res: HttpResponse, req: ParsedHttpRequest) =>
+//     getHistoryMessages(pgPool!, res, req)
+//   )
+// );
+
+app.get(
+  '/history/:roomId/messages',
+  sessionTokenGuard((res: HttpResponse, req: ParsedHttpRequest) =>
     getHistoryMessages(pgPool!, res, req)
   )
-  .ws('/*', {
-    maxLifetime: WS_MAX_LIFETIME_MINS,
-    idleTimeout: WS_IDLE_TIMEOUT_SECS,
-    sendPingsAutomatically: true,
-    subscription: handleSubscriptionBindings,
-    upgrade: handleConnectionUpgrade,
-    open: (socket: WebSocket<Session>) => handleSocketOpen(socket, redisClient),
-    pong: handleClientHeartbeat,
-    message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
-      handleSocketMessage(socket, redisClient, message, isBinary, app);
-    },
-    close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
-      handleDisconnect(socket, redisClient, code, message, CONTAINER_HOSTNAME);
-    }
-  });
+);
+
+app.ws('/*', {
+  maxLifetime: WS_MAX_LIFETIME_MINS,
+  idleTimeout: WS_IDLE_TIMEOUT_SECS,
+  sendPingsAutomatically: true,
+  subscription: handleSubscriptionBindings,
+  upgrade: handleConnectionUpgrade,
+  open: (socket: WebSocket<Session>) => handleSocketOpen(socket, redisClient),
+  pong: handleClientHeartbeat,
+  message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
+    handleSocketMessage(socket, redisClient, message, isBinary, app);
+  },
+  close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
+    handleDisconnect(socket, redisClient, code, message, CONTAINER_HOSTNAME);
+  }
+});
 
 const amqpManager = AmqpManager.getInstance(app, eventEmitter, {
   instanceId: CONTAINER_HOSTNAME,

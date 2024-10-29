@@ -2,12 +2,16 @@ import { getRedisClient } from '@/lib/redis';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import * as historyService from './history.service';
 import { getLogger } from '@/util/logger';
-import { getErrorResponse, getJsonResponse, getSuccessResponse } from '@/util/http';
+import {
+  getErrorResponse,
+  getJsonResponse,
+  getSuccessResponse,
+  ParsedHttpRequest
+} from '@/util/http';
 import { getMessagesByRoomId, HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
 import { HistoryOrder } from '@/types/history.types';
 import { Pool, PoolClient } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
-import { getISODateString } from '@/util/date';
 import { BadRequestError } from '@/lib/errors';
 
 const logger = getLogger('history-http');
@@ -106,7 +110,7 @@ export async function _getRoomHistoryMessages(res: HttpResponse, req: HttpReques
   }
 }
 
-export async function getHistoryMessages(pgPool: Pool, res: HttpResponse, req: HttpRequest) {
+export async function getHistoryMessages(pgPool: Pool, res: HttpResponse, req: ParsedHttpRequest) {
   let aborted = false;
   let pgClient: PoolClient | undefined;
 
@@ -115,12 +119,17 @@ export async function getHistoryMessages(pgPool: Pool, res: HttpResponse, req: H
   });
 
   try {
-    const roomId = req.getParameter(0);
-    const offset = Number(req.getQuery('offset')) || 0;
-    const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
-    const start = req.getQuery('start') || null;
-    const end = req.getQuery('end') || null;
-    const order = (req.getQuery('order') || QueryOrder.DESC) as QueryOrder;
+    const roomId = req.params[0];
+    const offset = Number(req.query.offset) || 0;
+    const limit = Number(req.query.limit) || HISTORY_MAX_LIMIT;
+    const start = req.query.start || null;
+    const end = req.query.end || null;
+    const order = (req.query.order || QueryOrder.DESC) as QueryOrder;
+    // const offset = Number(req.getQuery('offset')) || 0;
+    // const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
+    // const start = req.getQuery('start') || null;
+    // const end = req.getQuery('end') || null;
+    // const order = (req.getQuery('order') || QueryOrder.DESC) as QueryOrder;
 
     if (limit > HISTORY_MAX_LIMIT) {
       throw new BadRequestError('Invalid limit parameter');
@@ -143,15 +152,11 @@ export async function getHistoryMessages(pgPool: Pool, res: HttpResponse, req: H
       end
     );
 
-    if (!aborted) {
-      res.cork(() => getSuccessResponse(res, result));
-    }
+    res.cork(() => getSuccessResponse(res, result));
   } catch (err: unknown) {
     logger.error(`Failed to get room history messages`, { err });
 
-    if (!aborted) {
-      res.cork(() => getErrorResponse(res, err));
-    }
+    res.cork(() => getErrorResponse(res, err));
   } finally {
     if (pgClient) {
       pgClient.release();

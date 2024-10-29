@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const pkg = require('./package.json');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 esbuild
   .build({
     entryPoints: ['src/server.ts'],
@@ -12,8 +14,8 @@ esbuild
     outfile: 'build/server.js',
     external: [...Object.keys(pkg.dependencies || {})],
     plugins: [],
-    minify: true,
-    sourcemap: false
+    minify: isProduction,
+    sourcemap: !isProduction
   })
   .then(() => {
     const srcCertsDir = path.resolve(__dirname, 'src', 'certs');

@@ -7,6 +7,20 @@ interface ErrorResponseBody {
   message?: string;
 }
 
+export interface ParsedHttpRequest {
+  method: string;
+  query: Record<string, string>;
+  params: string[];
+}
+
+export type HttpHandler = (res: HttpResponse, req: ParsedHttpRequest) => void | Promise<void>;
+
+export type HttpMiddleware = (handler: HttpHandler) => HttpHandler;
+
+export function compose(middlewares: HttpMiddleware[], handler: HttpHandler): HttpHandler {
+  return middlewares.reduceRight((next, middleware) => middleware(next), handler);
+}
+
 export function getJsonResponse(res: HttpResponse, status: string) {
   res.writeStatus(status);
   res.writeHeader('Content-Type', 'application/json');
@@ -74,3 +88,82 @@ export function formatErrorResponseBody(statusCode: number, err: unknown): Error
     name: 'InternalServerError'
   };
 }
+
+export function getQueryParams(req: HttpRequest): Record<string, string> {
+  const query = req.getQuery();
+
+  const params: Record<string, string> = {};
+
+  query.split('&').forEach((param) => {
+    const [key, value] = param.split('=');
+
+    if (key) {
+      params[decodeURIComponent(key)] = decodeURIComponent(value || '');
+    }
+  });
+
+  return params;
+}
+
+export function getPathParams(req: HttpRequest): string[] {
+  const params: string[] = [];
+  let index = 0;
+
+  while (true) {
+    const param = req.getParameter(index++);
+
+    if (!param) {
+      break;
+    }
+
+    params.push(param);
+  }
+
+  return params;
+}
+
+export function sessionTokenGuard(handler: Function) {
+  return (res: HttpResponse, req: HttpRequest) => {
+    let aborted = false;
+
+    res.onAborted(() => {
+      aborted = true;
+    });
+
+    const method = req.getMethod();
+    const query = getQueryParams(req);
+    const params = getPathParams(req);
+
+    const parsedRequest: ParsedHttpRequest = {
+      method,
+      query,
+      params
+    };
+
+    return handler(res, parsedRequest);
+  };
+}
+
+// export const sessionTokenGuard = (next: any) => (res: HttpResponse, req: HttpRequest) => {
+//   return (res: HttpResponse, req: HttpRequest) => {
+//     let aborted = false;
+
+//     res.onAborted(() => {
+//       aborted = true;
+//     });
+
+//     const method = req.getMethod();
+//     const query = getQueryParams(req);
+//     const params = getPathParams(req);
+
+//     const parsedRequest: ParsedHttpRequest = {
+//       method,
+//       query,
+//       params
+//     };
+
+//     next(res, parsedRequest);
+//   };
+// };
+
+export function requestPipe(middlewares: any[], handler: Function) {}

@@ -4,6 +4,8 @@ import { Session } from '@/types/session.types';
 import { RedisClient } from '@/lib/redis';
 import { isActiveMember } from '@/modules/presence/presence.service';
 import { getRoomByConnectionId } from '@/modules/room/room.service';
+import { HttpRequest, HttpResponse } from 'uWebSockets.js';
+import { getJsonResponse, getPathParams, getQueryParams, ParsedHttpRequest } from '@/util/http';
 
 export function authenticatedSessionGuard(session: Session): boolean {
   if (!session.clientId) {
@@ -62,4 +64,26 @@ export async function roomMemberGuard(
   }
 
   return true;
+}
+
+export function sessionTokenGuard(handler: Function) {
+  return (res: HttpResponse, req: HttpRequest) => {
+    let aborted = false;
+
+    res.onAborted(() => {
+      aborted = true;
+    });
+
+    const method = req.getMethod();
+    const query = getQueryParams(req);
+    const params = getPathParams(req);
+
+    const parsedRequest: ParsedHttpRequest = {
+      method,
+      query,
+      params
+    };
+
+    return handler(res, parsedRequest);
+  };
 }

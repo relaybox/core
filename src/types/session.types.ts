@@ -11,6 +11,8 @@ export interface AuthUser {
   lastOnline: string;
   appId: string;
   blockedAt: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
 }
 
 export interface Session {

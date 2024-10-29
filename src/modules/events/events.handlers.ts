@@ -15,7 +15,7 @@ import {
 } from './events.service';
 import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
-import { getNspClientId, getNspEvent, getNspRoomId } from '@/util/helpers';
+import { getNspEvent, getNspRoomId } from '@/util/helpers';
 import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueMessage } from '@/lib/publisher';
 

@@ -14,7 +14,7 @@ import {
 import { Session } from '@/types/session.types';
 import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
-import { getRoomHistoryMessages } from '@/modules/history/history.http';
+import { getHistoryMessages, getRoomHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
 import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
@@ -46,6 +46,9 @@ const app = App()
   .get('/rooms/:nspRoomId/messages', getRoomHistoryMessages)
   .post('/events', (res: HttpResponse, req: HttpRequest) =>
     handleClientEvent(pgPool!, redisClient, res, req)
+  )
+  .get('/history/:nspRoomId/messages', (res: HttpResponse, req: HttpRequest) =>
+    getHistoryMessages(pgPool!, res, req)
   )
   .ws('/*', {
     maxLifetime: WS_MAX_LIFETIME_MINS,

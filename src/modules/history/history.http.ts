@@ -3,8 +3,10 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import * as historyService from './history.service';
 import { getLogger } from '@/util/logger';
 import { getJsonResponse } from '@/util/http';
-import { HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
+import { getMessagesByRoomId, HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
 import { HistoryOrder } from '@/types/history.types';
+import { Pool, PoolClient } from 'pg';
+import { QueryOrder } from '@/util/pg-query';
 
 const logger = getLogger('history-http');
 
@@ -98,6 +100,57 @@ export async function _getRoomHistoryMessages(res: HttpResponse, req: HttpReques
           JSON.stringify({ status: 500, message: err.message })
         );
       });
+    }
+  }
+}
+
+export async function getHistoryMessages(pgPool: Pool, res: HttpResponse, req: HttpRequest) {
+  let aborted = false;
+  let pgClient: PoolClient | undefined;
+
+  res.onAborted(() => {
+    aborted = true;
+  });
+
+  try {
+    const roomId = req.getParameter(0);
+    const offset = Number(req.getQuery('offset')) || 0;
+    const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
+    const start = Number(req.getQuery('start')) || null;
+    const end = Number(req.getQuery('end')) || null;
+    const order = req.getQuery('order') || QueryOrder.DESC;
+
+    pgClient = await pgPool.connect();
+
+    const messages = await getMessagesByRoomId(
+      logger,
+      pgClient,
+      roomId,
+      offset,
+      limit,
+      <QueryOrder>order,
+      start,
+      end
+    );
+
+    if (!aborted) {
+      res.cork(() => {
+        getJsonResponse(res, '200 ok').end(JSON.stringify({ status: 200, messages }));
+      });
+    }
+  } catch (err: any) {
+    logger.error(`Failed to get room history messages`, { err });
+
+    if (!aborted) {
+      res.cork(() => {
+        getJsonResponse(res, '500 Internal Server Error').end(
+          JSON.stringify({ status: 500, message: err.message })
+        );
+      });
+    }
+  } finally {
+    if (pgClient) {
+      pgClient.release();
     }
   }
 }

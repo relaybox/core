@@ -1,10 +1,14 @@
 import { RedisClient } from '@/lib/redis';
-import * as historyRepository from './history.repository';
+import * as repository from './history.repository';
+import * as db from './history.db';
 import { getLogger } from '@/util/logger';
 import { KeyPrefix } from '@/types/state.types';
 import { Job } from 'bullmq';
 import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue';
-import { HistoryOrder, HistoryResponse } from '@/types/history.types';
+import { HistoryOrder, HistoryResponse, Message } from '@/types/history.types';
+import { Logger } from 'winston';
+import { PoolClient } from 'pg';
+import { PaginatedQueryResult, QueryOrder } from '@/util/pg-query';
 
 const logger = getLogger('history'); // TODO: MOVE ALL LOGGERS TO HANDLERS FILE
 
@@ -95,7 +99,7 @@ export async function addRoomHistoryMessage(
   logger.debug(`Adding message to history`, { key, timestamp });
 
   try {
-    await historyRepository.addRoomHistoryMessage(redisClient, key, messageData);
+    await repository.addRoomHistoryMessage(redisClient, key, messageData);
 
     const ttl = await redisClient.ttl(key);
 
@@ -147,7 +151,7 @@ export async function getRoomHistoryMessages(
 
       const { min, max } = getPartitionRange(startTime, endTime, order, lastScore);
 
-      const currentMessages = await historyRepository.getRoomHistoryMessages(
+      const currentMessages = await repository.getRoomHistoryMessages(
         redisClient,
         currentPartitionKey,
         min,
@@ -212,4 +216,55 @@ export function setRoomHistoryKeyTtl(nspRoomId: string, key: string): Promise<Jo
   } catch (err) {
     logger.error(`Failed to add history ttl job to history queue`, { err });
   }
+}
+
+export async function getMessagesByRoomId(
+  logger: Logger,
+  pgClient: PoolClient,
+  roomId: string,
+  offset: number,
+  limit: number,
+  order: QueryOrder = QueryOrder.DESC,
+  start: number | null = null,
+  end: number | null = null
+): Promise<PaginatedQueryResult<Message>> {
+  logger.debug(`Getting messages by room id`, { roomId });
+
+  let startDateString = start ? new Date(start).toISOString() : null;
+  let endDateString = end ? new Date(end).toISOString() : null;
+
+  const { rows: messages } = await db.getMessagesByRoomId(
+    pgClient,
+    roomId,
+    offset,
+    limit,
+    order,
+    startDateString,
+    endDateString
+  );
+
+  const parsedMessages = parseMessages(messages[0].data);
+
+  return {
+    count: messages[0].count,
+    data: parsedMessages
+  };
+}
+
+export function parseMessages(messages: any[]): Message[] {
+  return messages.map((message) => {
+    const { id, body, user, clientId, connectionId, event } = message;
+
+    return {
+      id,
+      body,
+      sender: {
+        clientId,
+        connectionId,
+        user
+      },
+      timestamp: new Date(message.createdAt).getTime(),
+      event
+    };
+  });
 }

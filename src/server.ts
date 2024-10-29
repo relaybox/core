@@ -62,6 +62,13 @@ app.get(
   )
 );
 
+// app.get(
+//   '/history/:roomId/messages',
+//   sessionTokenGuard((res: HttpResponse, req: ParsedHttpRequest) =>
+//     getHistoryMessages(pgPool!, res, req)
+//   )
+// );
+
 app.ws('/*', {
   maxLifetime: WS_MAX_LIFETIME_MINS,
   idleTimeout: WS_IDLE_TIMEOUT_SECS,

@@ -2,11 +2,13 @@ import { getRedisClient } from '@/lib/redis';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import * as historyService from './history.service';
 import { getLogger } from '@/util/logger';
-import { getJsonResponse } from '@/util/http';
+import { getErrorResponse, getJsonResponse, getSuccessResponse } from '@/util/http';
 import { getMessagesByRoomId, HISTORY_MAX_LIMIT, HISTORY_MAX_SECONDS } from './history.service';
 import { HistoryOrder } from '@/types/history.types';
 import { Pool, PoolClient } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
+import { getISODateString } from '@/util/date';
+import { BadRequestError } from '@/lib/errors';
 
 const logger = getLogger('history-http');
 
@@ -116,37 +118,39 @@ export async function getHistoryMessages(pgPool: Pool, res: HttpResponse, req: H
     const roomId = req.getParameter(0);
     const offset = Number(req.getQuery('offset')) || 0;
     const limit = Number(req.getQuery('limit')) || HISTORY_MAX_LIMIT;
-    const start = Number(req.getQuery('start')) || null;
-    const end = Number(req.getQuery('end')) || null;
-    const order = req.getQuery('order') || QueryOrder.DESC;
+    const start = req.getQuery('start') || null;
+    const end = req.getQuery('end') || null;
+    const order = (req.getQuery('order') || QueryOrder.DESC) as QueryOrder;
+
+    if (limit > HISTORY_MAX_LIMIT) {
+      throw new BadRequestError('Invalid limit parameter');
+    }
+
+    if (offset < 0) {
+      throw new BadRequestError('Invalid offset parameter');
+    }
 
     pgClient = await pgPool.connect();
 
-    const messages = await getMessagesByRoomId(
+    const result = await getMessagesByRoomId(
       logger,
       pgClient,
       roomId,
       offset,
       limit,
-      <QueryOrder>order,
+      order,
       start,
       end
     );
 
     if (!aborted) {
-      res.cork(() => {
-        getJsonResponse(res, '200 ok').end(JSON.stringify({ status: 200, messages }));
-      });
+      res.cork(() => getSuccessResponse(res, result));
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error(`Failed to get room history messages`, { err });
 
     if (!aborted) {
-      res.cork(() => {
-        getJsonResponse(res, '500 Internal Server Error').end(
-          JSON.stringify({ status: 500, message: err.message })
-        );
-      });
+      res.cork(() => getErrorResponse(res, err));
     }
   } finally {
     if (pgClient) {

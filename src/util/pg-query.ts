@@ -6,8 +6,8 @@ export interface PaginatedQueryResult<T> {
 }
 
 export enum QueryOrder {
-  ASC = 'ASC',
-  DESC = 'DESC'
+  ASC = 'asc',
+  DESC = 'desc'
 }
 
 export function isPaginationRequest(offset?: number, limit?: number): boolean {

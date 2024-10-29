@@ -19,10 +19,7 @@ export function getMessagesByRoomId(
           'id', au."id",
           'clientId', au."clientId",
           'createdAt', au."createdAt",
-          'updatedAt', au."updatedAt",
           'username', au."username",
-          'orgId', au."orgId",
-          'appId', au."appId",
           'isOnline', au."isOnline",
           'lastOnline', au."lastOnline",
           'blockedAt', au."blockedAt",
@@ -46,11 +43,8 @@ export function getMessagesByRoomId(
   }
 
   if (order) {
-    query +=
-      order === QueryOrder.ASC ? ` ORDER BY mh."createdAt" ASC` : ` ORDER BY mh."createdAt" DESC`;
+    query += ` ORDER BY mh."createdAt" ${order}`;
   }
-
-  console.log(query);
 
   return getPaginatedQuery(pgClient, query, offset!, limit!, queryParams);
 }

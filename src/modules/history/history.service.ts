@@ -9,6 +9,7 @@ import { HistoryOrder, HistoryResponse, Message } from '@/types/history.types';
 import { Logger } from 'winston';
 import { PoolClient } from 'pg';
 import { PaginatedQueryResult, QueryOrder } from '@/util/pg-query';
+import { getISODateString } from '@/util/date';
 
 const logger = getLogger('history'); // TODO: MOVE ALL LOGGERS TO HANDLERS FILE
 
@@ -225,13 +226,10 @@ export async function getMessagesByRoomId(
   offset: number,
   limit: number,
   order: QueryOrder = QueryOrder.DESC,
-  start: number | null = null,
-  end: number | null = null
+  start: string | null = null,
+  end: string | null = null
 ): Promise<PaginatedQueryResult<Message>> {
   logger.debug(`Getting messages by room id`, { roomId });
-
-  let startDateString = start ? new Date(start).toISOString() : null;
-  let endDateString = end ? new Date(end).toISOString() : null;
 
   const { rows: messages } = await db.getMessagesByRoomId(
     pgClient,
@@ -239,8 +237,8 @@ export async function getMessagesByRoomId(
     offset,
     limit,
     order,
-    startDateString,
-    endDateString
+    getISODateString(start),
+    getISODateString(end)
   );
 
   const parsedMessages = parseMessages(messages[0].data);
@@ -252,6 +250,10 @@ export async function getMessagesByRoomId(
 }
 
 export function parseMessages(messages: any[]): Message[] {
+  if (!messages?.length) {
+    return [];
+  }
+
   return messages.map((message) => {
     const { id, body, user, clientId, connectionId, event } = message;
 

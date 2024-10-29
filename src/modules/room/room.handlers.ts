@@ -158,6 +158,7 @@ export async function clientPublish(
 
     const webhookData = {
       ...messageData,
+      id: messageId,
       roomId,
       event
     };

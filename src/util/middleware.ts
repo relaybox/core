@@ -6,9 +6,6 @@ import {
   getQueryParams,
   parseRequestBody
 } from '@/util/http';
-import { Pool } from 'pg';
-import { Logger } from 'winston';
-import { getSecretKey } from '@/modules/auth/auth.service';
 
 export interface ParsedHttpRequest {
   method: string;
@@ -63,7 +60,7 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
 
       const nextMiddleware = middlewares[i];
 
-      const { promise: timeoutPromise, clearRequestTimeout } = timeoutRace(5000);
+      const { promise: timeoutPromise, clearRequestTimeout } = getRequestTimeout(5000);
 
       try {
         await Promise.race([
@@ -86,7 +83,7 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
   };
 }
 
-function timeoutRace(duration = 500) {
+function getRequestTimeout(duration = 500) {
   let timeoutId: NodeJS.Timeout;
 
   const promise = new Promise((_, reject) => {
@@ -100,46 +97,3 @@ function timeoutRace(duration = 500) {
     clearRequestTimeout: () => clearTimeout(timeoutId)
   };
 }
-
-export async function middlewareOne(
-  res: HttpResponse,
-  req: ParsedHttpRequest,
-  next: HttpMiddlewareNext
-) {
-  // await new Promise((resolve) => setTimeout(resolve, 500));
-  next();
-}
-
-export function requestLogger(
-  res: HttpResponse,
-  req: ParsedHttpRequest,
-  next: HttpMiddlewareNext
-): void {
-  console.log(req.url);
-
-  // throw new Error('test');
-
-  next();
-}
-
-// export function verifyToken(logger: Logger, pgPool: Pool | null): HttpMiddleware {
-//   return async (res: HttpResponse, req: ParsedHttpRequest, next: HttpMiddlewareNext) => {
-//     if (!pgPool) {
-//       throw new Error('Postgres pool not initialized');
-//     }
-
-//     const pgClient = await pgPool.connect();
-
-//     try {
-//       const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
-//       next();
-//     } catch (err: unknown) {
-//       logger.error(`Failed to verify token`, { err });
-//       res.cork(() => getErrorResponse(res, err));
-//     } finally {
-//       if (pgClient) {
-//         pgClient.release();
-//       }
-//     }
-//   };
-// }

@@ -9,7 +9,7 @@ import {
   verifyAuthTokenSignature
 } from './auth.service';
 
-export function verifyToken(logger: Logger, pgPool: Pool | null): HttpMiddleware {
+export function verifyAuthToken(logger: Logger, pgPool: Pool | null): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest, next: HttpMiddlewareNext) => {
     if (!pgPool) {
       throw new Error('Postgres pool not initialized');

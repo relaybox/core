@@ -21,8 +21,8 @@ import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
 import { cleanupPgPool, getPgPool } from '@/lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
 import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
-import { compose, middlewareOne, requestLogger } from '@/util/middleware';
-import { verifyToken } from '@/modules/auth/auth.middleware';
+import { compose } from '@/util/middleware';
+import { verifyAuthToken } from './modules/auth/auth.middleware';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -50,7 +50,7 @@ app.post('/events', compose(handleClientEvent(pgPool!, redisClient)));
 
 app.get(
   '/history/:roomId/messages',
-  compose(verifyToken(logger, pgPool), middlewareOne, requestLogger, getHistoryMessages(pgPool!))
+  compose(verifyAuthToken(logger, pgPool), getHistoryMessages(pgPool!))
 );
 
 app.ws('/*', {

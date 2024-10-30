@@ -18,6 +18,7 @@ export function getJsonResponse(res: HttpResponse, status: string) {
 export function getCorsResponse(res: HttpResponse) {
   res.writeHeader('Access-Control-Allow-Origin', '*');
   res.writeHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.writeHeader('Access-Control-Allow-Headers', 'Authorization');
 
   return res;
 }

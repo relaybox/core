@@ -8,6 +8,7 @@ import * as db from './auth.db';
 import jwt, { JsonWebTokenError } from 'jsonwebtoken';
 import { createHmac } from 'crypto';
 import { DsPermissions } from '@/types/permissions.types';
+import { ExtendedClientJwtPayload } from '@/types/auth.types';
 
 const logger = getLogger('auth');
 
@@ -103,6 +104,10 @@ export async function getSecretKey(
   return secretKey;
 }
 
+export function decodeAuthToken(token: string): ExtendedClientJwtPayload {
+  return jwt.decode(token) as ExtendedClientJwtPayload;
+}
+
 export function verifyAuthTokenSignature(logger: Logger, token: string, secretKey: string) {
   logger.debug(`Verifying auth token signature`);
 
@@ -162,4 +167,9 @@ export function verifyTimestamp(timestamp: number, diffInSeconds: number): numbe
   }
 
   return timestamp;
+}
+
+export function parsePublicKey(publicKey: string): { appPid: string; keyId: string } {
+  const [appPid, keyId] = publicKey.split('.');
+  return { appPid, keyId };
 }

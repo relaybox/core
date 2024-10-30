@@ -9,6 +9,7 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { extractRoomId } from '@/util/helpers';
 import { HistoryOrder } from '@/types/history.types';
+import { getLogger } from '@/util/logger';
 
 export async function clientRoomHistoryGet(
   logger: Logger,

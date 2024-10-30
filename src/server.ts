@@ -46,7 +46,7 @@ app.get('/', (res: HttpResponse) => {
   res.end(process.uptime().toString());
 });
 
-app.post('/events', compose(handleClientEvent(pgPool!, redisClient)));
+app.post('/events', compose(handleClientEvent(pgPool!)));
 
 app.get(
   '/history/:roomId/messages',

@@ -20,7 +20,6 @@ import { DsPermission } from '@/types/permissions.types';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
-import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { v4 as uuid } from 'uuid';
@@ -180,7 +179,6 @@ export async function clientPublish(
       message: processedMessageData
     };
 
-    await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
     await enqueueMessage(persistedMessageData);
     await enqueueWebhookEvent(
       WebhookEvent.ROOM_PUBLISH,

@@ -9,7 +9,6 @@ import { getLatencyLog } from './events.service';
 import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
-import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueMessage } from '@/lib/publisher';
 import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
 import { BadRequestError } from '@/lib/errors';
@@ -25,7 +24,7 @@ const logger = getLogger('event');
 
 const MAX_TIMESTAMP_DIFF_SECS = 30;
 
-export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpMiddleware {
+export function handleClientEvent(pgPool: Pool): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
     const requestId = uuid();
 
@@ -95,7 +94,6 @@ export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpM
         message: processedMessageData
       };
 
-      await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
       await enqueueMessage(persistedMessageData);
 
       res.cork(() =>

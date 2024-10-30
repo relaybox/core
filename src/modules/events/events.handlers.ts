@@ -1,17 +1,11 @@
-import { HttpRequest, HttpResponse } from 'uWebSockets.js';
+import { HttpResponse } from 'uWebSockets.js';
 import { getErrorResponse, getSuccessResponse } from '@/util/http';
 import { getLogger } from '@/util/logger';
 import { v4 as uuid } from 'uuid';
 import { RedisClient } from '@/lib/redis';
 import { Pool } from 'pg';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
-import {
-  getLatencyLog,
-  getPermissions,
-  getUserByClientId,
-  verifySignature,
-  verifyTimestamp
-} from './events.service';
+import { getLatencyLog } from './events.service';
 import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
@@ -19,7 +13,13 @@ import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueMessage } from '@/lib/publisher';
 import { HttpMiddleware, ParsedHttpRequest } from '@/util/middleware';
 import { BadRequestError } from '@/lib/errors';
-import { getSecretKey } from '@/modules/auth/auth.service';
+import {
+  getSecretKey,
+  getUserByClientId,
+  verifySignature,
+  verifyTimestamp
+} from '@/modules/auth/auth.service';
+import { getPermissions } from '@/modules/permissions/permissions.service';
 
 const logger = getLogger('event');
 

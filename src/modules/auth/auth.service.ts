@@ -3,13 +3,18 @@ import { Session } from '@/types/session.types';
 import { request } from '@/util/request';
 import { Logger } from 'winston';
 import { PoolClient } from 'pg';
-import { TokenError, UnauthorizedError } from '@/lib/errors';
+import { ForbiddenError, TokenError, UnauthorizedError } from '@/lib/errors';
 import * as db from './auth.db';
 import jwt, { JsonWebTokenError } from 'jsonwebtoken';
+import { createHmac } from 'crypto';
+import { DsPermissions } from '@/types/permissions.types';
 
 const logger = getLogger('auth');
 
 const RELAYBOX_AUTH_SERVICE_URL = process.env.RELAYBOX_AUTH_SERVICE_URL;
+const SIGNATURE_HASHING_ALGORITHM = 'sha256';
+const SIGNATURE_BUFFER_ENCODING = 'utf-8';
+const SIGNATURE_DIGEST = 'hex';
 
 export async function verifyAuthToken(token: string, connectionId?: string): Promise<Session> {
   if (!token) {
@@ -114,4 +119,47 @@ export function verifyAuthTokenSignature(logger: Logger, token: string, secretKe
 
     throw err;
   }
+}
+
+export async function getUserByClientId(
+  logger: Logger,
+  pgClient: PoolClient,
+  clientId: string
+): Promise<any> {
+  logger.debug(`Getting user by client id ${clientId}`);
+
+  const { rows } = await db.getUserByClientId(pgClient, clientId);
+
+  if (!rows.length) {
+    return null;
+  }
+
+  return rows[0];
+}
+
+export async function verifySignature(
+  providedPayload: any,
+  providedSignature: string,
+  secretKey: string
+): Promise<boolean> {
+  const buffer = Buffer.from(providedPayload, SIGNATURE_BUFFER_ENCODING);
+  const computedSignature = createHmac(SIGNATURE_HASHING_ALGORITHM, secretKey)
+    .update(buffer)
+    .digest(SIGNATURE_DIGEST);
+
+  if (providedSignature !== computedSignature) {
+    throw new UnauthorizedError('Unable to verify signature');
+  }
+
+  return true;
+}
+
+export function verifyTimestamp(timestamp: number, diffInSeconds: number): number {
+  const now = Date.now();
+
+  if (now - timestamp > diffInSeconds * 1000) {
+    throw new UnauthorizedError('Unable to verify timestamp');
+  }
+
+  return timestamp;
 }

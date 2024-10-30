@@ -270,3 +270,27 @@ export function parseMessages(messages: any[]): Message[] {
     };
   });
 }
+
+export function getRoomHistoryKey(nspRoomId: string, timestamp: number): string {
+  const date = new Date(timestamp);
+  const hours = date.getUTCHours();
+
+  date.setUTCHours(hours, 0, 0, 0);
+
+  return `${KeyPrefix.HISTORY}:messages:${nspRoomId}:${date.toISOString().slice(0, 13)}h`;
+}
+
+export function getMessageData(systemEvent: any): any {
+  const { data: body, timestamp, event, requestId } = systemEvent;
+
+  const sender = {
+    requestId
+  };
+
+  return {
+    body,
+    sender,
+    timestamp,
+    event
+  };
+}

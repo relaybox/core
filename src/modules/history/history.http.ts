@@ -11,6 +11,8 @@ const logger = getLogger('history-http');
 
 export function getHistoryMessages(pgPool: Pool): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
+    logger.debug(`Getting room history messages`);
+
     const pgClient = await pgPool.connect();
 
     try {

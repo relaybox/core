@@ -7,6 +7,8 @@ import {
   parseRequestBody
 } from '@/util/http';
 
+const DEFAULT_MIDDLEWARE_TIMEOUT_MS = 5000;
+
 export interface ParsedHttpRequest {
   method: string;
   query: Record<string, string>;
@@ -24,7 +26,6 @@ export type HttpMiddleware = (
 ) => Promise<void> | void;
 
 export type HttpRequestHandler = (res: HttpResponse, req: HttpRequest) => Promise<void>;
-
 export type HttpMiddlewareNext = (extendRequest?: Record<string, any>) => Promise<void> | void;
 
 export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
@@ -61,7 +62,9 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
 
       const nextMiddleware = middlewares[i];
 
-      const { promise: timeoutPromise, clearRequestTimeout } = getRequestTimeout(5000);
+      const { promise: timeoutPromise, clearRequestTimeout } = getMiddlewareTimeout(
+        DEFAULT_MIDDLEWARE_TIMEOUT_MS
+      );
 
       try {
         await Promise.race([
@@ -85,7 +88,7 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
   };
 }
 
-function getRequestTimeout(duration = 500) {
+function getMiddlewareTimeout(duration = 500) {
   let timeoutId: NodeJS.Timeout;
 
   const promise = new Promise((_, reject) => {

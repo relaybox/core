@@ -11,7 +11,7 @@ export function getMessagesByRoomId(
   end: string | null = null,
   order: QueryOrder = QueryOrder.DESC
 ): Promise<QueryResult> {
-  const queryParams: (string | number)[] = [roomId];
+  const queryParams: (string | number)[] = [roomId, appPid];
 
   let query = `
     SELECT mh.*, 
@@ -30,7 +30,7 @@ export function getMessagesByRoomId(
       ELSE NULL
     END AS user FROM message_history mh
     LEFT JOIN authentication_users au ON mh."clientId" = au."clientId"
-    WHERE mh."roomId" = $1
+    WHERE mh."roomId" = $1 AND mh."appPid" = $2 AND mh."deletedAt" IS NULL
   `;
 
   if (start) {

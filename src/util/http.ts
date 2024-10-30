@@ -70,10 +70,10 @@ export function getErrorResponse(res: HttpResponse, err: unknown): HttpResponse 
     );
   }
 
-  return getJsonResponse(res, '500 Bad Request').end();
+  return getJsonResponse(res, '500 Bad Request').end(JSON.stringify(formatErrorResponseBody(500)));
 }
 
-export function formatErrorResponseBody(statusCode: number, err: unknown): ErrorResponseBody {
+export function formatErrorResponseBody(statusCode: number, err?: unknown): ErrorResponseBody {
   if (err instanceof Error) {
     return {
       statusCode,

@@ -1,18 +1,18 @@
 import { QueryResult, PoolClient } from 'pg';
 
-export function getSecretKeybyKeyId(
-  pgClient: PoolClient,
-  appPid: string,
-  keyId: string
-): Promise<QueryResult> {
-  const query = `
-    SELECT "secretKey" 
-    FROM credentials 
-    WHERE "keyId" = $1 AND "appPid" = $2;
-  `;
+// export function getSecretKeybyKeyId(
+//   pgClient: PoolClient,
+//   appPid: string,
+//   keyId: string
+// ): Promise<QueryResult> {
+//   const query = `
+//     SELECT "secretKey"
+//     FROM credentials
+//     WHERE "keyId" = $1 AND "appPid" = $2;
+//   `;
 
-  return pgClient.query(query, [keyId, appPid]);
-}
+//   return pgClient.query(query, [keyId, appPid]);
+// }
 
 export function getPermissionsByKeyId(pgClient: PoolClient, keyId: string): Promise<QueryResult> {
   const query = `

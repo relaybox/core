@@ -38,25 +38,6 @@ export function verifyTimestamp(timestamp: number, diffInSeconds: number): numbe
   return timestamp;
 }
 
-export async function getSecretKey(
-  logger: Logger,
-  pgClient: PoolClient,
-  appPid: string,
-  keyId: string
-): Promise<string> {
-  logger.debug(`Getting secret key for key id ${keyId}`);
-
-  const { rows } = await db.getSecretKeybyKeyId(pgClient, appPid, keyId);
-
-  if (!rows.length) {
-    throw new UnauthorizedError('Secret key not found');
-  }
-
-  const secretKey = rows[0].secretKey;
-
-  return secretKey;
-}
-
 export async function getPermissions(
   logger: Logger,
   pgClient: PoolClient,

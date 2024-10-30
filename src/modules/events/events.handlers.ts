@@ -1,14 +1,13 @@
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
-import { getHeader, getJsonResponse, parseRequestBody } from '@/util/http';
+import { getErrorResponse, getSuccessResponse } from '@/util/http';
 import { getLogger } from '@/util/logger';
 import { v4 as uuid } from 'uuid';
 import { RedisClient } from '@/lib/redis';
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import {
   getLatencyLog,
   getPermissions,
-  getSecretKey,
   getUserByClientId,
   verifySignature,
   verifyTimestamp
@@ -18,137 +17,105 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
 import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueMessage } from '@/lib/publisher';
+import { HttpMiddleware, ParsedHttpRequest } from '@/util/middleware';
+import { BadRequestError } from '@/lib/errors';
+import { getSecretKey } from '@/modules/auth/auth.service';
 
 const logger = getLogger('event');
 
 const MAX_TIMESTAMP_DIFF_SECS = 30;
 
-export async function handleClientEvent(
-  pgPool: Pool,
-  redisClient: RedisClient,
-  res: HttpResponse,
-  req: HttpRequest
-): Promise<void> {
-  let aborted = false;
-  let pgClient: PoolClient | undefined;
+export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpMiddleware {
+  return async (res: HttpResponse, req: ParsedHttpRequest) => {
+    const requestId = uuid();
 
-  res.onAborted(() => {
-    aborted = true;
-  });
+    logger.info('Publishing event', { requestId });
 
-  const requestId = uuid();
+    const pgClient = await pgPool.connect();
 
-  logger.info('Publishing event', { requestId });
+    try {
+      const publicKey = req.headers['x-ds-public-key'];
+      const signature = req.headers['x-ds-req-signature'];
 
-  try {
-    const publicKey = getHeader(req, `X-Ds-Public-Key`);
-    const signature = getHeader(req, `X-Ds-Req-Signature`);
+      if (!publicKey || !signature) {
+        throw new BadRequestError('Public key and signature headers are required');
+      }
 
-    if (!publicKey || !signature) {
-      res.cork(() => {
-        getJsonResponse(res, '400 Bad Request').end(
-          JSON.stringify({
-            name: 'BadRequestError',
-            message: 'Public key and signature headers are required',
-            data: {
-              requestId
-            }
-          })
-        );
-      });
+      const body = req.body;
 
-      return;
-    }
+      const [appPid, keyId] = publicKey.split('.');
+      const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
 
-    const body = await parseRequestBody(res);
+      await verifySignature(body, signature, secretKey);
 
-    // Capture all necessary request data (like headers) before introducing any async code.
-    // Reference: https://github.com/uNetworking/uWebSockets.js/discussions/84
+      const { event, roomId, data, timestamp, clientId } = JSON.parse(body);
+      const verifiedTimestamp = verifyTimestamp(timestamp, MAX_TIMESTAMP_DIFF_SECS);
+      const permissions = await getPermissions(logger, pgClient, keyId);
 
-    pgClient = await pgPool.connect();
+      permissionsGuard(roomId, DsPermission.PUBLISH, permissions);
 
-    const [appPid, keyId] = publicKey.split('.');
-    const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
+      const user = clientId ? await getUserByClientId(logger, pgClient, clientId) : null;
 
-    await verifySignature(body, signature, secretKey);
+      const latencyLog = getLatencyLog(timestamp);
+      const nspRoomId = getNspRoomId(appPid, roomId);
+      const nspEvent = getNspEvent(nspRoomId, event);
 
-    const { event, roomId, data, timestamp, clientId } = JSON.parse(body);
-    const verifiedTimestamp = verifyTimestamp(timestamp, MAX_TIMESTAMP_DIFF_SECS);
-    const permissions = await getPermissions(logger, pgClient, keyId);
+      const sender = {
+        clientId,
+        connectionId: null,
+        user
+      };
 
-    permissionsGuard(roomId, DsPermission.PUBLISH, permissions);
+      const session = {
+        appPid,
+        keyId,
+        uid: clientId || null,
+        clientId,
+        connectionId: null,
+        socketId: null
+      };
 
-    const user = clientId ? await getUserByClientId(logger, pgClient, clientId) : null;
+      const extendedMessageData = {
+        id: requestId,
+        body: data,
+        sender,
+        timestamp: new Date().getTime(),
+        event
+      };
 
-    const latencyLog = getLatencyLog(timestamp);
-    const nspRoomId = getNspRoomId(appPid, roomId);
-    const nspEvent = getNspEvent(nspRoomId, event);
+      const amqpManager = AmqpManager.getInstance();
 
-    const sender = {
-      clientId,
-      connectionId: null,
-      user
-    };
+      const processedMessageData = amqpManager.dispatchHandler
+        .to(nspRoomId)
+        .dispatch(nspEvent, extendedMessageData, session, latencyLog);
 
-    const session = {
-      appPid,
-      keyId,
-      uid: clientId || null,
-      clientId,
-      connectionId: null,
-      socketId: null
-    };
+      const persistedMessageData = {
+        roomId,
+        event,
+        message: processedMessageData
+      };
 
-    const extendedMessageData = {
-      id: requestId,
-      body: data,
-      sender,
-      timestamp: new Date().getTime(),
-      event
-    };
+      await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
+      await enqueueMessage(persistedMessageData);
 
-    const amqpManager = AmqpManager.getInstance();
-
-    const processedMessageData = amqpManager.dispatchHandler
-      .to(nspRoomId)
-      .dispatch(nspEvent, extendedMessageData, session, latencyLog);
-
-    const persistedMessageData = {
-      roomId,
-      event,
-      message: processedMessageData
-    };
-
-    await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
-    await enqueueMessage(persistedMessageData);
-
-    if (!aborted) {
-      res.cork(() => {
-        getJsonResponse(res, '200 ok').end(
-          JSON.stringify({
-            requestId,
-            timestamp: verifiedTimestamp
-          })
-        );
-      });
+      res.cork(() =>
+        getSuccessResponse(res, {
+          requestId,
+          timestamp: verifiedTimestamp
+        })
+      );
 
       return;
-    }
-  } catch (err: any) {
-    logger.error(`Failed to publish event`, { err });
+    } catch (err: any) {
+      logger.error(`Failed to publish event`, { err });
 
-    if (!aborted) {
-      res.cork(() => {
-        getJsonResponse(res, '400 Bad Request').end(
-          JSON.stringify({ status: 500, message: err.message })
-        );
-      });
+      res.cork(() => getErrorResponse(res, err));
 
       return;
+    } finally {
+      if (pgClient) {
+        pgClient.release();
+      }
     }
-  } finally {
-    if (pgClient) {
-      pgClient.release();
-    }
-  }
+  };
 }

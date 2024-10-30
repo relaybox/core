@@ -1,4 +1,4 @@
-import { BadRequestError, TimeoutError } from '@/lib/errors';
+import { BadRequestError, TimeoutError, TokenError } from '@/lib/errors';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
 interface ErrorResponseBody {
@@ -63,6 +63,12 @@ export function getErrorResponse(res: HttpResponse, err: unknown): HttpResponse 
     );
   }
 
+  if (err instanceof TokenError) {
+    return getJsonResponse(res, '401 Unauthorized').end(
+      JSON.stringify(formatErrorResponseBody(401, err))
+    );
+  }
+
   return getJsonResponse(res, '500 Bad Request').end();
 }
 
@@ -83,6 +89,10 @@ export function formatErrorResponseBody(statusCode: number, err: unknown): Error
 
 export function getQueryParams(req: HttpRequest): Record<string, string> {
   const query = req.getQuery();
+
+  if (!query) {
+    return {};
+  }
 
   const params: Record<string, string> = {};
 

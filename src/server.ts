@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
 import os from 'os';
-import { App, HttpResponse, HttpRequest, WebSocket } from 'uWebSockets.js';
+import { App, HttpResponse, WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import {
   handleClientHeartbeat,
@@ -21,13 +21,8 @@ import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
 import { cleanupPgPool, getPgPool } from '@/lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
 import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
-import {
-  compose,
-  middlewareOne,
-  ParsedHttpRequest,
-  requestLogger,
-  verifyToken
-} from '@/util/middleware';
+import { compose, middlewareOne, requestLogger } from '@/util/middleware';
+import { verifyToken } from '@/modules/auth/auth.middleware';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -51,13 +46,11 @@ app.get('/', (res: HttpResponse) => {
   res.end(process.uptime().toString());
 });
 
-app.post('/events', (res: HttpResponse, req: HttpRequest) =>
-  handleClientEvent(pgPool!, redisClient, res, req)
-);
+app.post('/events', compose(handleClientEvent(pgPool!, redisClient)));
 
 app.get(
   '/history/:roomId/messages',
-  compose(verifyToken(pgPool), middlewareOne, requestLogger, getHistoryMessages(pgPool!))
+  compose(verifyToken(logger, pgPool), middlewareOne, requestLogger, getHistoryMessages(pgPool!))
 );
 
 app.ws('/*', {

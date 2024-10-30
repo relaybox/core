@@ -1,7 +1,14 @@
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
-import { getErrorResponse, getHeaders, getPathParams, getQueryParams } from '@/util/http';
-import { TimeoutError } from '@/lib/errors';
+import {
+  getErrorResponse,
+  getHeaders,
+  getPathParams,
+  getQueryParams,
+  parseRequestBody
+} from '@/util/http';
 import { Pool } from 'pg';
+import { Logger } from 'winston';
+import { getSecretKey } from '@/modules/auth/auth.service';
 
 export interface ParsedHttpRequest {
   method: string;
@@ -9,6 +16,7 @@ export interface ParsedHttpRequest {
   params: string[];
   headers: Record<string, string>;
   url: string;
+  body: any;
 }
 
 export type HttpMiddleware = (
@@ -17,28 +25,35 @@ export type HttpMiddleware = (
   next: HttpMiddlewareNext
 ) => Promise<void> | void;
 
+export type HttpRequestHandler = (res: HttpResponse, req: HttpRequest) => Promise<void>;
+
 export type HttpMiddlewareNext = (req?: ParsedHttpRequest) => Promise<void> | void;
 
-export function compose(...middlewares: HttpMiddleware[]) {
-  return (res: HttpResponse, req: HttpRequest) => {
+export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
+  return async (res: HttpResponse, req: HttpRequest) => {
     let aborted = false;
 
     res.onAborted(() => {
       res.cork(() => res.end());
     });
 
+    // Capture all necessary request data (like headers) before introducing any async code.
+    // Reference: https://github.com/uNetworking/uWebSockets.js/discussions/84
+
     const method = req.getMethod();
     const query = getQueryParams(req);
     const params = getPathParams(req);
     const headers = getHeaders(req);
     const url = req.getUrl();
+    const body = await parseRequestBody(res);
 
     const parsedRequest: ParsedHttpRequest = {
       method,
       query,
       params,
       headers,
-      url
+      url,
+      body
     };
 
     const dispatch = async (i: number, currentRequest: ParsedHttpRequest) => {
@@ -107,9 +122,24 @@ export function requestLogger(
   next();
 }
 
-export function verifyToken(pgPool: Pool | null): HttpMiddleware {
-  return async (res: HttpResponse, req: ParsedHttpRequest, next: HttpMiddlewareNext) => {
-    console.log('hello');
-    next();
-  };
-}
+// export function verifyToken(logger: Logger, pgPool: Pool | null): HttpMiddleware {
+//   return async (res: HttpResponse, req: ParsedHttpRequest, next: HttpMiddlewareNext) => {
+//     if (!pgPool) {
+//       throw new Error('Postgres pool not initialized');
+//     }
+
+//     const pgClient = await pgPool.connect();
+
+//     try {
+//       const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
+//       next();
+//     } catch (err: unknown) {
+//       logger.error(`Failed to verify token`, { err });
+//       res.cork(() => getErrorResponse(res, err));
+//     } finally {
+//       if (pgClient) {
+//         pgClient.release();
+//       }
+//     }
+//   };
+// }

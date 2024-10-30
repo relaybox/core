@@ -7,18 +7,6 @@ interface ErrorResponseBody {
   message?: string;
 }
 
-export interface ParsedHttpRequest {
-  method: string;
-  query: Record<string, string>;
-  params: string[];
-}
-
-export type HttpHandler = (res: HttpResponse, req: ParsedHttpRequest) => void | Promise<void>;
-
-export type HttpMiddleware = (handler: HttpHandler) => HttpHandler;
-
-export type HttpMiddlewareNext = (req?: ParsedHttpRequest) => void;
-
 export function getJsonResponse(res: HttpResponse, status: string) {
   res.writeStatus(status);
   res.writeHeader('Content-Type', 'application/json');
@@ -111,6 +99,7 @@ export function getQueryParams(req: HttpRequest): Record<string, string> {
 
 export function getPathParams(req: HttpRequest): string[] {
   const params: string[] = [];
+
   let index = 0;
 
   while (true) {
@@ -126,129 +115,12 @@ export function getPathParams(req: HttpRequest): string[] {
   return params;
 }
 
-export function sessionTokenGuard(handler: Function) {
-  return (res: HttpResponse, req: HttpRequest) => {
-    let aborted = false;
+export function getHeaders(req: HttpRequest): Record<string, string> {
+  const headers: Record<string, string> = {};
 
-    res.onAborted(() => {
-      aborted = true;
-    });
+  req.forEach((key, value) => {
+    headers[key] = value;
+  });
 
-    const method = req.getMethod();
-    const query = getQueryParams(req);
-    const params = getPathParams(req);
-
-    const parsedRequest: ParsedHttpRequest = {
-      method,
-      query,
-      params
-    };
-
-    return handler(res, parsedRequest);
-  };
-}
-
-// export const sessionTokenGuard = (next: any) => (res: HttpResponse, req: HttpRequest) => {
-//   return (res: HttpResponse, req: HttpRequest) => {
-//     let aborted = false;
-
-//     res.onAborted(() => {
-//       aborted = true;
-//     });
-
-//     const method = req.getMethod();
-//     const query = getQueryParams(req);
-//     const params = getPathParams(req);
-
-//     const parsedRequest: ParsedHttpRequest = {
-//       method,
-//       query,
-//       params
-//     };
-
-//     next(res, parsedRequest);
-//   };
-// };
-
-export function compose(...middlewares: any[]) {
-  return (res: HttpResponse, req: HttpRequest) => {
-    let aborted = false;
-
-    res.onAborted(() => {
-      res.cork(() => res.end());
-    });
-
-    const method = req.getMethod();
-    const query = getQueryParams(req);
-    const params = getPathParams(req);
-
-    const parsedRequest: ParsedHttpRequest = {
-      method,
-      query,
-      params
-    };
-
-    const dispatch = async (i: number, currentRequest: ParsedHttpRequest) => {
-      if (aborted) {
-        return;
-      }
-
-      const nextMiddleware = middlewares[i];
-
-      try {
-        await Promise.race([
-          timeoutRace(),
-          nextMiddleware(res, currentRequest, (updatedRequest: ParsedHttpRequest) =>
-            dispatch(i + 1, updatedRequest || currentRequest)
-          )
-        ]);
-      } catch (err: unknown) {
-        aborted = true;
-        res.cork(() => getErrorResponse(res, err));
-        return;
-      }
-    };
-
-    dispatch(0, parsedRequest);
-  };
-}
-
-export function timeoutRace() {
-  return new Promise((_, reject) => setTimeout(() => reject(new TimeoutError('Timeout')), 5000));
-}
-
-export async function middlewareOne(
-  res: HttpResponse,
-  req: ParsedHttpRequest,
-  next: HttpMiddlewareNext
-): Promise<void> {
-  console.log(1, req);
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  next();
-}
-
-export function middlewareTwo(
-  res: HttpResponse,
-  req: ParsedHttpRequest,
-  next: HttpMiddlewareNext
-): void {
-  console.log(2, req);
-
-  next();
-}
-
-export function finalHandler(res: HttpResponse, req: ParsedHttpRequest, next: HttpMiddlewareNext) {
-  console.log('Final');
-
-  res.cork(() => getSuccessResponse(res, { message: 'Hello, World!' }));
-}
-
-export function inject(handler: Function) {
-  return (res: HttpResponse, req: ParsedHttpRequest) => {
-    console.log('Injected');
-
-    return handler;
-  };
+  return headers;
 }

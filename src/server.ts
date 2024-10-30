@@ -15,20 +15,19 @@ import { Session } from '@/types/session.types';
 import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
 import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { getHistoryMessages } from '@/modules/history/history.http';
-import {
-  compose,
-  finalHandler,
-  getCorsResponse,
-  middlewareOne,
-  middlewareTwo,
-  ParsedHttpRequest,
-  sessionTokenGuard
-} from '@/util/http';
+import { getCorsResponse } from '@/util/http';
 import { eventEmitter } from '@/lib/event-bus';
 import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
 import { cleanupPgPool, getPgPool } from '@/lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
 import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
+import {
+  compose,
+  middlewareOne,
+  ParsedHttpRequest,
+  requestLogger,
+  verifyToken
+} from '@/util/middleware';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -56,26 +55,10 @@ app.post('/events', (res: HttpResponse, req: HttpRequest) =>
   handleClientEvent(pgPool!, redisClient, res, req)
 );
 
-// app.get(
-//   '/history/:roomId/messages',
-//   compose([sessionTokenGuard], (res: HttpResponse, req: ParsedHttpRequest) =>
-//     getHistoryMessages(pgPool!, res, req)
-//   )
-// );
-
 app.get(
   '/history/:roomId/messages',
-  compose(middlewareOne, middlewareTwo, (res: HttpResponse, req: ParsedHttpRequest) =>
-    getHistoryMessages(pgPool!, res, req)
-  )
+  compose(verifyToken(pgPool), middlewareOne, requestLogger, getHistoryMessages(pgPool!))
 );
-
-// app.get(
-//   '/history/:roomId/messages',
-//   sessionTokenGuard((res: HttpResponse, req: ParsedHttpRequest) =>
-//     getHistoryMessages(pgPool!, res, req)
-//   )
-// );
 
 app.ws('/*', {
   maxLifetime: WS_MAX_LIFETIME_MINS,

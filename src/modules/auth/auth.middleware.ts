@@ -1,4 +1,4 @@
-import { HttpMiddleware, HttpMiddlewareNext, ParsedHttpRequest } from '@/util/middleware';
+import { HttpMiddleware, HttpMiddlewareNext, ParsedHttpRequest } from '@/lib/middleware';
 import { Pool } from 'pg';
 import { HttpResponse } from 'uWebSockets.js';
 import { Logger } from 'winston';

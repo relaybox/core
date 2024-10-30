@@ -53,7 +53,7 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
       body
     };
 
-    const dispatch = async (i: number, currentRequest: ParsedHttpRequest) => {
+    async function dispatch(i: number, currentRequest: ParsedHttpRequest) {
       if (aborted) {
         return;
       }
@@ -71,13 +71,14 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
         ]);
 
         clearRequestTimeout();
+
         return;
       } catch (err: unknown) {
         aborted = true;
         res.cork(() => getErrorResponse(res, err));
         return;
       }
-    };
+    }
 
     dispatch(0, parsedRequest);
   };

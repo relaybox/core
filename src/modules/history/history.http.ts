@@ -8,7 +8,7 @@ import { HistoryOrder } from '@/types/history.types';
 import { Pool, PoolClient } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
 import { BadRequestError } from '@/lib/errors';
-import { HttpMiddleware, ParsedHttpRequest } from '@/util/middleware';
+import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
 
 const logger = getLogger('history-http');
 

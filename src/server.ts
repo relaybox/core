@@ -21,7 +21,7 @@ import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
 import { cleanupPgPool, getPgPool } from '@/lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
 import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
-import { compose } from '@/util/middleware';
+import { compose } from '@/lib/middleware';
 import { verifyAuthToken } from './modules/auth/auth.middleware';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;

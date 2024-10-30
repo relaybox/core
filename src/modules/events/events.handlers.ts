@@ -11,7 +11,7 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
 import { addRoomHistoryMessage } from '../history/history.service';
 import { enqueueMessage } from '@/lib/publisher';
-import { HttpMiddleware, ParsedHttpRequest } from '@/util/middleware';
+import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
 import { BadRequestError } from '@/lib/errors';
 import {
   getSecretKey,

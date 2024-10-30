@@ -28,7 +28,7 @@ export function verifyAuthToken(logger: Logger, pgPool: Pool | null): HttpMiddle
 
       verifyAuthTokenSignature(logger, bearerToken, secretKey);
 
-      next();
+      next({ auth: { appPid, keyId } });
     } catch (err: unknown) {
       logger.error(`Failed to verify token`, { err });
       throw err;

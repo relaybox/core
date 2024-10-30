@@ -223,6 +223,7 @@ export async function getMessagesByRoomId(
   logger: Logger,
   pgClient: PoolClient,
   roomId: string,
+  appPid: string,
   offset: number,
   limit: number,
   start: string | null = null,
@@ -234,6 +235,7 @@ export async function getMessagesByRoomId(
   const { rows: messages } = await db.getMessagesByRoomId(
     pgClient,
     roomId,
+    appPid,
     offset,
     limit,
     getISODateString(start),

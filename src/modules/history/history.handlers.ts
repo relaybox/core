@@ -9,7 +9,6 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { extractRoomId } from '@/util/helpers';
 import { HistoryOrder } from '@/types/history.types';
-import { getLogger } from '@/util/logger';
 
 export async function clientRoomHistoryGet(
   logger: Logger,
@@ -46,10 +45,6 @@ export async function clientRoomHistoryGet(
         `Either 'seconds' or 'start' must be provided when order is ${HistoryOrder.ASC}`
       );
     }
-
-    // if (!start && !end && !items && !seconds) {
-    //   seconds = 120;
-    // }
 
     const historyData = await getRoomHistoryMessages(
       redisClient,

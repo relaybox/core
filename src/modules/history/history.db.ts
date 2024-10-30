@@ -4,6 +4,7 @@ import { PoolClient, QueryResult } from 'pg';
 export function getMessagesByRoomId(
   pgClient: PoolClient,
   roomId: string,
+  appPid: string,
   offset: number,
   limit: number,
   start: string | null = null,

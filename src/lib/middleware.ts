@@ -14,6 +14,7 @@ export interface ParsedHttpRequest {
   headers: Record<string, string>;
   url: string;
   body: any;
+  [key: string]: any;
 }
 
 export type HttpMiddleware = (
@@ -24,7 +25,7 @@ export type HttpMiddleware = (
 
 export type HttpRequestHandler = (res: HttpResponse, req: HttpRequest) => Promise<void>;
 
-export type HttpMiddlewareNext = (req?: ParsedHttpRequest) => Promise<void> | void;
+export type HttpMiddlewareNext = (extendRequest?: Record<string, any>) => Promise<void> | void;
 
 export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
   return async (res: HttpResponse, req: HttpRequest) => {
@@ -65,8 +66,8 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
       try {
         await Promise.race([
           timeoutPromise,
-          nextMiddleware(res, currentRequest, (nextRequest?: ParsedHttpRequest) =>
-            dispatch(i + 1, nextRequest || currentRequest)
+          nextMiddleware(res, currentRequest, (nextRequest?: Record<string, any>) =>
+            dispatch(i + 1, { ...currentRequest, ...(nextRequest || {}) })
           )
         ]);
 

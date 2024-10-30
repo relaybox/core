@@ -132,9 +132,9 @@ export function getHistoryMessages(pgPool: Pool): HttpMiddleware {
         roomId,
         offset,
         limit,
-        order,
         start,
-        end
+        end,
+        order
       );
 
       res.cork(() => getSuccessResponse(res, result));

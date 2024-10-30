@@ -225,9 +225,9 @@ export async function getMessagesByRoomId(
   roomId: string,
   offset: number,
   limit: number,
-  order: QueryOrder = QueryOrder.DESC,
   start: string | null = null,
-  end: string | null = null
+  end: string | null = null,
+  order: QueryOrder = QueryOrder.DESC
 ): Promise<PaginatedQueryResult<Message>> {
   logger.debug(`Getting messages by room id`, { roomId });
 
@@ -236,9 +236,9 @@ export async function getMessagesByRoomId(
     roomId,
     offset,
     limit,
-    order,
     getISODateString(start),
-    getISODateString(end)
+    getISODateString(end),
+    order
   );
 
   const parsedMessages = parseMessages(messages[0].data);

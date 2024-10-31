@@ -180,8 +180,6 @@ export async function clientPublish(
       message: processedMessageData
     };
 
-    console.log(persistedMessageData);
-
     await cacheMessage(logger, redisClient, persistedMessageData);
     await enqueueMessage(persistedMessageData);
 

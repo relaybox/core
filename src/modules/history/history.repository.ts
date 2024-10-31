@@ -1,15 +1,5 @@
 import { RedisClient } from '@/lib/redis';
-
-export function addRoomHistoryMessage(
-  redisClient: RedisClient,
-  key: string,
-  messageData: any
-): Promise<number> {
-  return redisClient.zAdd(key, {
-    score: messageData.timestamp,
-    value: JSON.stringify(messageData)
-  });
-}
+import { Message } from '@/types/data.types';
 
 export function getRoomHistoryMessages(
   redisClient: RedisClient,
@@ -29,6 +19,22 @@ export function getRoomHistoryMessages(
   });
 }
 
-export function roomHistoryKeyExists(redisClient: RedisClient, key: string): Promise<number> {
-  return redisClient.exists(key);
+export function setCachedMessage(
+  redisClient: RedisClient,
+  key: string,
+  message: Message,
+  timestamp: number
+): Promise<number> {
+  return redisClient.zAdd(key, {
+    score: timestamp,
+    value: JSON.stringify(message)
+  });
+}
+
+export function setCachedMessageExpiry(
+  redisClient: RedisClient,
+  key: string,
+  ttl: number
+): Promise<boolean> {
+  return redisClient.expire(key, ttl);
 }

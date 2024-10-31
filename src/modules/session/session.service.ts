@@ -13,6 +13,7 @@ import { restoreCachedUsers } from '@/modules/user/user.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { getNspJobId } from '@/util/helpers';
+import { ConnectionAuth } from '@/types/auth.types';
 
 const logger = getLogger('session');
 

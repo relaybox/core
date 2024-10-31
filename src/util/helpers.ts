@@ -31,8 +31,3 @@ export function getQueryParamRealValue(queryParam: string | undefined): string |
 
   return queryParam;
 }
-
-// export function getPublicClientId(clientId: string): string | null {
-//   return clientId;
-//   return clientId?.split(':')[1] || null;
-// }

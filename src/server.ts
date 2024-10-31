@@ -90,7 +90,7 @@ async function shutdown(signal: string): Promise<void> {
   logger.info(`${signal} received, shutting down...`);
 
   const shutdownTimeout = setTimeout(() => {
-    logger.error('Graceful shutdown timed out, forcing exit');
+    logger.error('Shutdown timed out, forcing exit');
     process.exit(1);
   }, 20000);
 
@@ -99,11 +99,11 @@ async function shutdown(signal: string): Promise<void> {
 
     clearTimeout(shutdownTimeout);
 
-    logger.info('Graceful shutdown completed');
+    logger.info('Shutdown complete');
 
     process.exit(0);
   } catch (err) {
-    logger.error('Error during graceful shutdown', { err });
+    logger.error('Error during shutdown', { err });
     process.exit(1);
   }
 }

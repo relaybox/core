@@ -33,6 +33,7 @@ import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { KeyPrefix, KeySuffix } from '@/types/state.types';
 import { eventHandlersMap } from './websocket.handlers';
 import * as repository from './websocket.repository';
+import { ConnectionAuth } from '@/types/auth.types';
 
 const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
 
@@ -83,7 +84,7 @@ export function handleConnectionUpgrade(
       logger.error('Error during WebSocket session initialization:', err);
 
       if (!upgradeAborted.aborted) {
-        res.writeStatus('500 Internal Server Error').end();
+        res.cork(() => res.writeStatus('500 Internal Server Error').end());
       }
     });
 

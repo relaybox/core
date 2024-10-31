@@ -1,6 +1,6 @@
 import { JwtPayload } from 'jsonwebtoken';
 
-interface ConnectionAuth {
+export interface ConnectionAuth {
   token?: string;
   apiKey?: string;
   clientId?: string;

@@ -2,7 +2,7 @@ import { PoolClient, QueryResult } from 'pg';
 
 export interface PaginatedQueryResult<T> {
   count: number;
-  data: T[];
+  items: T[];
 }
 
 export enum QueryOrder {

@@ -38,7 +38,7 @@ export async function getMessagesByRoomId(
 
   return {
     count: messages[0].count,
-    data: parsedMessages
+    items: parsedMessages
   };
 }
 

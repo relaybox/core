@@ -6,7 +6,6 @@ import {
   clientAuthUserUnsubscribe,
   clientAuthUserUnsubscribeAll
 } from '@/modules/user/user.handlers';
-import { clientRoomHistoryGet } from '@/modules/history/history.handlers';
 import { clientPublish, clientRoomJoin, clientRoomLeave } from '../room/room.handlers';
 import {
   clientRoomSubscriptionBind,
@@ -43,7 +42,6 @@ export const eventHandlersMap = {
   [ClientEvent.ROOM_PRESENCE_COUNT]: clientPresenceCount,
   [ClientEvent.ROOM_METRICS_SUBSCRIBE]: clientMetricsSubscribe,
   [ClientEvent.ROOM_METRICS_UNSUBSCRIBE]: clientMetricsUnsubscribe,
-  [ClientEvent.ROOM_HISTORY_GET]: clientRoomHistoryGet,
   [ClientEvent.AUTH_USER_SUBSCRIBE]: clientAuthUserSubscribe,
   [ClientEvent.AUTH_USER_UNSUBSCRIBE]: clientAuthUserUnsubscribe,
   [ClientEvent.AUTH_USER_UNSUBSCRIBE_ALL]: clientAuthUserUnsubscribeAll,

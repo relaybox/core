@@ -25,7 +25,7 @@ export function getHistoryMessages(pgPool: Pool): HttpMiddleware {
       const appPid = req.auth.appPid;
 
       if (limit > HISTORY_MAX_LIMIT) {
-        throw new BadRequestError('Invalid limit parameter');
+        throw new BadRequestError(`Limit must be less than ${HISTORY_MAX_LIMIT}`);
       }
 
       if (offset < 0) {

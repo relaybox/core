@@ -85,61 +85,71 @@ export async function addMessageToCache(
     const key = `${KeyPrefix.HISTORY}:buffer:${message.nspRoomId}`;
 
     await repository.setCachedMessage(redisClient, key, messageData, timestamp);
-    // await repository.setCachedMessageExpiry(redisClient, key, HISTORY_CACHED_MESSAGE_TTL_SECS * 2);
   } catch (err: unknown) {
     logger.error(`Failed to cache message`, { err });
     throw err;
   }
 }
 
-// export async function addMessageToCache(
-//   logger: Logger,
-//   redisClient: RedisClient,
-//   persistedMessage: PersistedMessage
-// ): Promise<void> {
-//   logger.debug(`Caching message`, { id: persistedMessage.message?.data.id });
+export function sortItemsByTimestamp(items: Message[]) {
+  return items.sort((a, b) => a.timestamp + b.timestamp);
+}
 
-//   if (!persistedMessage.message) {
-//     logger.error(`Message not found`);
-//     return;
-//   }
+export function unshiftAndPop(originalArray: Message[], newElements: Message[]) {
+  const numberOfElementsToRemove = newElements.length;
 
-//   try {
-//     const message = persistedMessage.message;
-//     const messageData = message.data;
-//     const timestamp = message.data.timestamp;
-//     const partitionKey = getPartitionKey(timestamp);
-//     const key = `${KeyPrefix.HISTORY}:${message.nspRoomId}:${partitionKey}`;
+  return [
+    ...newElements,
+    ...originalArray.slice(0, originalArray.length - numberOfElementsToRemove)
+  ];
+}
 
-//     await repository.setCachedMessage(redisClient, key, messageData, timestamp);
-//     await repository.setCachedMessageExpiry(redisClient, key, HISTORY_CACHED_MESSAGE_TTL_SECS * 2);
-//   } catch (err: unknown) {
-//     logger.error(`Failed to cache message`, { err });
-//     throw err;
-//   }
-// }
+export function shiftAndPush(originalArray: Message[], newElements: Message[]) {
+  const numberOfElementsToRemove = newElements.length;
 
-// export function getPartitionKey(timestamp: number): number {
-//   return Math.floor(timestamp / 60000) * 60000;
-// }
+  return [...originalArray.slice(numberOfElementsToRemove), ...newElements];
+}
 
-// export async function getCachedMessages(
-//   logger: Logger,
-//   redisClient: RedisClient,
-//   appPid: string,
-//   roomId: string,
-//   start: number | null = null,
-//   end: number | null = null,
-//   limit: number = 100
-// ): Promise<Message[]> {
-//   logger.debug(`Getting buffered messages`);
+export function getMergedItems(
+  originalArray: Message[],
+  newElements: Message[],
+  order: QueryOrder
+): Message[] {
+  return order === QueryOrder.DESC
+    ? unshiftAndPop(originalArray, newElements)
+    : shiftAndPush(originalArray, newElements);
+}
 
-//   try {
-//     const latestTimestampForQuery = end ?? Date.now();
-//     const partitionKey = getPartitionKey(latestTimestampForQuery);
-//     const key = `${KeyPrefix.HISTORY}:${nspRoomId}:${partitionKey}`;
-//   } catch (err: unknown) {
-//     logger.error(`Failed to get cached messages`, { err });
-//     throw err;
-//   }
-// }
+export async function getCachedMessagesByRange(
+  logger: Logger,
+  redisClient: RedisClient,
+  appPid: string,
+  roomId: string,
+  limit: number,
+  min: number,
+  max: string | null = null,
+  order: QueryOrder = QueryOrder.DESC
+): Promise<Message[]> {
+  logger.debug(`Getting buffered messages`);
+
+  try {
+    const rangeMin = min + 1;
+    const rangeMax = Number(max) || Date.now();
+
+    const key = `${KeyPrefix.HISTORY}:buffer:${appPid}:${roomId}`;
+    const cachedMessagesByRange = await repository.getCachedMessagesByRange(
+      redisClient,
+      key,
+      rangeMin,
+      rangeMax,
+      limit,
+      order === QueryOrder.DESC
+    );
+
+    return cachedMessagesByRange.map((message) => JSON.parse(message.value));
+  } catch (err: unknown) {
+    console.log(err);
+    logger.error(`Failed to get cached messages`, { err });
+    throw err;
+  }
+}

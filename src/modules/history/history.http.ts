@@ -1,7 +1,14 @@
 import { HttpResponse } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { getErrorResponse, getSuccessResponse } from '@/util/http';
-import { getMessagesByRoomId, HISTORY_MAX_LIMIT } from './history.service';
+import {
+  getCachedMessagesByRange,
+  getMergedItems,
+  getMessagesByRoomId,
+  HISTORY_MAX_LIMIT,
+  sortItemsByTimestamp,
+  unshiftAndPop
+} from './history.service';
 import { Pool } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
 import { BadRequestError } from '@/lib/errors';
@@ -17,13 +24,13 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
     const pgClient = await pgPool.connect();
 
     try {
+      const appPid = req.auth.appPid;
       const roomId = req.params[0];
       const offset = Number(req.query.offset) || 0;
       const limit = Number(req.query.limit) || HISTORY_MAX_LIMIT;
       const start = req.query.start || null;
       const end = req.query.end || null;
       const order = (req.query.order || QueryOrder.DESC) as QueryOrder;
-      const appPid = req.auth.appPid;
 
       if (limit > HISTORY_MAX_LIMIT) {
         throw new BadRequestError(`Limit must be less than ${HISTORY_MAX_LIMIT}`);
@@ -49,7 +56,31 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         order
       );
 
-      res.cork(() => getSuccessResponse(res, result));
+      let { count, items } = result;
+
+      const itemsSortedByTimestamp = sortItemsByTimestamp(items);
+
+      const cachedMessagesByRange = await getCachedMessagesByRange(
+        logger,
+        redisClient,
+        appPid,
+        roomId,
+        limit,
+        itemsSortedByTimestamp[0].timestamp,
+        end,
+        order
+      );
+
+      const mergedItems = getMergedItems(items, cachedMessagesByRange, order);
+
+      count += cachedMessagesByRange.length;
+
+      res.cork(() =>
+        getSuccessResponse(res, {
+          count,
+          items: mergedItems
+        })
+      );
     } catch (err: unknown) {
       logger.error(`Failed to get room history messages`, { err });
       res.cork(() => getErrorResponse(res, err));

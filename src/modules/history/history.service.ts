@@ -4,7 +4,7 @@ import { Message } from '@/types/history.types';
 import { Logger } from 'winston';
 import { PoolClient } from 'pg';
 import { PaginatedQueryResult, QueryOrder } from '@/util/pg-query';
-import { getISODateString } from '@/util/date';
+import { getISODateString, getISODateStringOrNull } from '@/util/date';
 import { RedisClient } from '@/lib/redis';
 import { PersistedMessage } from '@/types/data.types';
 import { KeyPrefix } from '@/types/state.types';
@@ -19,8 +19,8 @@ export async function getMessagesByRoomId(
   roomId: string,
   offset: number,
   limit: number,
-  start: string | null = null,
-  end: string | null = null,
+  start: number | null = null,
+  end: number | null = null,
   order: QueryOrder = QueryOrder.DESC
 ): Promise<PaginatedQueryResult<Message>> {
   logger.debug(`Getting messages by room id`, { roomId });
@@ -31,8 +31,8 @@ export async function getMessagesByRoomId(
     roomId,
     offset,
     limit,
-    getISODateString(start),
-    getISODateString(end),
+    getISODateStringOrNull(start),
+    getISODateStringOrNull(end),
     order
   );
 
@@ -95,55 +95,58 @@ export function sortItemsByTimestamp(items: Message[]) {
   return items.sort((a, b) => a.timestamp + b.timestamp);
 }
 
-export function unshiftAndPop(originalArray: Message[], newElements: Message[]) {
-  const numberOfElementsToRemove = newElements.length;
-
-  return [
-    ...newElements,
-    ...originalArray.slice(0, originalArray.length - numberOfElementsToRemove)
-  ];
+export function unshiftNewItems(originalArray: Message[], newElements: Message[]) {
+  return [...newElements, ...originalArray];
 }
 
-export function shiftAndPush(originalArray: Message[], newElements: Message[]) {
-  const numberOfElementsToRemove = newElements.length;
-
-  return [...originalArray.slice(numberOfElementsToRemove), ...newElements];
+export function pushNewItems(originalArray: Message[], newElements: Message[]) {
+  return [...originalArray, ...newElements];
 }
 
 export function getMergedItems(
   originalArray: Message[],
   newElements: Message[],
-  order: QueryOrder
+  order: QueryOrder,
+  limit: number
 ): Message[] {
-  return order === QueryOrder.DESC
-    ? unshiftAndPop(originalArray, newElements)
-    : shiftAndPush(originalArray, newElements);
+  const mergedItems =
+    order === QueryOrder.DESC
+      ? unshiftNewItems(originalArray, newElements)
+      : pushNewItems(originalArray, newElements);
+
+  return mergedItems.slice(0, limit);
 }
 
-export async function getCachedMessagesByRange(
+export async function getCachedMessagesForRange(
   logger: Logger,
   redisClient: RedisClient,
   appPid: string,
   roomId: string,
   limit: number,
-  min: number,
-  max: string | null = null,
+  start: number | null = null,
+  end: number | null = null,
   order: QueryOrder = QueryOrder.DESC
 ): Promise<Message[]> {
   logger.debug(`Getting buffered messages`);
 
   try {
-    const rangeMin = min + 1;
-    const rangeMax = Number(max) || Date.now();
-
+    const min = start || 0;
+    const max = end || Date.now();
+    const rev = order === QueryOrder.DESC;
     const key = `${KeyPrefix.HISTORY}:buffer:${appPid}:${roomId}`;
-    const cachedMessagesByRange = await repository.getCachedMessagesByRange(
+
+    // Reverse min and max if order is DESC
+    // This will provide results in descending order
+    const rangeMin = order === QueryOrder.DESC ? max : min;
+    const rangeMax = order === QueryOrder.DESC ? min : max;
+
+    let cachedMessagesByRange = await repository.getCachedMessagesForRange(
       redisClient,
       key,
       rangeMin,
       rangeMax,
       limit,
-      order === QueryOrder.DESC
+      rev
     );
 
     return cachedMessagesByRange.map((message) => JSON.parse(message.value));

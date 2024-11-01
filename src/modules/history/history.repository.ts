@@ -13,15 +13,15 @@ export function setCachedMessage(
   });
 }
 
-export function getCachedMessagesByRange(
+export function getCachedMessagesForRange(
   redisClient: RedisClient,
   key: string,
   min: number,
   max: number,
   limit: number,
-  rev: boolean = true
+  rev: boolean
 ): Promise<{ score: number; value: string }[]> {
-  return redisClient.zRangeWithScores(key, max, min, {
+  return redisClient.zRangeWithScores(key, min, max, {
     BY: 'SCORE',
     ...(rev && { REV: true }),
     LIMIT: {

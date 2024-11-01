@@ -47,11 +47,11 @@ export const connectionOptions: RedisClientOptions = {
   socket: {
     ...socketOptions,
     reconnectStrategy
-  },
-  scripts: {
-    addAndCleanup,
-    setKeyExpiry
   }
+  // scripts: {
+  //   addAndCleanup,
+  //   setKeyExpiry
+  // }
 };
 
 // IO redis client options (BullMQ)

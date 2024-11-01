@@ -2,12 +2,11 @@ import { HttpResponse } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { getErrorResponse, getSuccessResponse } from '@/util/http';
 import {
-  getCachedMessagesByRange,
+  getCachedMessagesForRange,
   getMergedItems,
   getMessagesByRoomId,
   HISTORY_MAX_LIMIT,
-  sortItemsByTimestamp,
-  unshiftAndPop
+  sortItemsByTimestamp
 } from './history.service';
 import { Pool } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
@@ -28,8 +27,8 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
       const roomId = req.params[0];
       const offset = Number(req.query.offset) || 0;
       const limit = Number(req.query.limit) || HISTORY_MAX_LIMIT;
-      const start = req.query.start || null;
-      const end = req.query.end || null;
+      const start = Number(req.query.start) || null;
+      const end = Number(req.query.end) || null;
       const order = (req.query.order || QueryOrder.DESC) as QueryOrder;
 
       if (limit > HISTORY_MAX_LIMIT) {
@@ -58,22 +57,23 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
 
       let { count, items } = result;
 
-      const itemsSortedByTimestamp = sortItemsByTimestamp(items);
+      const index = order === QueryOrder.ASC ? items.length - 1 : 0;
+      const startFromCache = items[index]?.timestamp + 1 || start;
 
-      const cachedMessagesByRange = await getCachedMessagesByRange(
+      const cachedMessagesForRange = await getCachedMessagesForRange(
         logger,
         redisClient,
         appPid,
         roomId,
         limit,
-        itemsSortedByTimestamp[0].timestamp,
+        startFromCache,
         end,
         order
       );
 
-      const mergedItems = getMergedItems(items, cachedMessagesByRange, order);
+      const mergedItems = getMergedItems(items, cachedMessagesForRange, order, limit);
 
-      count += cachedMessagesByRange.length;
+      count += cachedMessagesForRange.length;
 
       res.cork(() =>
         getSuccessResponse(res, {

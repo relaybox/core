@@ -15,3 +15,11 @@ export function getISODateString(value?: string | null): string | null {
 
   return isNaN(date.getTime()) ? null : date.toISOString();
 }
+
+export function getISODateStringOrNull(value?: number | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  return new Date(value).toISOString();
+}

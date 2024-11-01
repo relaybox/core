@@ -36,5 +36,5 @@ export function setCachedMessageExpiry(
   key: string,
   ttl: number
 ): Promise<boolean> {
-  return redisClient.expire(key, ttl);
+  return redisClient.setKeyExpiry(key, ttl);
 }

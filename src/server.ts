@@ -50,7 +50,7 @@ app.post('/events', compose(handleClientEvent(pgPool!)));
 
 app.get(
   '/history/:roomId/messages',
-  compose(verifyAuthToken(logger, pgPool), getHistoryMessages(pgPool!))
+  compose(verifyAuthToken(logger, pgPool), getHistoryMessages(pgPool!, redisClient!))
 );
 
 app.ws('/*', {

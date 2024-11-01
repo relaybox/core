@@ -24,7 +24,7 @@ import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { v4 as uuid } from 'uuid';
 import { enqueueMessage } from '@/lib/publisher';
-import { cacheMessage } from '@/modules/history/history.service';
+import { addMessageToCache } from '@/modules/history/history.service';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -180,7 +180,7 @@ export async function clientPublish(
       message: processedMessageData
     };
 
-    await cacheMessage(logger, redisClient, persistedMessageData);
+    await addMessageToCache(logger, redisClient, persistedMessageData);
     await enqueueMessage(persistedMessageData);
 
     // TODO: pass logger to enqueueWebhookEvent

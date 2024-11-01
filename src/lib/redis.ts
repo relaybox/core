@@ -9,6 +9,7 @@ import {
 import { getLogger } from '@/util/logger';
 import fs from 'fs';
 import path from 'path';
+import { addAndCleanup, setKeyExpiry } from '@/scripts/redis';
 
 const logger = getLogger('redis');
 
@@ -46,6 +47,10 @@ export const connectionOptions: RedisClientOptions = {
   socket: {
     ...socketOptions,
     reconnectStrategy
+  },
+  scripts: {
+    addAndCleanup,
+    setKeyExpiry
   }
 };
 

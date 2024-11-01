@@ -6,10 +6,11 @@ import { Pool } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
 import { BadRequestError } from '@/lib/errors';
 import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
+import { RedisClient } from '@/lib/redis';
 
 const logger = getLogger('history-http');
 
-export function getHistoryMessages(pgPool: Pool): HttpMiddleware {
+export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
     logger.debug(`Getting room history messages`);
 
@@ -39,8 +40,8 @@ export function getHistoryMessages(pgPool: Pool): HttpMiddleware {
       const result = await getMessagesByRoomId(
         logger,
         pgClient,
-        roomId,
         appPid,
+        roomId,
         offset,
         limit,
         start,

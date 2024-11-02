@@ -62,14 +62,23 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
       );
 
       const newCount = count + cachedMessagesForRange.length;
-      const mergedItems = getMergedItems(items, cachedMessagesForRange, order, limit, lastItemId);
-      const nextPageToken = getNextPageToken(mergedItems, start, end, order, limit);
+
+      const mergedItems = getMergedItems(
+        logger,
+        items,
+        cachedMessagesForRange,
+        order,
+        limit,
+        lastItemId
+      );
+
+      const nextPageToken = getNextPageToken(logger, mergedItems, start, end, order, limit);
 
       res.cork(() =>
         getSuccessResponse(res, {
           count: newCount,
-          nextPageToken,
-          items: mergedItems
+          items: mergedItems,
+          nextPageToken
         })
       );
     } catch (err: unknown) {

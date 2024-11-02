@@ -145,55 +145,71 @@ export async function getCachedMessagesForRange(
 }
 
 export function getMergedItems(
+  logger: Logger,
   items: Message[],
   cachedMessagesForRange: Message[],
   order: QueryOrder,
   limit: number,
   lastItemId: string | null = null
 ): Message[] {
+  logger.debug(`Merging items`);
+
   if (!cachedMessagesForRange.length) {
     return items;
   }
 
-  const itemMap = new Map(items.map((item) => [item.id, item]));
+  try {
+    const itemMap = new Map(items.map((item) => [item.id, item]));
 
-  const mergedItems = [...items];
+    const mergedItems = [...items];
 
-  for (const cachedMessage of cachedMessagesForRange) {
-    if (!itemMap.has(cachedMessage.id) && lastItemId !== cachedMessage.id) {
-      if (order === QueryOrder.DESC) {
-        mergedItems.unshift(cachedMessage);
-      } else {
-        mergedItems.push(cachedMessage);
+    for (const cachedMessage of cachedMessagesForRange) {
+      if (!itemMap.has(cachedMessage.id) && lastItemId !== cachedMessage.id) {
+        if (order === QueryOrder.DESC) {
+          mergedItems.unshift(cachedMessage);
+        } else {
+          mergedItems.push(cachedMessage);
+        }
       }
     }
-  }
 
-  return mergedItems.slice(0, limit);
+    return mergedItems.slice(0, limit);
+  } catch (err: unknown) {
+    logger.error(`Failed to merge items`, { err });
+    throw err;
+  }
 }
 
 export function getNextPageToken(
+  logger: Logger,
   items: Message[],
   start: number | null,
   end: number | null,
   order: QueryOrder,
   limit: number
 ): string | null {
+  logger.debug(`Getting next page token`);
+
   if (items.length < limit) {
     return null;
   }
 
-  const lastItem = items[items.length - 1];
+  try {
+    const lastItem = items[items.length - 1];
 
-  const tokenData = {
-    start: order === QueryOrder.ASC ? lastItem.timestamp : start,
-    end: order === QueryOrder.DESC ? lastItem.timestamp : end,
-    order,
-    limit,
-    lastItemId: lastItem.id
-  };
+    const tokenData = {
+      start: order === QueryOrder.ASC ? lastItem.timestamp : start,
+      end: order === QueryOrder.DESC ? lastItem.timestamp : end,
+      order,
+      limit,
+      lastItemId: lastItem.id
+    };
 
-  return Buffer.from(JSON.stringify(tokenData)).toString(NEXT_PAGE_TOKEN_ENCODING);
+    return Buffer.from(JSON.stringify(tokenData)).toString(NEXT_PAGE_TOKEN_ENCODING);
+  } catch (err: unknown) {
+    logger.error(`Failed to get next page token`, { err });
+    throw err;
+  }
 }
 
 export function decodeNextPageToken(token: string): HistoryNextPageTokenData | null {

@@ -1,58 +1,71 @@
-import { getPartitionKey } from '@/modules/history/history.service';
+import { getMergedItems } from '@/modules/history/history.service';
+import { Message } from '@/types/history.types';
+import { getLogger } from '@/util/logger';
+import { QueryOrder } from '@/util/pg-query';
 import { describe, expect, it } from 'vitest';
 
-describe('getPartitionKey', () => {
-  it('should floor the timestamp to the start of the minute and format the key correctly', () => {
-    const timestamp = 1609459265000; // 2021-01-01 00:01:05 UTC
-    const expectedKey = 1609459260000; // Start of the minute
-    const result = getPartitionKey(timestamp);
-    expect(result).toBe(expectedKey);
-  });
+const logger = getLogger('');
 
-  it('should handle timestamps exactly at the start of a minute', () => {
-    const timestamp = 1609459200000; // 2021-01-01 00:00:00 UTC
-    const expectedKey = 1609459200000;
-    const result = getPartitionKey(timestamp);
-    expect(result).toBe(expectedKey);
-  });
+describe('history.service', () => {
+  describe('getMergedItems', () => {
+    const items = [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }] as Message[];
 
-  it('should correctly floor timestamps just before the next minute', () => {
-    const timestamp = 1609459259000; // 2021-01-01 00:00:59 UTC
-    const expectedKey = 1609459200000;
-    const result = getPartitionKey(timestamp);
-    expect(result).toBe(expectedKey);
-  });
+    const cachedMessagesForRange = [
+      { id: '5' },
+      { id: '6' },
+      { id: '7' },
+      { id: '8' }
+    ] as Message[];
 
-  it('should correctly floor multiple timestamps within the same minute', () => {
-    const baseTimestamp = 1609459200000; // 2021-01-01 00:00:00 UTC
-    const expectedKey = 1609459200000;
-
-    for (let i = 0; i < 60; i++) {
-      const timestamp = baseTimestamp + i; // 00:00:00 to 00:00:59
-      const result = getPartitionKey(timestamp);
-      expect(result).toBe(expectedKey);
-    }
-  });
-
-  it('should correctly floor multiple timestamps across different minutes', () => {
-    const timestamps = [
-      1609459201000, // 00:00:01
-      1609459261000, // 00:01:01
-      1609459321000, // 00:02:01
-      1609459381000 // 00:03:01
-    ];
-    const expectedKeys = [1609459200000, 1609459260000, 1609459320000, 1609459380000];
-
-    timestamps.forEach((timestamp, index) => {
-      const result = getPartitionKey(timestamp);
-      expect(result).toBe(expectedKeys[index]);
+    it('should return the original items if there are no cached messages', () => {
+      const result = getMergedItems(logger, items, [], QueryOrder.DESC, 10);
+      expect(result).toEqual(items);
     });
-  });
 
-  it('should handle non-integer timestamps by flooring to the nearest second', () => {
-    const timestamp = 1609459200000.789; // 2021-01-01 00:00:00.789 UTC
-    const expectedKey = 1609459200000;
-    const result = getPartitionKey(timestamp);
-    expect(result).toBe(expectedKey);
+    it('should prepend cached messages for descending order', () => {
+      const itemsDescending = [...items].reverse();
+
+      const result = getMergedItems(
+        logger,
+        itemsDescending,
+        cachedMessagesForRange,
+        QueryOrder.DESC,
+        10
+      );
+
+      expect(result).toEqual([
+        { id: '8' },
+        { id: '7' },
+        { id: '6' },
+        { id: '5' },
+        { id: '4' },
+        { id: '3' },
+        { id: '2' },
+        { id: '1' }
+      ]);
+    });
+
+    it('should append cached messages for ascending order', () => {
+      const itemsAscending = [...items];
+
+      const result = getMergedItems(
+        logger,
+        itemsAscending,
+        cachedMessagesForRange,
+        QueryOrder.ASC,
+        10
+      );
+
+      expect(result).toEqual([
+        { id: '1' },
+        { id: '2' },
+        { id: '3' },
+        { id: '4' },
+        { id: '5' },
+        { id: '6' },
+        { id: '7' },
+        { id: '8' }
+      ]);
+    });
   });
 });

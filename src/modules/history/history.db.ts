@@ -5,7 +5,6 @@ export function getMessagesByRoomId(
   pgClient: PoolClient,
   appPid: string,
   roomId: string,
-  offset: number,
   limit: number,
   start: string | null = null,
   end: string | null = null,
@@ -47,5 +46,5 @@ export function getMessagesByRoomId(
     query += ` ORDER BY mh."createdAt" ${order}`;
   }
 
-  return getPaginatedQuery(pgClient, query, offset!, limit!, queryParams);
+  return getPaginatedQuery(pgClient, query, 0, limit!, queryParams);
 }

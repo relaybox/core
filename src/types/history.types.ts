@@ -1,3 +1,4 @@
+import { QueryOrder } from '@/util/pg-query';
 import { AuthUser } from './session.types';
 
 export enum HistoryOrder {
@@ -23,4 +24,18 @@ export interface Message {
   sender: MessageSender;
   timestamp: number;
   event: string;
+}
+
+export interface HistoryRequestParams {
+  limit: number;
+  start: number | null;
+  end: number | null;
+  order: QueryOrder;
+}
+
+export interface HistoryNextPageTokenData {
+  start: number | null;
+  end: number | null;
+  order: QueryOrder;
+  limit: number;
 }

@@ -3,10 +3,11 @@ import { getLogger } from '@/util/logger';
 import { getErrorResponse, getSuccessResponse } from '@/util/http';
 import {
   getCachedMessagesForRange,
+  getHistoryRequestParams,
   getMergedItems,
   getMessagesByRoomId,
-  HISTORY_MAX_LIMIT,
-  sortItemsByTimestamp
+  getNextPageToken,
+  HISTORY_MAX_LIMIT
 } from './history.service';
 import { Pool } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
@@ -25,18 +26,16 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
     try {
       const appPid = req.auth.appPid;
       const roomId = req.params[0];
-      const offset = Number(req.query.offset) || 0;
-      const limit = Number(req.query.limit) || HISTORY_MAX_LIMIT;
-      const start = Number(req.query.start) || null;
-      const end = Number(req.query.end) || null;
-      const order = (req.query.order || QueryOrder.DESC) as QueryOrder;
+      const { limit, start, end, order } = getHistoryRequestParams(req);
+      // const appPid = req.auth.appPid;
+      // const roomId = req.params[0];
+      // const limit = Number(req.query.limit) || HISTORY_MAX_LIMIT;
+      // const start = Number(req.query.start) || null;
+      // const end = Number(req.query.end) || null;
+      // const order = (req.query.order || QueryOrder.DESC) as QueryOrder;
 
       if (limit > HISTORY_MAX_LIMIT) {
         throw new BadRequestError(`Limit must be less than ${HISTORY_MAX_LIMIT}`);
-      }
-
-      if (offset < 0) {
-        throw new BadRequestError('Invalid offset parameter');
       }
 
       if (end && start && end < start) {
@@ -48,14 +47,13 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         pgClient,
         appPid,
         roomId,
-        offset,
         limit,
         start,
         end,
         order
       );
 
-      let { count, items } = result;
+      const { count, items } = result;
 
       const index = order === QueryOrder.ASC ? items.length - 1 : 0;
       const startFromCache = items[index]?.timestamp + 1 || start;
@@ -71,14 +69,15 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         order
       );
 
-      const mergedItems = getMergedItems(items, cachedMessagesForRange, order, limit);
-
-      count += cachedMessagesForRange.length;
+      const newCount = count + cachedMessagesForRange.length;
+      const mergedItems = getMergedItems(items, cachedMessagesForRange, limit, order);
+      const nextPageToken = getNextPageToken(mergedItems, limit, start, end, order);
 
       res.cork(() =>
         getSuccessResponse(res, {
-          count,
-          items: mergedItems
+          count: newCount,
+          items: mergedItems,
+          nextPageToken
         })
       );
     } catch (err: unknown) {

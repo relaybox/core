@@ -1,23 +1,42 @@
 import * as db from './history.db';
 import * as repository from './history.repository';
-import { Message } from '@/types/history.types';
+import { HistoryNextPageTokenData, HistoryRequestParams, Message } from '@/types/history.types';
 import { Logger } from 'winston';
 import { PoolClient } from 'pg';
 import { PaginatedQueryResult, QueryOrder } from '@/util/pg-query';
-import { getISODateString, getISODateStringOrNull } from '@/util/date';
+import { getISODateStringOrNull } from '@/util/date';
 import { RedisClient } from '@/lib/redis';
 import { PersistedMessage } from '@/types/data.types';
 import { KeyPrefix } from '@/types/state.types';
+import { ParsedHttpRequest } from '@/lib/middleware';
 
 export const HISTORY_MAX_LIMIT = 100;
 export const HISTORY_CACHED_MESSAGE_TTL_SECS = 60;
+
+export function getHistoryRequestParams(req: ParsedHttpRequest): HistoryRequestParams {
+  const tokenParams = decodeNextPageToken(req.query.nextPageToken || '');
+
+  console.log(tokenParams);
+
+  // const lastId = tokenParams?.lastId || req.query.id || null;
+  const limit = tokenParams?.limit || Number(req.query.limit) || HISTORY_MAX_LIMIT;
+  const start = tokenParams?.start || Number(req.query.start) || null;
+  const end = tokenParams?.end || Number(req.query.end) || null;
+  const order = tokenParams?.order || ((req.query.order || QueryOrder.DESC) as QueryOrder);
+
+  return {
+    limit,
+    start,
+    end,
+    order
+  };
+}
 
 export async function getMessagesByRoomId(
   logger: Logger,
   pgClient: PoolClient,
   appPid: string,
   roomId: string,
-  offset: number,
   limit: number,
   start: number | null = null,
   end: number | null = null,
@@ -29,7 +48,6 @@ export async function getMessagesByRoomId(
     pgClient,
     appPid,
     roomId,
-    offset,
     limit,
     getISODateStringOrNull(start),
     getISODateStringOrNull(end),
@@ -106,8 +124,8 @@ export function pushNewItems(originalArray: Message[], newElements: Message[]) {
 export function getMergedItems(
   originalArray: Message[],
   newElements: Message[],
-  order: QueryOrder,
-  limit: number
+  limit: number,
+  order: QueryOrder
 ): Message[] {
   const mergedItems =
     order === QueryOrder.DESC
@@ -155,4 +173,31 @@ export async function getCachedMessagesForRange(
     logger.error(`Failed to get cached messages`, { err });
     throw err;
   }
+}
+
+export function getNextPageToken(
+  items: Message[],
+  limit: number,
+  start: number | null,
+  end: number | null,
+  order: QueryOrder
+): string {
+  const lastItem = items[items.length - 1];
+
+  const tokenData = {
+    start: order === QueryOrder.ASC ? lastItem.timestamp : start,
+    end: order === QueryOrder.DESC ? lastItem.timestamp : end,
+    order,
+    limit
+  };
+
+  return Buffer.from(JSON.stringify(tokenData)).toString('base64');
+}
+
+export function decodeNextPageToken(token: string): HistoryNextPageTokenData | null {
+  if (!token) {
+    return null;
+  }
+
+  return JSON.parse(Buffer.from(token, 'base64').toString());
 }

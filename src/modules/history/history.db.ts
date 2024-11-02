@@ -52,5 +52,11 @@ export function getMessagesByRoomId(
     query += ` ORDER BY mh."createdAt" ${order}`;
   }
 
-  return getPaginatedQuery(pgClient, query, 0, limit!, queryParams);
+  if (limit) {
+    query += ` LIMIT ${limit}`;
+  }
+
+  return pgClient.query(query, queryParams);
+
+  // return getPaginatedQuery(pgClient, query, 0, limit!, queryParams);
 }

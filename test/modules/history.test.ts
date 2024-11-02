@@ -8,10 +8,16 @@ const logger = getLogger('');
 
 describe('history.service', () => {
   describe('getMergedItems', () => {
-    const items = [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }] as Message[];
+    const items = [
+      { id: '1' },
+      { id: '2' },
+      { id: '3' },
+      { id: '4' },
+      { id: '5', body: 'static' }
+    ] as Message[];
 
     const cachedMessagesForRange = [
-      { id: '5' },
+      { id: '5', body: 'cached' },
       { id: '6' },
       { id: '7' },
       { id: '8' }
@@ -22,7 +28,7 @@ describe('history.service', () => {
       expect(result).toEqual(items);
     });
 
-    it('should prepend cached messages for descending order', () => {
+    it('should prepend cached messages for request in descending order', () => {
       const itemsDescending = [...items].reverse();
 
       const result = getMergedItems(
@@ -37,7 +43,7 @@ describe('history.service', () => {
         { id: '8' },
         { id: '7' },
         { id: '6' },
-        { id: '5' },
+        { id: '5', body: 'static' },
         { id: '4' },
         { id: '3' },
         { id: '2' },
@@ -45,7 +51,7 @@ describe('history.service', () => {
       ]);
     });
 
-    it('should append cached messages for ascending order', () => {
+    it('should append cached messages for request in ascending order', () => {
       const itemsAscending = [...items];
 
       const result = getMergedItems(
@@ -61,7 +67,7 @@ describe('history.service', () => {
         { id: '2' },
         { id: '3' },
         { id: '4' },
-        { id: '5' },
+        { id: '5', body: 'static' },
         { id: '6' },
         { id: '7' },
         { id: '8' }

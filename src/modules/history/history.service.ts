@@ -3,7 +3,7 @@ import * as repository from './history.repository';
 import { HistoryNextPageTokenData, HistoryRequestParams, Message } from '@/types/history.types';
 import { Logger } from 'winston';
 import { PoolClient } from 'pg';
-import { PaginatedQueryResult, QueryOrder } from '@/util/pg-query';
+import { QueryOrder } from '@/util/pg-query';
 import { getISODateStringOrNull } from '@/util/date';
 import { RedisClient } from '@/lib/redis';
 import { PersistedMessage } from '@/types/data.types';
@@ -42,26 +42,26 @@ export async function getMessagesByRoomId(
   order: QueryOrder = QueryOrder.DESC,
   limit: number,
   lastItemId: string | null = null
-): Promise<PaginatedQueryResult<Message>> {
+): Promise<Message[]> {
   logger.debug(`Getting messages by room id`, { roomId });
 
-  const { rows: messages } = await db.getMessagesByRoomId(
-    pgClient,
-    appPid,
-    roomId,
-    getISODateStringOrNull(start),
-    getISODateStringOrNull(end),
-    order,
-    limit,
-    lastItemId
-  );
+  try {
+    const { rows: messages } = await db.getMessagesByRoomId(
+      pgClient,
+      appPid,
+      roomId,
+      getISODateStringOrNull(start),
+      getISODateStringOrNull(end),
+      order,
+      limit,
+      lastItemId
+    );
 
-  const parsedMessages = parseMessages(messages[0].data);
-
-  return {
-    count: messages[0].count,
-    items: parsedMessages
-  };
+    return parseMessages(messages);
+  } catch (err: unknown) {
+    logger.error(`Failed to get messages by room id`, { err });
+    throw err;
+  }
 }
 
 export function parseMessages(messages: any[]): Message[] {
@@ -159,7 +159,7 @@ export function getMergedItems(
   }
 
   try {
-    const itemMap = new Map(items.map((item) => [item.id, item]));
+    const itemMap = new Map<string, Message>(items.map((item) => [item.id, item]));
 
     const mergedItems = [...items];
 

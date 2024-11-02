@@ -36,7 +36,7 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         throw new BadRequestError('End must be greater than start');
       }
 
-      const result = await getMessagesByRoomId(
+      const items = await getMessagesByRoomId(
         logger,
         pgClient,
         appPid,
@@ -48,7 +48,7 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         lastItemId
       );
 
-      const { count, items } = result;
+      // const { items } = result;
 
       const cachedMessagesForRange = await getCachedMessagesForRange(
         logger,
@@ -61,7 +61,7 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         items
       );
 
-      const newCount = count + cachedMessagesForRange.length;
+      // const newCount = count + cachedMessagesForRange.length;
 
       const mergedItems = getMergedItems(
         logger,
@@ -76,7 +76,7 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
 
       res.cork(() =>
         getSuccessResponse(res, {
-          count: newCount,
+          // count: newCount,
           items: mergedItems,
           nextPageToken
         })

@@ -33,8 +33,8 @@ export interface ReducedSession {
   keyId: string;
   uid: string;
   clientId: string;
-  connectionId: string;
-  socketId: string;
+  connectionId: string | null;
+  socketId: string | null;
   instanceId?: string | number;
   user?: AuthUser;
 }

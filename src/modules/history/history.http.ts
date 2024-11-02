@@ -2,7 +2,7 @@ import { HttpResponse } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { getErrorResponse, getSuccessResponse } from '@/util/http';
 import {
-  // getCachedMessagesForRange,
+  getCachedMessagesForRange,
   getMergedItems,
   getMessagesByRoomId,
   getNextPageToken,
@@ -10,11 +10,9 @@ import {
   parseRequestQueryParams
 } from './history.service';
 import { Pool } from 'pg';
-import { QueryOrder } from '@/util/pg-query';
 import { BadRequestError } from '@/lib/errors';
 import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
 import { RedisClient } from '@/lib/redis';
-import { Message } from '@/types/history.types';
 
 const logger = getLogger('history-http');
 
@@ -52,31 +50,26 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
 
       const { count, items } = result;
 
-      // const index = order === QueryOrder.ASC ? items.length - 1 : 0;
-      // const startFromCache = items[index]?.timestamp || start;
-
-      // const cachedMessagesForRange = await getCachedMessagesForRange(
-      //   logger,
-      //   redisClient,
-      //   appPid,
-      //   roomId,
-      //   startFromCache,
-      //   end,
-      //   order,
-      //   limit
-      // );
-
-      const cachedMessagesForRange = [] as Message[];
+      const cachedMessagesForRange = await getCachedMessagesForRange(
+        logger,
+        redisClient,
+        appPid,
+        roomId,
+        start,
+        end,
+        order,
+        items
+      );
 
       const newCount = count + cachedMessagesForRange.length;
-      // const mergedItems = getMergedItems(items, cachedMessagesForRange, limit, order);
-      const nextPageToken = getNextPageToken(items, start, end, order, limit);
+      const mergedItems = getMergedItems(items, cachedMessagesForRange, order, limit, lastItemId);
+      const nextPageToken = getNextPageToken(mergedItems, start, end, order, limit);
 
       res.cork(() =>
         getSuccessResponse(res, {
           count: newCount,
-          items: items,
-          nextPageToken
+          nextPageToken,
+          items: mergedItems
         })
       );
     } catch (err: unknown) {

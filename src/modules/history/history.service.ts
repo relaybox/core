@@ -12,6 +12,7 @@ import { ParsedHttpRequest } from '@/lib/middleware';
 
 export const HISTORY_MAX_LIMIT = 100;
 export const HISTORY_CACHED_MESSAGE_TTL_SECS = 60;
+export const NEXT_PAGE_TOKEN_ENCODING = 'base64';
 
 export function parseRequestQueryParams(req: ParsedHttpRequest): HistoryRequestParams {
   const tokenParams = decodeNextPageToken(req.query.nextPageToken || '');
@@ -110,97 +111,66 @@ export async function addMessageToCache(
   }
 }
 
-export function sortItemsByTimestamp(items: Message[]) {
-  return items.sort((a, b) => a.timestamp + b.timestamp);
-}
+export async function getCachedMessagesForRange(
+  logger: Logger,
+  redisClient: RedisClient,
+  appPid: string,
+  roomId: string,
+  start: number | null = null,
+  end: number | null = null,
+  order: QueryOrder = QueryOrder.DESC,
+  items: Message[]
+): Promise<Message[]> {
+  logger.debug(`Getting buffered messages`);
 
-export function unshiftNewItems(
-  originalArray: Message[],
-  newElements: Message[],
-  keyMap: Map<string, Message>
-): Message[] {
-  const mergedItems = [...originalArray];
+  try {
+    const index = order === QueryOrder.DESC ? 0 : items.length - 1;
+    const startFromCache = items[index]?.timestamp || start || 0;
+    const endFromCache = end ?? Date.now();
+    const key = `${KeyPrefix.HISTORY}:buffer:${appPid}:${roomId}`;
 
-  for (const newElement of newElements) {
-    if (!keyMap.has(newElement.id)) {
-      mergedItems.unshift(newElement);
-    }
+    const cachedMessagedForRange = await repository.getCachedMessagesForRange(
+      redisClient,
+      key,
+      startFromCache,
+      endFromCache
+    );
+
+    return cachedMessagedForRange.map((message) => JSON.parse(message.value));
+  } catch (err: unknown) {
+    console.log(err);
+    logger.error(`Failed to get cached messages`, { err });
+    throw err;
   }
-
-  return mergedItems;
-}
-
-export function pushNewItems(
-  originalArray: Message[],
-  newElements: Message[],
-  keyMap: Map<string, Message>
-): Message[] {
-  const mergedItems = [...originalArray];
-
-  for (const newElement of newElements) {
-    if (!keyMap.has(newElement.id)) {
-      mergedItems.unshift(newElement);
-    }
-  }
-
-  return mergedItems;
 }
 
 export function getMergedItems(
-  originalArray: Message[],
-  newElements: Message[],
+  items: Message[],
+  cachedMessagesForRange: Message[],
+  order: QueryOrder,
   limit: number,
-  order: QueryOrder
+  lastItemId: string | null = null
 ): Message[] {
-  const keyMap = new Map(originalArray.map((item) => [item.id, item]));
+  if (!cachedMessagesForRange.length) {
+    return items;
+  }
 
-  const mergedItems =
-    order === QueryOrder.DESC
-      ? unshiftNewItems(originalArray, newElements, keyMap)
-      : pushNewItems(originalArray, newElements, keyMap);
+  const itemMap = new Map(items.map((item) => [item.id, item]));
+
+  const mergedItems = [...items];
+
+  for (const cachedMessage of cachedMessagesForRange) {
+    if (!itemMap.has(cachedMessage.id) && lastItemId !== cachedMessage.id) {
+      if (order === QueryOrder.DESC) {
+        mergedItems.unshift(cachedMessage);
+      } else {
+        mergedItems.push(cachedMessage);
+      }
+    }
+  }
 
   return mergedItems.slice(0, limit);
 }
-
-// export async function getCachedMessagesForRange(
-//   logger: Logger,
-//   redisClient: RedisClient,
-//   appPid: string,
-//   roomId: string,
-//   start: number | null = null,
-//   end: number | null = null,
-//   order: QueryOrder = QueryOrder.DESC,
-//   limit: number
-// ): Promise<Message[]> {
-//   logger.debug(`Getting buffered messages`);
-
-//   try {
-//     const min = start || 0;
-//     const max = end || Date.now();
-//     const rev = order === QueryOrder.DESC;
-//     const key = `${KeyPrefix.HISTORY}:buffer:${appPid}:${roomId}`;
-
-//     // Reverse min and max if order is DESC
-//     // This will provide results in descending order
-//     const rangeMin = order === QueryOrder.DESC ? max : min;
-//     const rangeMax = order === QueryOrder.DESC ? min : max;
-
-//     let cachedMessagesByRange = await repository.getCachedMessagesForRange(
-//       redisClient,
-//       key,
-//       rangeMin,
-//       rangeMax,
-//       limit,
-//       rev
-//     );
-
-//     return cachedMessagesByRange.map((message) => JSON.parse(message.value));
-//   } catch (err: unknown) {
-//     console.log(err);
-//     logger.error(`Failed to get cached messages`, { err });
-//     throw err;
-//   }
-// }
 
 export function getNextPageToken(
   items: Message[],
@@ -208,7 +178,11 @@ export function getNextPageToken(
   end: number | null,
   order: QueryOrder,
   limit: number
-): string {
+): string | null {
+  if (items.length < limit) {
+    return null;
+  }
+
   const lastItem = items[items.length - 1];
 
   const tokenData = {
@@ -219,9 +193,7 @@ export function getNextPageToken(
     lastItemId: lastItem.id
   };
 
-  console.log(tokenData);
-
-  return Buffer.from(JSON.stringify(tokenData)).toString('base64');
+  return Buffer.from(JSON.stringify(tokenData)).toString(NEXT_PAGE_TOKEN_ENCODING);
 }
 
 export function decodeNextPageToken(token: string): HistoryNextPageTokenData | null {
@@ -229,5 +201,5 @@ export function decodeNextPageToken(token: string): HistoryNextPageTokenData | n
     return null;
   }
 
-  return JSON.parse(Buffer.from(token, 'base64').toString());
+  return JSON.parse(Buffer.from(token, NEXT_PAGE_TOKEN_ENCODING).toString());
 }

@@ -43,8 +43,6 @@ export function getMessagesByRoomId(
     query += ` AND mh."createdAt" <= $${queryParams.length}`;
   }
 
-  console.log(lastItemId);
-
   if (lastItemId) {
     queryParams.push(lastItemId);
     query += ` AND mh."id" != $${queryParams.length}`;
@@ -53,8 +51,6 @@ export function getMessagesByRoomId(
   if (order) {
     query += ` ORDER BY mh."createdAt" ${order}`;
   }
-
-  console.log(query);
 
   return getPaginatedQuery(pgClient, query, 0, limit!, queryParams);
 }

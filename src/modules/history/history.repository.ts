@@ -17,17 +17,7 @@ export function getCachedMessagesForRange(
   redisClient: RedisClient,
   key: string,
   min: number,
-  max: number,
-  limit: number,
-  rev: boolean
+  max: number
 ): Promise<{ score: number; value: string }[]> {
-  console.log(min, max);
-  return redisClient.zRangeWithScores(key, min, max, {
-    BY: 'SCORE',
-    ...(rev && { REV: true }),
-    LIMIT: {
-      offset: 0,
-      count: limit
-    }
-  });
+  return redisClient.zRangeWithScores(key, min, max, { BY: 'SCORE' });
 }

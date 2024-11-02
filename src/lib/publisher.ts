@@ -37,30 +37,6 @@ export function getPublisher(): Publisher {
   return publisher;
 }
 
-// export async function enqueueMessage(data: any): Promise<void> {
-//   logger.debug(`Enqueuing message`, { data });
-
-//   if (!publisher) {
-//     logger.error(`Publisher not initialized`);
-//     return;
-//   }
-
-//   try {
-//     const envelope: Envelope = {
-//       exchange: AMQP_EXCHANGE_NAME,
-//       routingKey: AMQP_ROUTING_KEY
-//     };
-
-//     const message = {
-//       data
-//     };
-
-//     await publisher.send(envelope, message);
-//   } catch (err: unknown) {
-//     logger.error(`Failed to enqueue message`, { err });
-//   }
-// }
-
 export async function cleanupAmqpPublisher() {
   if (publisher) {
     try {

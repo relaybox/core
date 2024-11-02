@@ -18,7 +18,7 @@ import {
   verifyTimestamp
 } from '@/modules/auth/auth.service';
 import { getPermissions } from '@/modules/permissions/permissions.service';
-import { addMessageToCache, enqueuePersistenceMessage } from '../history/history.service';
+import { addMessageToCache, enqueueMessageForPersistence } from '../history/history.service';
 
 const logger = getLogger('event');
 
@@ -95,7 +95,7 @@ export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpM
       };
 
       await addMessageToCache(logger, redisClient, persistedMessageData);
-      await enqueuePersistenceMessage(logger, persistedMessageData);
+      await enqueueMessageForPersistence(logger, persistedMessageData);
 
       res.cork(() =>
         getSuccessResponse(res, {

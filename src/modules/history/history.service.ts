@@ -222,7 +222,7 @@ export function decodeNextPageToken(token: string): HistoryNextPageTokenData | n
   return JSON.parse(Buffer.from(token, NEXT_PAGE_TOKEN_ENCODING).toString());
 }
 
-export async function enqueuePersistenceMessage(logger: Logger, data: any): Promise<void> {
+export async function enqueueMessageForPersistence(logger: Logger, data: any): Promise<void> {
   logger.debug(`Enqueuing message`, { data });
 
   const publisher = getPublisher();

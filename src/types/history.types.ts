@@ -27,6 +27,7 @@ export interface Message {
 }
 
 export interface HistoryRequestParams {
+  lastItemId: string | null;
   limit: number;
   start: number | null;
   end: number | null;
@@ -34,6 +35,7 @@ export interface HistoryRequestParams {
 }
 
 export interface HistoryNextPageTokenData {
+  lastItemId: string;
   start: number | null;
   end: number | null;
   order: QueryOrder;

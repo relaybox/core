@@ -5,10 +5,11 @@ export function getMessagesByRoomId(
   pgClient: PoolClient,
   appPid: string,
   roomId: string,
-  limit: number,
   start: string | null = null,
   end: string | null = null,
-  order: QueryOrder = QueryOrder.DESC
+  order: QueryOrder = QueryOrder.DESC,
+  limit: number,
+  lastItemId: string | null = null
 ): Promise<QueryResult> {
   const queryParams: (string | number)[] = [roomId, appPid];
 
@@ -42,9 +43,18 @@ export function getMessagesByRoomId(
     query += ` AND mh."createdAt" <= $${queryParams.length}`;
   }
 
+  console.log(lastItemId);
+
+  if (lastItemId) {
+    queryParams.push(lastItemId);
+    query += ` AND mh."id" != $${queryParams.length}`;
+  }
+
   if (order) {
     query += ` ORDER BY mh."createdAt" ${order}`;
   }
+
+  console.log(query);
 
   return getPaginatedQuery(pgClient, query, 0, limit!, queryParams);
 }

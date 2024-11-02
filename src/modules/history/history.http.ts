@@ -2,18 +2,19 @@ import { HttpResponse } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { getErrorResponse, getSuccessResponse } from '@/util/http';
 import {
-  getCachedMessagesForRange,
-  getHistoryRequestParams,
+  // getCachedMessagesForRange,
   getMergedItems,
   getMessagesByRoomId,
   getNextPageToken,
-  HISTORY_MAX_LIMIT
+  HISTORY_MAX_LIMIT,
+  parseRequestQueryParams
 } from './history.service';
 import { Pool } from 'pg';
 import { QueryOrder } from '@/util/pg-query';
 import { BadRequestError } from '@/lib/errors';
 import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
 import { RedisClient } from '@/lib/redis';
+import { Message } from '@/types/history.types';
 
 const logger = getLogger('history-http');
 
@@ -26,13 +27,8 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
     try {
       const appPid = req.auth.appPid;
       const roomId = req.params[0];
-      const { limit, start, end, order } = getHistoryRequestParams(req);
-      // const appPid = req.auth.appPid;
-      // const roomId = req.params[0];
-      // const limit = Number(req.query.limit) || HISTORY_MAX_LIMIT;
-      // const start = Number(req.query.start) || null;
-      // const end = Number(req.query.end) || null;
-      // const order = (req.query.order || QueryOrder.DESC) as QueryOrder;
+
+      const { start, end, order, limit, lastItemId } = parseRequestQueryParams(req);
 
       if (limit > HISTORY_MAX_LIMIT) {
         throw new BadRequestError(`Limit must be less than ${HISTORY_MAX_LIMIT}`);
@@ -47,36 +43,39 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         pgClient,
         appPid,
         roomId,
-        limit,
         start,
         end,
-        order
+        order,
+        limit,
+        lastItemId
       );
 
       const { count, items } = result;
 
-      const index = order === QueryOrder.ASC ? items.length - 1 : 0;
-      const startFromCache = items[index]?.timestamp + 1 || start;
+      // const index = order === QueryOrder.ASC ? items.length - 1 : 0;
+      // const startFromCache = items[index]?.timestamp || start;
 
-      const cachedMessagesForRange = await getCachedMessagesForRange(
-        logger,
-        redisClient,
-        appPid,
-        roomId,
-        limit,
-        startFromCache,
-        end,
-        order
-      );
+      // const cachedMessagesForRange = await getCachedMessagesForRange(
+      //   logger,
+      //   redisClient,
+      //   appPid,
+      //   roomId,
+      //   startFromCache,
+      //   end,
+      //   order,
+      //   limit
+      // );
+
+      const cachedMessagesForRange = [] as Message[];
 
       const newCount = count + cachedMessagesForRange.length;
-      const mergedItems = getMergedItems(items, cachedMessagesForRange, limit, order);
-      const nextPageToken = getNextPageToken(mergedItems, limit, start, end, order);
+      // const mergedItems = getMergedItems(items, cachedMessagesForRange, limit, order);
+      const nextPageToken = getNextPageToken(items, start, end, order, limit);
 
       res.cork(() =>
         getSuccessResponse(res, {
           count: newCount,
-          items: mergedItems,
+          items: items,
           nextPageToken
         })
       );

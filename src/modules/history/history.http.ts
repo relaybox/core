@@ -48,8 +48,6 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         lastItemId
       );
 
-      // const { items } = result;
-
       const cachedMessagesForRange = await getCachedMessagesForRange(
         logger,
         redisClient,
@@ -60,8 +58,6 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
         order,
         items
       );
-
-      // const newCount = count + cachedMessagesForRange.length;
 
       const mergedItems = getMergedItems(
         logger,
@@ -76,7 +72,6 @@ export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): Http
 
       res.cork(() =>
         getSuccessResponse(res, {
-          // count: newCount,
           items: mergedItems,
           nextPageToken
         })

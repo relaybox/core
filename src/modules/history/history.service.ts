@@ -9,6 +9,8 @@ import { RedisClient } from '@/lib/redis';
 import { PersistedMessage } from '@/types/data.types';
 import { KeyPrefix } from '@/types/state.types';
 import { ParsedHttpRequest } from '@/lib/middleware';
+import { AMQP_EXCHANGE_NAME, AMQP_ROUTING_KEY, getPublisher } from '@/lib/publisher';
+import { Envelope } from 'rabbitmq-client';
 
 export const HISTORY_MAX_LIMIT = 100;
 export const HISTORY_CACHED_MESSAGE_TTL_SECS = 60;
@@ -218,4 +220,30 @@ export function decodeNextPageToken(token: string): HistoryNextPageTokenData | n
   }
 
   return JSON.parse(Buffer.from(token, NEXT_PAGE_TOKEN_ENCODING).toString());
+}
+
+export async function enqueuePersistenceMessage(logger: Logger, data: any): Promise<void> {
+  logger.debug(`Enqueuing message`, { data });
+
+  const publisher = getPublisher();
+
+  if (!publisher) {
+    logger.error(`Publisher not initialized`);
+    return;
+  }
+
+  try {
+    const envelope: Envelope = {
+      exchange: AMQP_EXCHANGE_NAME,
+      routingKey: AMQP_ROUTING_KEY
+    };
+
+    const message = {
+      data
+    };
+
+    await publisher.send(envelope, message);
+  } catch (err: unknown) {
+    logger.error(`Failed to enqueue message`, { err });
+  }
 }

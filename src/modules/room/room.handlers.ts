@@ -23,8 +23,7 @@ import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { v4 as uuid } from 'uuid';
-import { enqueueMessage } from '@/lib/publisher';
-import { addMessageToCache } from '@/modules/history/history.service';
+import { addMessageToCache, enqueuePersistenceMessage } from '@/modules/history/history.service';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -181,7 +180,7 @@ export async function clientPublish(
     };
 
     await addMessageToCache(logger, redisClient, persistedMessageData);
-    await enqueueMessage(persistedMessageData);
+    await enqueuePersistenceMessage(logger, persistedMessageData);
 
     // TODO: pass logger to enqueueWebhookEvent
     await enqueueWebhookEvent(

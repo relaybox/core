@@ -3,11 +3,11 @@ import { Connection, Envelope, Publisher, PublisherProps } from 'rabbitmq-client
 
 const logger = getLogger('publisher');
 
-const AMQP_CONNECTION_STRING = process.env.RABBIT_MQ_CONNECTION_STRING;
-const AMQP_EXCHANGE_NAME = 'ds.persistence.durable';
-const AMQP_QUEUE_TYPE = 'direct';
-const AMQP_MAX_RETRY_ATTEMPTS = 2;
-const AMQP_ROUTING_KEY = 'message.persist';
+export const AMQP_CONNECTION_STRING = process.env.RABBIT_MQ_CONNECTION_STRING;
+export const AMQP_EXCHANGE_NAME = 'ds.persistence.durable';
+export const AMQP_QUEUE_TYPE = 'direct';
+export const AMQP_MAX_RETRY_ATTEMPTS = 2;
+export const AMQP_ROUTING_KEY = 'message.persist';
 
 const connection = new Connection(AMQP_CONNECTION_STRING);
 
@@ -15,7 +15,6 @@ let publisher: Publisher | null = null;
 
 export function getPublisher(): Publisher {
   if (publisher) {
-    logger.error(`Publisher already initialized`);
     return publisher;
   }
 
@@ -38,29 +37,29 @@ export function getPublisher(): Publisher {
   return publisher;
 }
 
-export async function enqueueMessage(data: any): Promise<void> {
-  logger.debug(`Enqueuing message`, { data });
+// export async function enqueueMessage(data: any): Promise<void> {
+//   logger.debug(`Enqueuing message`, { data });
 
-  if (!publisher) {
-    logger.error(`Publisher not initialized`);
-    return;
-  }
+//   if (!publisher) {
+//     logger.error(`Publisher not initialized`);
+//     return;
+//   }
 
-  try {
-    const envelope: Envelope = {
-      exchange: AMQP_EXCHANGE_NAME,
-      routingKey: AMQP_ROUTING_KEY
-    };
+//   try {
+//     const envelope: Envelope = {
+//       exchange: AMQP_EXCHANGE_NAME,
+//       routingKey: AMQP_ROUTING_KEY
+//     };
 
-    const message = {
-      data
-    };
+//     const message = {
+//       data
+//     };
 
-    await publisher.send(envelope, message);
-  } catch (err: unknown) {
-    logger.error(`Failed to enqueue message`, { err });
-  }
-}
+//     await publisher.send(envelope, message);
+//   } catch (err: unknown) {
+//     logger.error(`Failed to enqueue message`, { err });
+//   }
+// }
 
 export async function cleanupAmqpPublisher() {
   if (publisher) {

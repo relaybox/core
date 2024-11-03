@@ -1,15 +1,15 @@
 import '../__mocks__/external/rabbitmq-client';
 import { mockApp } from '../__mocks__/external/uWebsockets';
-import ConnectionManager from '@/lib/connection-manager';
+import ConnectionManager from '@/lib/amqp-manager/connection-manager';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import Connection from 'rabbitmq-client';
-import MessageHandler from '@/lib/message-handler';
+import MessageHandler from '@/lib/amqp-manager/message-handler';
 import ConsumerManager, {
   AMQP_CONSUMER_CONCURRENCY,
   AMQP_QUEUE_NAME_PREFIX
-} from '@/lib/consumer-manager';
+} from '@/lib/amqp-manager/consumer-manager';
 
-vi.mock('@/lib/message-handler');
+vi.mock('@/lib/amqp-manager/message-handler');
 
 describe('consumer-manager', () => {
   let originalEnv: NodeJS.ProcessEnv;

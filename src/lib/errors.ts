@@ -21,3 +21,24 @@ export class NetworkError extends Error {
     this.name = 'NetworkError';
   }
 }
+
+export class BadRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BadRequestError';
+  }
+}
+
+export class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TimeoutError';
+  }
+}
+
+export class TokenError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TokenError';
+  }
+}

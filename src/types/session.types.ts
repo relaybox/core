@@ -11,6 +11,8 @@ export interface AuthUser {
   lastOnline: string;
   appId: string;
   blockedAt: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
 }
 
 export interface Session {
@@ -31,8 +33,8 @@ export interface ReducedSession {
   keyId: string;
   uid: string;
   clientId: string;
-  connectionId: string;
-  socketId: string;
+  connectionId: string | null;
+  socketId: string | null;
   instanceId?: string | number;
   user?: AuthUser;
 }

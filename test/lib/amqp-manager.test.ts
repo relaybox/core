@@ -1,13 +1,13 @@
 import { mockApp } from '../__mocks__/external/uWebsockets';
-import AmqpManager from '@/lib/amqp-manager';
+import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import ConnectionManager from '@/lib/connection-manager';
-import ConfigManager from '@/lib/config-manager';
-import MessageHandler from '@/lib/message-handler';
-import ConsumerManager from '@/lib/consumer-manager';
-import ChannelManager from '@/lib/channel-manager';
-import PublisherManager from '@/lib/publisher-manager';
-import DispatchHandler from '@/lib/dispatch-handler';
+import ConnectionManager from '@/lib/amqp-manager/connection-manager';
+import ConfigManager from '@/lib/amqp-manager/config-manager';
+import MessageHandler from '@/lib/amqp-manager/message-handler';
+import ConsumerManager from '@/lib/amqp-manager/consumer-manager';
+import ChannelManager from '@/lib/amqp-manager/channel-manager';
+import PublisherManager from '@/lib/amqp-manager/publisher-manager';
+import DispatchHandler from '@/lib/amqp-manager/dispatch-handler';
 import EventEmitter from 'events';
 
 const mockLogger = vi.hoisted(() => ({
@@ -17,7 +17,7 @@ const mockLogger = vi.hoisted(() => ({
   })
 }));
 
-vi.mock('@/lib/connection-manager', () => ({
+vi.mock('@/lib/amqp-manager/connection-manager', () => ({
   default: {
     getInstance: vi.fn().mockReturnValue({
       connect: vi.fn()
@@ -26,12 +26,12 @@ vi.mock('@/lib/connection-manager', () => ({
 }));
 
 vi.mock('@/util/logger', () => mockLogger);
-vi.mock('@/lib/config-manager');
-vi.mock('@/lib/message-handler');
-vi.mock('@/lib/consumer-manager');
-vi.mock('@/lib/channel-manager');
-vi.mock('@/lib/publisher-manager');
-vi.mock('@/lib/dispatch-handler');
+vi.mock('@/lib/amqp-manager/config-manager');
+vi.mock('@/lib/amqp-manager/message-handler');
+vi.mock('@/lib/amqp-manager/consumer-manager');
+vi.mock('@/lib/amqp-manager/channel-manager');
+vi.mock('@/lib/amqp-manager/publisher-manager');
+vi.mock('@/lib/amqp-manager/dispatch-handler');
 
 describe('amqp-manager', () => {
   const mockEventEmitter = new EventEmitter();

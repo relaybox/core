@@ -1,9 +1,9 @@
 import '../__mocks__/external/rabbitmq-client';
 import Connection, { Envelope } from 'rabbitmq-client';
-import ConnectionManager from '@/lib/connection-manager';
-import PublisherManager, { MAX_DELIVERY_ATTEMPTS } from '@/lib/publisher-manager';
+import ConnectionManager from '@/lib/amqp-manager/connection-manager';
+import PublisherManager, { MAX_DELIVERY_ATTEMPTS } from '@/lib/amqp-manager/publisher-manager';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import ConfigManager from '@/lib/config-manager';
+import ConfigManager from '@/lib/amqp-manager/config-manager';
 
 describe('publisher-manager', () => {
   let connection: Connection;

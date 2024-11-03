@@ -10,3 +10,9 @@ export interface Message {
   latencyLog: LatencyLog;
   global?: boolean;
 }
+
+export interface PersistedMessage {
+  roomId: string;
+  event: string;
+  message?: Message;
+}

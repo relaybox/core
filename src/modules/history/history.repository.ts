@@ -1,34 +1,23 @@
 import { RedisClient } from '@/lib/redis';
+import { Message } from '@/types/data.types';
 
-export function addRoomHistoryMessage(
+export function setCachedMessage(
   redisClient: RedisClient,
   key: string,
-  messageData: any
+  message: Message,
+  timestamp: number
 ): Promise<number> {
   return redisClient.zAdd(key, {
-    score: messageData.timestamp,
-    value: JSON.stringify(messageData)
+    score: timestamp,
+    value: JSON.stringify(message)
   });
 }
 
-export function getRoomHistoryMessages(
+export function getCachedMessagesForRange(
   redisClient: RedisClient,
   key: string,
   min: number,
-  max: number,
-  limit: number,
-  rev: boolean
-): Promise<any[]> {
-  return redisClient.zRangeWithScores(key, max, min, {
-    BY: 'SCORE',
-    ...(rev && { REV: true }),
-    LIMIT: {
-      offset: 0,
-      count: limit
-    }
-  });
-}
-
-export function roomHistoryKeyExists(redisClient: RedisClient, key: string): Promise<number> {
-  return redisClient.exists(key);
+  max: number
+): Promise<{ score: number; value: string }[]> {
+  return redisClient.zRangeWithScores(key, min, max, { BY: 'SCORE' });
 }

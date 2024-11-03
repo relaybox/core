@@ -1,215 +1,247 @@
+import * as db from './history.db';
+import * as repository from './history.repository';
+import { HistoryNextPageTokenData, HistoryRequestParams, Message } from '@/types/history.types';
+import { Logger } from 'winston';
+import { PoolClient } from 'pg';
+import { QueryOrder } from '@/util/pg-query';
+import { getISODateStringOrNull } from '@/util/date';
 import { RedisClient } from '@/lib/redis';
-import * as historyRepository from './history.repository';
-import { getLogger } from '@/util/logger';
+import { PersistedMessage } from '@/types/data.types';
 import { KeyPrefix } from '@/types/state.types';
-import { Job } from 'bullmq';
-import { defaultJobConfig, HistoryJobName, historyQueue } from './history.queue';
-import { HistoryOrder, HistoryResponse } from '@/types/history.types';
+import { ParsedHttpRequest } from '@/lib/middleware';
+import { AMQP_EXCHANGE_NAME, AMQP_ROUTING_KEY } from '@/lib/publisher';
+import { Envelope, Publisher } from 'rabbitmq-client';
 
-const logger = getLogger('history'); // TODO: MOVE ALL LOGGERS TO HANDLERS FILE
-
-export const HISTORY_PARTITION_RANGE_MS = 60 * 60 * 1000;
-export const HISTORY_MAX_SECONDS = 24 * 60 * 60;
 export const HISTORY_MAX_LIMIT = 100;
+export const HISTORY_CACHED_MESSAGE_TTL_SECS = 60;
+export const NEXT_PAGE_TOKEN_ENCODING = 'base64';
 
-export function getPartitionKey(nspRoomId: string, timestamp: number): string {
-  const date = new Date(timestamp);
-  const hours = date.getUTCHours();
-  date.setUTCHours(hours, 0, 0, 0);
+export function parseRequestQueryParams(req: ParsedHttpRequest): HistoryRequestParams {
+  const tokenParams = decodeNextPageToken(req.query.nextPageToken || '');
 
-  return `${KeyPrefix.HISTORY}:messages:${nspRoomId}:${date.toISOString().slice(0, 13)}h`;
+  const lastItemId = tokenParams?.lastItemId || null;
+  const start = tokenParams?.start || Number(req.query.start) || null;
+  const end = tokenParams?.end || Number(req.query.end) || null;
+  const order = tokenParams?.order || ((req.query.order || QueryOrder.DESC) as QueryOrder);
+  const limit = tokenParams?.limit || Number(req.query.limit) || HISTORY_MAX_LIMIT;
+
+  return {
+    lastItemId,
+    start,
+    end,
+    order,
+    limit
+  };
 }
 
-export function getPartitionRange(
-  startTime: number,
-  endTime: number,
-  order: HistoryOrder,
-  lastScore?: number
-): { min: number; max: number } {
-  return order === HistoryOrder.DESC
-    ? { min: startTime, max: lastScore || endTime }
-    : { min: endTime, max: lastScore || startTime };
+export async function getMessagesByRoomId(
+  logger: Logger,
+  pgClient: PoolClient,
+  appPid: string,
+  roomId: string,
+  start: number | null = null,
+  end: number | null = null,
+  order: QueryOrder = QueryOrder.DESC,
+  limit: number,
+  lastItemId: string | null = null
+): Promise<Message[]> {
+  logger.debug(`Getting messages by room id`, { roomId });
+
+  try {
+    const { rows: messages } = await db.getMessagesByRoomId(
+      pgClient,
+      appPid,
+      roomId,
+      getISODateStringOrNull(start),
+      getISODateStringOrNull(end),
+      order,
+      limit,
+      lastItemId
+    );
+
+    return parseMessages(messages);
+  } catch (err: unknown) {
+    logger.error(`Failed to get messages by room id`, { err });
+    throw err;
+  }
 }
 
-function parseNextPageToken(token: string) {
-  const decoded = Buffer.from(token, 'base64').toString();
-  return JSON.parse(decoded);
+export function parseMessages(messages: any[]): Message[] {
+  if (!messages?.length) {
+    return [];
+  }
+
+  return messages.map((message) => {
+    const { id, body, user, clientId, connectionId, event } = message;
+
+    return {
+      id,
+      body: body.$,
+      sender: {
+        clientId,
+        connectionId,
+        user
+      },
+      timestamp: new Date(message.createdAt).getTime(),
+      event
+    };
+  });
 }
 
-export function generateNextPageToken(partitionKey: string, lastScore: number) {
-  return Buffer.from(JSON.stringify({ partitionKey, lastScore })).toString('base64');
+export async function addMessageToCache(
+  logger: Logger,
+  redisClient: RedisClient,
+  persistedMessage: PersistedMessage
+): Promise<void> {
+  logger.debug(`Caching message`, { id: persistedMessage.message?.data.id });
+
+  if (!persistedMessage.message) {
+    logger.error(`Message not found`);
+    return;
+  }
+
+  try {
+    const message = persistedMessage.message;
+    const messageData = message.data;
+    const timestamp = message.data.timestamp;
+    const key = `${KeyPrefix.HISTORY}:buffer:${message.nspRoomId}`;
+
+    await repository.setCachedMessage(redisClient, key, messageData, timestamp);
+  } catch (err: unknown) {
+    logger.error(`Failed to cache message`, { err });
+    throw err;
+  }
+}
+
+export async function getCachedMessagesForRange(
+  logger: Logger,
+  redisClient: RedisClient,
+  appPid: string,
+  roomId: string,
+  start: number | null = null,
+  end: number | null = null,
+  order: QueryOrder = QueryOrder.DESC,
+  items: Message[]
+): Promise<Message[]> {
+  logger.debug(`Getting buffered messages`);
+
+  try {
+    const index = order === QueryOrder.DESC ? 0 : items.length - 1;
+    const startFromCache = items[index]?.timestamp || start || 0;
+    const endFromCache = end ?? Date.now();
+    const key = `${KeyPrefix.HISTORY}:buffer:${appPid}:${roomId}`;
+
+    const cachedMessagedForRange = await repository.getCachedMessagesForRange(
+      redisClient,
+      key,
+      startFromCache,
+      endFromCache
+    );
+
+    return cachedMessagedForRange.map((message) => JSON.parse(message.value));
+  } catch (err: unknown) {
+    console.log(err);
+    logger.error(`Failed to get cached messages`, { err });
+    throw err;
+  }
+}
+
+export function getMergedItems(
+  logger: Logger,
+  items: Message[],
+  cachedMessagesForRange: Message[],
+  order: QueryOrder,
+  limit: number,
+  lastItemId: string | null = null
+): Message[] {
+  logger.debug(`Merging items`);
+
+  if (!cachedMessagesForRange.length) {
+    return items;
+  }
+
+  try {
+    const itemMap = new Map<string, Message>(items.map((item) => [item.id, item]));
+
+    const mergedItems = [...items];
+
+    for (const cachedMessage of cachedMessagesForRange) {
+      if (!itemMap.has(cachedMessage.id) && lastItemId !== cachedMessage.id) {
+        if (order === QueryOrder.DESC) {
+          mergedItems.unshift(cachedMessage);
+        } else {
+          mergedItems.push(cachedMessage);
+        }
+      }
+    }
+
+    return mergedItems.slice(0, limit);
+  } catch (err: unknown) {
+    logger.error(`Failed to merge items`, { err });
+    throw err;
+  }
 }
 
 export function getNextPageToken(
-  messages: any[],
-  lastScore: number,
-  limit: number,
-  currentPartitionKey: string,
-  items: number | null = null,
-  order: HistoryOrder
+  logger: Logger,
+  items: Message[],
+  start: number | null,
+  end: number | null,
+  order: QueryOrder,
+  limit: number
 ): string | null {
-  if ((items && items <= limit) || messages.length < limit) {
+  logger.debug(`Getting next page token`);
+
+  if (items.length < limit) {
     return null;
   }
 
-  const lastScoreForOrder = order === HistoryOrder.DESC ? lastScore - 1 : lastScore + 1;
-
-  return generateNextPageToken(currentPartitionKey, lastScoreForOrder);
-}
-
-export function getNextTime(lastTime: number, order: HistoryOrder): number {
-  return order === HistoryOrder.DESC
-    ? lastTime - HISTORY_PARTITION_RANGE_MS
-    : lastTime + HISTORY_PARTITION_RANGE_MS;
-}
-
-export function nextTimeOutOfRange(
-  nextTime: number,
-  startTime: number,
-  endTime: number,
-  order: HistoryOrder
-): boolean {
-  const oneHourMs = 60 * 60 * 1000;
-
-  return order === HistoryOrder.DESC
-    ? nextTime < startTime - oneHourMs
-    : nextTime > endTime + oneHourMs;
-}
-
-export function messagesLimitReached(
-  messages: any[],
-  limit: number,
-  items: number | null
-): boolean {
-  return messages.length >= limit || messages.length === items;
-}
-
-export async function addRoomHistoryMessage(
-  redisClient: RedisClient,
-  nspRoomId: string,
-  messageData: any
-): Promise<void> {
-  const { timestamp } = messageData;
-  const key = getPartitionKey(nspRoomId, timestamp);
-
-  logger.debug(`Adding message to history`, { key, timestamp });
-
   try {
-    await historyRepository.addRoomHistoryMessage(redisClient, key, messageData);
+    const lastItem = items[items.length - 1];
 
-    const ttl = await redisClient.ttl(key);
-
-    if (ttl < 0) {
-      await setRoomHistoryKeyTtl(nspRoomId, key);
-    }
-  } catch (err) {
-    logger.error(`Failed to add message to history`, { err });
-    throw err;
-  }
-}
-
-export async function getRoomHistoryMessages(
-  redisClient: RedisClient,
-  nspRoomId: string,
-  start: number | null = null,
-  end: number | null = null,
-  seconds: number = HISTORY_MAX_SECONDS,
-  limit: number = 100,
-  items: number | null = null,
-  order: HistoryOrder = HistoryOrder.DESC,
-  nextPageToken: string | null = null
-): Promise<HistoryResponse> {
-  logger.debug(`Getting room message history`, { nspRoomId, seconds, limit, nextPageToken });
-
-  const endTime = end || Date.now();
-  const startTime = start || endTime - seconds * 1000;
-  const rangeLimitForOrder = order === HistoryOrder.DESC ? endTime : startTime;
-
-  if (endTime - startTime > HISTORY_MAX_SECONDS * 1000) {
-    throw new Error(`Maximum time range of ${HISTORY_MAX_SECONDS / 60 / 60} hours exceeded`);
-  }
-
-  let currentPartitionKey, lastScore, nextTime;
-
-  if (nextPageToken) {
-    const { partitionKey, lastScore: parsedLastScore } = parseNextPageToken(nextPageToken);
-    currentPartitionKey = partitionKey;
-    lastScore = parsedLastScore;
-  } else {
-    currentPartitionKey = getPartitionKey(nspRoomId, rangeLimitForOrder);
-  }
-
-  const messages: Record<string, unknown>[] = [];
-
-  try {
-    while (true) {
-      const resultsLimit = Math.min(items ?? limit, limit);
-
-      const { min, max } = getPartitionRange(startTime, endTime, order, lastScore);
-
-      const currentMessages = await historyRepository.getRoomHistoryMessages(
-        redisClient,
-        currentPartitionKey,
-        min,
-        max,
-        resultsLimit - messages.length,
-        order === HistoryOrder.DESC
-      );
-
-      if (currentMessages.length) {
-        messages.push(...currentMessages.map((message) => JSON.parse(message.value)));
-        lastScore = currentMessages[currentMessages.length - 1].score;
-        nextTime = getNextTime(lastScore, order);
-      } else {
-        nextTime = getNextTime(nextTime || lastScore || rangeLimitForOrder, order);
-      }
-
-      if (
-        nextTimeOutOfRange(nextTime, startTime, endTime, order) ||
-        messagesLimitReached(messages, limit, items)
-      ) {
-        break;
-      }
-
-      currentPartitionKey = getPartitionKey(nspRoomId, nextTime);
-    }
-
-    const nextPageToken = getNextPageToken(
-      messages,
-      lastScore,
+    const tokenData = {
+      start: order === QueryOrder.ASC ? lastItem.timestamp : start,
+      end: order === QueryOrder.DESC ? lastItem.timestamp : end,
+      order,
       limit,
-      currentPartitionKey,
-      items,
-      order
-    );
-
-    return {
-      messages,
-      nextPageToken,
-      ...(items && { itemsRemaining: items - messages.length })
+      lastItemId: lastItem.id
     };
-  } catch (err) {
-    logger.error(`Failed to get room history messages`, { err });
+
+    return Buffer.from(JSON.stringify(tokenData)).toString(NEXT_PAGE_TOKEN_ENCODING);
+  } catch (err: unknown) {
+    logger.error(`Failed to get next page token`, { err });
     throw err;
   }
 }
 
-export function setRoomHistoryKeyTtl(nspRoomId: string, key: string): Promise<Job> | void {
-  logger.debug('Adding history ttl job to history queue', { nspRoomId, key });
+export function decodeNextPageToken(token: string): HistoryNextPageTokenData | null {
+  if (!token) {
+    return null;
+  }
+
+  return JSON.parse(Buffer.from(token, NEXT_PAGE_TOKEN_ENCODING).toString());
+}
+
+export async function enqueueMessageForPersistence(
+  logger: Logger,
+  publisher: Publisher,
+  data: any
+): Promise<void> {
+  logger.debug(`Enqueuing message`, { data });
 
   try {
-    const jobData = {
-      nspRoomId,
-      key
+    const envelope: Envelope = {
+      exchange: AMQP_EXCHANGE_NAME,
+      routingKey: AMQP_ROUTING_KEY
     };
 
-    const jobConfig = {
-      jobId: key,
-      ...defaultJobConfig
+    const message = {
+      data
     };
 
-    return historyQueue.add(HistoryJobName.HISTORY_TTL, jobData, jobConfig);
-  } catch (err) {
-    logger.error(`Failed to add history ttl job to history queue`, { err });
+    await publisher.send(envelope, message);
+  } catch (err: unknown) {
+    logger.error(`Failed to enqueue message`, { err });
+    throw err;
   }
 }

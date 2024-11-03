@@ -9,6 +9,7 @@ import {
 import { getLogger } from '@/util/logger';
 import fs from 'fs';
 import path from 'path';
+import { addAndCleanup, setKeyExpiry } from '@/scripts/redis';
 
 const logger = getLogger('redis');
 
@@ -47,6 +48,10 @@ export const connectionOptions: RedisClientOptions = {
     ...socketOptions,
     reconnectStrategy
   }
+  // scripts: {
+  //   addAndCleanup,
+  //   setKeyExpiry
+  // }
 };
 
 // IO redis client options (BullMQ)
@@ -61,7 +66,7 @@ export const connectionOptionsIo = {
   ...(!REDIS_TLS_DISABLED && tlsConnectionOptionsIo)
 };
 
-let redisClient: RedisClient;
+let redisClient: RedisClient | null = null;
 
 function getRedisAuthToken(): string {
   if (!REDIS_AUTH) {
@@ -109,14 +114,15 @@ export function getRedisClient(): RedisClient {
   return redisClient;
 }
 
-async function cleanupRedisClient() {
+export async function cleanupRedisClient() {
   if (redisClient) {
-    await redisClient.quit();
-    logger.info('Redis client disconnected through app termination');
+    try {
+      await redisClient.quit();
+    } catch (err) {
+      logger.error('Error ending Redis client', { err });
+    } finally {
+      logger.info('Redis client disconnected through app termination');
+      redisClient = null;
+    }
   }
-
-  process.exit(0);
 }
-
-process.on('SIGINT', cleanupRedisClient);
-process.on('SIGTERM', cleanupRedisClient);

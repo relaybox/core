@@ -1,5 +1,4 @@
 export enum ClientEvent {
-  // DISCONNECT = 'disconnect',
   ROOM_JOIN = 'ds:client:room:join',
   ROOM_LEAVE = 'ds:client:room:leave',
   ROOM_SUBSCRIPTION_BIND = 'ds:client:room:subscription:bind',
@@ -18,7 +17,6 @@ export enum ClientEvent {
   AUTH_USER_UNSUBSCRIBE = 'ds:client:auth:user:unsubscribe',
   AUTH_USER_UNSUBSCRIBE_ALL = 'ds:client:auth:user:unsubscribe:all',
   AUTH_USER_STATUS_UPDATE = 'ds:client:auth:user:status:update',
-  ROOM_HISTORY_GET = 'ds:client:room:history:get',
   PUBLISH = 'ds:client:publish'
 }
 

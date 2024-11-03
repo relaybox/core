@@ -15,15 +15,16 @@ import { SubscriptionType } from '@/types/subscription.types';
 import { removeActiveMember } from '../presence/presence.service';
 import { unbindAllSubscriptions } from '../subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
-import { permissionsGuard } from '../guards/guards.service';
+import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
-import AmqpManager from '@/lib/amqp-manager';
+import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { WebSocket } from 'uWebSockets.js';
-import ChannelManager from '@/lib/channel-manager';
-import { addRoomHistoryMessage } from '../history/history.service';
+import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { v4 as uuid } from 'uuid';
+import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
+import { getPublisher } from '@/lib/publisher';
 
 export async function clientRoomJoin(
   logger: Logger,
@@ -124,17 +125,19 @@ export async function clientPublish(
   createdAt: string
 ): Promise<void> {
   const session = socket.getUserData();
+  const publisher = getPublisher();
 
   logger.debug(`Client publish event`, { session });
 
+  const { appPid, permissions } = session;
   const { roomId, event, data: messageData } = data;
 
-  const nspRoomId = getNspRoomId(session.appPid, roomId);
+  const nspRoomId = getNspRoomId(appPid, roomId);
   const nspEvent = getNspEvent(nspRoomId, event);
   const latencyLog = getLatencyLog(createdAt);
 
   try {
-    permissionsGuard(roomId, DsPermission.PUBLISH, session.permissions);
+    permissionsGuard(roomId, DsPermission.PUBLISH, permissions);
 
     const reducedSession = getReducedSession(session);
 
@@ -156,6 +159,7 @@ export async function clientPublish(
 
     const webhookData = {
       ...messageData,
+      id: messageId,
       roomId,
       event
     };
@@ -167,11 +171,20 @@ export async function clientPublish(
 
     const amqpManager = AmqpManager.getInstance();
 
-    amqpManager.dispatchHandler
+    const processedMessageData = amqpManager.dispatchHandler
       .to(nspRoomId)
       .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
 
-    await addRoomHistoryMessage(redisClient, nspRoomId, extendedMessageData);
+    const persistedMessageData = {
+      roomId,
+      event,
+      message: processedMessageData
+    };
+
+    await addMessageToCache(logger, redisClient, persistedMessageData);
+    await enqueueMessageForPersistence(logger, publisher, persistedMessageData);
+
+    // TODO: pass logger to enqueueWebhookEvent
     await enqueueWebhookEvent(
       WebhookEvent.ROOM_PUBLISH,
       webhookData,

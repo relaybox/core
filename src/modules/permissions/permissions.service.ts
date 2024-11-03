@@ -1,4 +1,8 @@
+import { ForbiddenError } from '@/lib/errors';
 import { DsPermission, DsPermissions } from '@/types/permissions.types';
+import { PoolClient } from 'pg';
+import { Logger } from 'winston';
+import * as db from './permissions.db';
 
 export function matchRoomPermissions(roomId: string, permissions: DsPermissions): string[] {
   if (Array.isArray(permissions)) {
@@ -46,4 +50,40 @@ export function hasPermission(
   }
 
   return false;
+}
+
+export async function getPermissions(
+  logger: Logger,
+  pgClient: PoolClient,
+  keyId: string
+): Promise<DsPermissions | string[]> {
+  logger.debug(`Getting permissions for key id ${keyId}`);
+
+  const { rows } = await db.getPermissionsByKeyId(pgClient, keyId);
+
+  if (!rows.length) {
+    throw new ForbiddenError(`Permissions for key ${keyId} not found`);
+  }
+
+  return formatPermissions(rows);
+}
+
+export function formatPermissions(
+  rows: { pattern: string; permission: string }[]
+): DsPermissions | string[] {
+  if (rows[0].pattern === null) {
+    return rows.map((row) => row.permission);
+  }
+
+  const response = {} as Record<string, string[]>;
+
+  for (const row of rows) {
+    if (!response[row.pattern]) {
+      response[row.pattern] = [];
+    }
+
+    response[row.pattern].push(row.permission);
+  }
+
+  return response;
 }

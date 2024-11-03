@@ -133,35 +133,6 @@ export function emit(socket: WebSocket<Session>, type: ServerEvent, body: any): 
   socket.send(data);
 }
 
-export async function handleSocketMessage(
-  socket: WebSocket<Session>,
-  redisClient: RedisClient,
-  message: ArrayBuffer,
-  isBinary: boolean,
-  app: TemplatedApp
-): Promise<void> {
-  try {
-    const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
-
-    if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {
-      handleByteLengthError(socket, ackId);
-    }
-
-    const handler = eventHandlersMap[type as ClientEvent];
-
-    if (!handler) {
-      logger.error(`Event ${type} not recognized`, { type, ackId });
-      return;
-    }
-
-    const res = ackHandler(socket, ackId);
-
-    return handler(logger, redisClient, socket, body, res, createdAt);
-  } catch (err: any) {
-    logger.error(`Failed to handle socket message`, { err });
-  }
-}
-
 export function ackHandler(socket: WebSocket<Session>, ackId: string) {
   return function (data: any, err?: DsErrorResponse) {
     try {
@@ -183,6 +154,57 @@ export function handleByteLengthError(socket: WebSocket<Session>, ackId: string)
 
   throw new Error(message);
 }
+
+// export async function handleSocketMessage(
+//   socket: WebSocket<Session>,
+//   redisClient: RedisClient,
+//   message: ArrayBuffer,
+//   isBinary: boolean,
+//   app: TemplatedApp
+// ): Promise<void> {
+//   try {
+//     const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
+
+//     if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {
+//       handleByteLengthError(socket, ackId);
+//     }
+
+//     const handler = eventHandlersMap[type as ClientEvent];
+
+//     if (!handler) {
+//       logger.error(`Event ${type} not recognized`, { type, ackId });
+//       return;
+//     }
+
+//     const res = ackHandler(socket, ackId);
+
+//     return handler(logger, redisClient, socket, body, res, createdAt);
+//   } catch (err: any) {
+//     logger.error(`Failed to handle socket message`, { err });
+//   }
+// }
+
+// export function ackHandler(socket: WebSocket<Session>, ackId: string) {
+//   return function (data: any, err?: DsErrorResponse) {
+//     try {
+//       emit(socket, ServerEvent.MESSAGE_ACKNOWLEDGED, { ackId, data, err });
+//     } catch (err: any) {
+//       logger.error(`Failed to send message acknowledgment`, { err });
+//     }
+//   };
+// }
+
+// export function handleByteLengthError(socket: WebSocket<Session>, ackId: string) {
+//   const res = ackHandler(socket, ackId);
+
+//   const message = `Message size exceeds maximum allowed size (${MESSAGE_MAX_BYTE_LENGTH})`;
+
+//   if (res) {
+//     res(null, { message });
+//   }
+
+//   throw new Error(message);
+// }
 
 export async function handleDisconnect(
   socket: WebSocket<Session>,

@@ -1,4 +1,4 @@
-import { ClientEvent } from '@/types/event.types';
+import { ClientEvent, ServerEvent } from '@/types/event.types';
 import { rateLimitMiddleware } from './websocket.middleware';
 import {
   clientAuthUserStatusUpdate,
@@ -28,6 +28,11 @@ import {
 import { handler as clientRoomJoin } from '@/modules/room/handlers/room-join.handler';
 import { handler as clientRoomLeave } from '@/modules/room/handlers/room-leave.handler';
 import { handler as clientPublish } from '@/modules/room/handlers/room-publish.handler';
+import { TemplatedApp, WebSocket } from 'uWebSockets.js';
+import { Session } from '@/types/session.types';
+import { RedisClient } from '@/lib/redis';
+import { ackHandler, emit, handleByteLengthError } from './websocket.service';
+import { getLogger } from '@/util/logger';
 
 export const eventHandlersMap = {
   [ClientEvent.ROOM_JOIN]: clientRoomJoin,
@@ -50,3 +55,39 @@ export const eventHandlersMap = {
   [ClientEvent.AUTH_USER_UNSUBSCRIBE_ALL]: clientAuthUserUnsubscribeAll,
   [ClientEvent.AUTH_USER_STATUS_UPDATE]: clientAuthUserStatusUpdate
 };
+
+const logger = getLogger('websocket-router');
+
+const decoder = new TextDecoder('utf-8');
+
+const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
+
+export async function handleSocketMessage(
+  socket: WebSocket<Session>,
+  redisClient: RedisClient,
+  message: ArrayBuffer,
+  isBinary: boolean,
+  app: TemplatedApp
+): Promise<void> {
+  try {
+    const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
+
+    // IMPLEMENT AS MIDDLEWARE!!!!
+    if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {
+      handleByteLengthError(socket, ackId);
+    }
+
+    const handler = eventHandlersMap[type as ClientEvent];
+
+    if (!handler) {
+      logger.error(`Event ${type} not recognized`, { type, ackId });
+      return;
+    }
+
+    const res = ackHandler(socket, ackId);
+
+    return handler(logger, redisClient, socket, body, res, createdAt);
+  } catch (err: any) {
+    logger.error(`Failed to handle socket message`, { err });
+  }
+}

@@ -7,7 +7,7 @@ import {
   handleClientHeartbeat,
   handleConnectionUpgrade,
   handleDisconnect,
-  handleSocketMessage,
+  // handleSocketMessage,
   handleSocketOpen,
   handleSubscriptionBindings
 } from '@/modules/websocket/websocket.service';
@@ -23,6 +23,10 @@ import { handleClientEvent } from './modules/events/events.handlers';
 import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
 import { compose } from '@/lib/middleware';
 import { verifyAuthToken } from './modules/auth/auth.middleware';
+import { handleSocketMessage } from './modules/websocket/websocket.router';
+import { createServices } from './lib/services';
+import { createEventHandlersMap } from './lib/handlers';
+import { createRouter } from './lib/router';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -31,11 +35,14 @@ const LISTEN_EXCLUSIVE_PORT = 1;
 const WS_MAX_LIFETIME_MINS = 60;
 
 const logger = getLogger('core-socket-server');
-const pgPool = getPgPool();
-const redisClient = getRedisClient();
-const publisher = getPublisher();
 
 const app = App();
+
+const services = createServices(app, CONTAINER_HOSTNAME);
+const eventHandlersMap = createEventHandlersMap(services);
+const router = createRouter(eventHandlersMap);
+
+console.log(router);
 
 app.options('/*', (res: HttpResponse) => {
   const corsReponse = getCorsResponse(res);
@@ -46,11 +53,14 @@ app.get('/', (res: HttpResponse) => {
   res.end(process.uptime().toString());
 });
 
-app.post('/events', compose(handleClientEvent(pgPool!, redisClient)));
+app.post('/events', compose(handleClientEvent(services.pgPool!, services.redisClient)));
 
 app.get(
   '/history/:roomId/messages',
-  compose(verifyAuthToken(logger, pgPool), getHistoryMessages(pgPool!, redisClient!))
+  compose(
+    verifyAuthToken(logger, services.pgPool),
+    getHistoryMessages(services.pgPool!, services.redisClient!)
+  )
 );
 
 app.ws('/*', {
@@ -59,13 +69,14 @@ app.ws('/*', {
   sendPingsAutomatically: true,
   subscription: handleSubscriptionBindings,
   upgrade: handleConnectionUpgrade,
-  open: (socket: WebSocket<Session>) => handleSocketOpen(socket, redisClient),
+  open: (socket: WebSocket<Session>) => handleSocketOpen(socket, services.redisClient),
   pong: handleClientHeartbeat,
-  message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
-    handleSocketMessage(socket, redisClient, message, isBinary, app);
-  },
+  message: router,
+  // message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
+  //   handleSocketMessage(socket, services.redisClient, message, isBinary, app);
+  // },
   close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
-    handleDisconnect(socket, redisClient, code, message, CONTAINER_HOSTNAME);
+    handleDisconnect(socket, services.redisClient, code, message, CONTAINER_HOSTNAME);
   }
 });
 

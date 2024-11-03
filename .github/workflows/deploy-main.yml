@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/20241027_persistent_history
 
 jobs:
   test:

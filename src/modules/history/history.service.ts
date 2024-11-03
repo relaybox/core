@@ -76,7 +76,7 @@ export function parseMessages(messages: any[]): Message[] {
 
     return {
       id,
-      body,
+      body: body.$,
       sender: {
         clientId,
         connectionId,

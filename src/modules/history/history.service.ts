@@ -9,7 +9,7 @@ import { RedisClient } from '@/lib/redis';
 import { PersistedMessage } from '@/types/data.types';
 import { KeyPrefix } from '@/types/state.types';
 import { ParsedHttpRequest } from '@/lib/middleware';
-import { AMQP_EXCHANGE_NAME, AMQP_ROUTING_KEY, getPublisher } from '@/lib/publisher';
+import { AMQP_EXCHANGE_NAME, AMQP_ROUTING_KEY } from '@/lib/publisher';
 import { Envelope, Publisher } from 'rabbitmq-client';
 
 export const HISTORY_MAX_LIMIT = 100;
@@ -242,5 +242,6 @@ export async function enqueueMessageForPersistence(
     await publisher.send(envelope, message);
   } catch (err: unknown) {
     logger.error(`Failed to enqueue message`, { err });
+    throw err;
   }
 }

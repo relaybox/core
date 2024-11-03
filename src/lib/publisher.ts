@@ -9,8 +9,6 @@ export const AMQP_QUEUE_TYPE = 'direct';
 export const AMQP_MAX_RETRY_ATTEMPTS = 2;
 export const AMQP_ROUTING_KEY = 'message.persist';
 
-const connection = new Connection(AMQP_CONNECTION_STRING);
-
 let publisher: Publisher | null = null;
 
 export function getPublisher(): Publisher {
@@ -19,6 +17,8 @@ export function getPublisher(): Publisher {
   }
 
   logger.info('Creating amqp publisher');
+
+  const connection = new Connection(AMQP_CONNECTION_STRING);
 
   const publisherOptions: PublisherProps = {
     confirm: true,

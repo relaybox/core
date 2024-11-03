@@ -10,7 +10,7 @@ import { PersistedMessage } from '@/types/data.types';
 import { KeyPrefix } from '@/types/state.types';
 import { ParsedHttpRequest } from '@/lib/middleware';
 import { AMQP_EXCHANGE_NAME, AMQP_ROUTING_KEY, getPublisher } from '@/lib/publisher';
-import { Envelope } from 'rabbitmq-client';
+import { Envelope, Publisher } from 'rabbitmq-client';
 
 export const HISTORY_MAX_LIMIT = 100;
 export const HISTORY_CACHED_MESSAGE_TTL_SECS = 60;
@@ -222,15 +222,12 @@ export function decodeNextPageToken(token: string): HistoryNextPageTokenData | n
   return JSON.parse(Buffer.from(token, NEXT_PAGE_TOKEN_ENCODING).toString());
 }
 
-export async function enqueueMessageForPersistence(logger: Logger, data: any): Promise<void> {
+export async function enqueueMessageForPersistence(
+  logger: Logger,
+  publisher: Publisher,
+  data: any
+): Promise<void> {
   logger.debug(`Enqueuing message`, { data });
-
-  const publisher = getPublisher();
-
-  if (!publisher) {
-    logger.error(`Publisher not initialized`);
-    return;
-  }
 
   try {
     const envelope: Envelope = {

@@ -19,6 +19,7 @@ import {
 } from '@/modules/auth/auth.service';
 import { getPermissions } from '@/modules/permissions/permissions.service';
 import { addMessageToCache, enqueueMessageForPersistence } from '../history/history.service';
+import { getPublisher } from '@/lib/publisher';
 
 const logger = getLogger('event');
 
@@ -31,6 +32,7 @@ export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpM
     logger.info('Publishing event', { requestId });
 
     const pgClient = await pgPool.connect();
+    const publisher = getPublisher();
 
     try {
       const publicKey = req.headers['x-ds-public-key'];
@@ -95,7 +97,7 @@ export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpM
       };
 
       await addMessageToCache(logger, redisClient, persistedMessageData);
-      await enqueueMessageForPersistence(logger, persistedMessageData);
+      await enqueueMessageForPersistence(logger, publisher, persistedMessageData);
 
       res.cork(() =>
         getSuccessResponse(res, {

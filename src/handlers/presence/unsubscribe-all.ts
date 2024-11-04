@@ -27,6 +27,7 @@ export function handler({ redisClient }: Services) {
 
     try {
       await unbindAllSubscriptions(
+        logger,
         redisClient,
         connectionId,
         nspRoomId,

@@ -38,6 +38,7 @@ export function handler({ redisClient }: Services) {
       permissionsGuard(roomId, DsPermission.METRICS, permissions);
 
       await bindSubscription(
+        logger,
         redisClient,
         connectionId,
         nspRoomId,

@@ -10,8 +10,6 @@ import { LatencyLog } from 'src/types/request.types';
 import { RedisClient } from 'src/lib/redis';
 import { isActiveMember } from '@/modules/presence/presence.service';
 
-const logger = getLogger('metrics');
-
 export function publishMetric(
   uid: string,
   nspRoomId: string,

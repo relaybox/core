@@ -34,6 +34,7 @@ export function handler({ redisClient }: Services) {
 
       await roomMemberGuard(logger, redisClient, connectionId, nspRoomId);
       await bindSubscription(
+        logger,
         redisClient,
         connectionId,
         nspRoomId,

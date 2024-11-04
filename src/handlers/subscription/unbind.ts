@@ -33,6 +33,7 @@ export function handler({ redisClient }: Services) {
     try {
       if (!event) {
         await unbindAllSubscriptions(
+          logger,
           redisClient,
           connectionId,
           nspRoomId,
@@ -42,6 +43,7 @@ export function handler({ redisClient }: Services) {
         res(nspRoomId);
       } else {
         await unbindSubscription(
+          logger,
           redisClient,
           connectionId,
           nspRoomId,

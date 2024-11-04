@@ -79,6 +79,7 @@ export async function restoreCachedRooms(
           Promise.all([
             joinRoom(logger, redisClient, session, nspRoomId, socket),
             restoreRoomSubscriptions(
+              logger,
               redisClient,
               connectionId,
               nspRoomId,
@@ -86,6 +87,7 @@ export async function restoreCachedRooms(
               socket
             ),
             restoreRoomSubscriptions(
+              logger,
               redisClient,
               connectionId,
               nspRoomId,
@@ -93,6 +95,7 @@ export async function restoreCachedRooms(
               socket
             ),
             restoreRoomSubscriptions(
+              logger,
               redisClient,
               connectionId,
               nspRoomId,

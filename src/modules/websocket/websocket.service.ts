@@ -12,7 +12,7 @@ import {
 import { getLogger } from '@/util/logger';
 import { v4 as uuid } from 'uuid';
 import { Session } from '@/types/session.types';
-import { ClientEvent, ServerEvent } from '@/types/event.types';
+import { ServerEvent } from '@/types/event.types';
 import {
   SocketConnectionEventType,
   SocketDisconnectReason,
@@ -22,16 +22,9 @@ import { RedisClient } from '@/lib/redis';
 import { DsErrorResponse } from '@/types/request.types';
 import { eventEmitter } from '@/lib/event-bus';
 import { getQueryParamRealValue } from '@/util/helpers';
-import {
-  HttpRequest,
-  HttpResponse,
-  TemplatedApp,
-  us_socket_context_t,
-  WebSocket
-} from 'uWebSockets.js';
+import { HttpRequest, HttpResponse, us_socket_context_t, WebSocket } from 'uWebSockets.js';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { KeyPrefix, KeySuffix } from '@/types/state.types';
-import { eventHandlersMap } from './websocket.handlers';
 import * as repository from './websocket.repository';
 import { ConnectionAuth } from '@/types/auth.types';
 
@@ -66,7 +59,7 @@ export function handleConnectionUpgrade(
   const secWebsocketProtocol = req.getHeader('sec-websocket-protocol');
   const secWebsocketExtensions = req.getHeader('sec-websocket-extensions');
 
-  initializeSession(connectionAuthParams)
+  initializeSession(logger, connectionAuthParams)
     .then((verifiedSession: Session) => {
       verifiedSession.socketId = uuid();
 
@@ -104,10 +97,15 @@ export async function handleSocketOpen(
 
     logger.debug(`Socket connect event, ${connectionId}`, verifiedSession);
 
-    await setSessionActive(verifiedSession, socket);
-    await markSessionUserActive(appPid, uid);
-    await restoreSession(redisClient, verifiedSession, socket);
-    await recordConnnectionEvent(verifiedSession, socket, SocketConnectionEventType.CONNECT);
+    await setSessionActive(logger, verifiedSession, socket);
+    await markSessionUserActive(logger, appPid, uid);
+    await restoreSession(logger, redisClient, verifiedSession, socket);
+    await recordConnnectionEvent(
+      logger,
+      verifiedSession,
+      socket,
+      SocketConnectionEventType.CONNECT
+    );
 
     logger.info(
       `Session initialization complete, emitting CONNECTION_ACKNOWLEDGED (${connectionId})`,
@@ -223,10 +221,10 @@ export async function handleDisconnect(
   try {
     logger.info(`Socket disconnection event: ${code}`, { session });
 
-    await clearSessionMetrics(redisClient, session);
-    await markSessionForDeletion(session, serverInstanceId);
-    await markSessionUserInactive(session, serverInstanceId);
-    await recordConnnectionEvent(session, socket, SocketConnectionEventType.DISCONNECT);
+    await clearSessionMetrics(logger, redisClient, session);
+    await markSessionForDeletion(logger, session, serverInstanceId);
+    await markSessionUserInactive(logger, session, serverInstanceId);
+    await recordConnnectionEvent(logger, session, socket, SocketConnectionEventType.DISCONNECT);
   } catch (err: any) {
     logger.error(`Failed to perform session clean up`, { err });
   }
@@ -273,7 +271,7 @@ export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise
   });
 
   try {
-    await setSessionActive(session, socket);
+    await setSessionActive(logger, session, socket);
   } catch (err: any) {
     logger.error(`Failed to set session heartbeat`, { session });
   }

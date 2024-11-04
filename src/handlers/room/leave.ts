@@ -53,14 +53,29 @@ export function handler({ redisClient }: Services) {
         leaveRoom(logger, redisClient, session, nspRoomRoutingKey, socket),
         removeActiveMember(uid, nspRoomId, presenceSubsciption, session, presenceLeaveMessage),
         unbindAllSubscriptions(
+          logger,
           redisClient,
           connectionId,
           nspRoomId,
           KeyNamespace.SUBSCRIPTIONS,
           socket
         ),
-        unbindAllSubscriptions(redisClient, connectionId, nspRoomId, KeyNamespace.PRESENCE, socket),
-        unbindAllSubscriptions(redisClient, connectionId, nspRoomId, KeyNamespace.METRICS, socket),
+        unbindAllSubscriptions(
+          logger,
+          redisClient,
+          connectionId,
+          nspRoomId,
+          KeyNamespace.PRESENCE,
+          socket
+        ),
+        unbindAllSubscriptions(
+          logger,
+          redisClient,
+          connectionId,
+          nspRoomId,
+          KeyNamespace.METRICS,
+          socket
+        ),
         pushRoomLeaveMetrics(uid, nspRoomId, session),
         enqueueWebhookEvent(WebhookEvent.ROOM_LEAVE, webhookdata, session)
       ]);

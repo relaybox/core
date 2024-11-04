@@ -13,12 +13,12 @@ import {
 import { Session } from '@/types/session.types';
 import { getHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
-import { handleClientEvent } from './modules/events/events.handlers';
 import { compose } from '@/lib/middleware';
 import { verifyAuthToken } from './modules/auth/auth.middleware';
 import { createEventHandlersMap } from './lib/handlers';
 import { createRouter } from './lib/router';
 import Services from './lib/services';
+import { handler as handleClientEvent } from '@/handlers/events/post';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -31,7 +31,7 @@ const logger = getLogger('core-socket-server');
 const app = App();
 const services = new Services(logger, app, CONTAINER_HOSTNAME);
 const eventHandlersMap = createEventHandlersMap(services);
-const router = createRouter(eventHandlersMap);
+const eventRouter = createRouter(eventHandlersMap);
 
 app.options('/*', (res: HttpResponse) => {
   const corsReponse = getCorsResponse(res);
@@ -60,7 +60,7 @@ app.ws('/*', {
   upgrade: handleConnectionUpgrade,
   open: (socket: WebSocket<Session>) => handleSocketOpen(socket, services.redisClient),
   pong: handleClientHeartbeat,
-  message: router,
+  message: eventRouter,
   close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
     handleDisconnect(socket, services.redisClient, code, message, CONTAINER_HOSTNAME);
   }

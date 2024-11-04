@@ -1,6 +1,5 @@
 import { WebSocket } from 'uWebSockets.js';
 import { KeyNamespace, KeyPrefix } from '@/types/state.types';
-import { getLogger } from '@/util/logger';
 import {
   createSubscription,
   deleteSubscription,
@@ -8,8 +7,7 @@ import {
 } from './subscription.repository';
 import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
-
-const logger = getLogger('subscription');
+import { Logger } from 'winston';
 
 function getSubscriptionKeyName(
   connectionId: string,
@@ -20,6 +18,7 @@ function getSubscriptionKeyName(
 }
 
 export async function bindSubscription(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,
@@ -41,6 +40,7 @@ export async function bindSubscription(
 }
 
 export async function unbindSubscription(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,
@@ -65,6 +65,7 @@ export async function unbindSubscription(
 }
 
 export async function unbindAllSubscriptions(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,
@@ -85,7 +86,14 @@ export async function unbindAllSubscriptions(
     if (subscriptions) {
       await Promise.all(
         subscriptions.map(async (subscription) =>
-          unbindSubscription(redisClient, connectionId, nspRoomId, subscription, keyNamespace)
+          unbindSubscription(
+            logger,
+            redisClient,
+            connectionId,
+            nspRoomId,
+            subscription,
+            keyNamespace
+          )
         )
       );
     }
@@ -96,6 +104,7 @@ export async function unbindAllSubscriptions(
 }
 
 export async function restoreRoomSubscriptions(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,

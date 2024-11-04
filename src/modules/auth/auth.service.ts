@@ -3,21 +3,22 @@ import { Session } from '@/types/session.types';
 import { request } from '@/util/request';
 import { Logger } from 'winston';
 import { PoolClient } from 'pg';
-import { ForbiddenError, TokenError, UnauthorizedError } from '@/lib/errors';
+import { TokenError, UnauthorizedError } from '@/lib/errors';
 import * as db from './auth.db';
 import jwt, { JsonWebTokenError } from 'jsonwebtoken';
 import { createHmac } from 'crypto';
-import { DsPermissions } from '@/types/permissions.types';
 import { ExtendedClientJwtPayload } from '@/types/auth.types';
-
-const logger = getLogger('auth');
 
 const RELAYBOX_AUTH_SERVICE_URL = process.env.RELAYBOX_AUTH_SERVICE_URL;
 const SIGNATURE_HASHING_ALGORITHM = 'sha256';
 const SIGNATURE_BUFFER_ENCODING = 'utf-8';
 const SIGNATURE_DIGEST = 'hex';
 
-export async function verifyAuthToken(token: string, connectionId?: string): Promise<Session> {
+export async function verifyAuthToken(
+  logger: Logger,
+  token: string,
+  connectionId?: string
+): Promise<Session> {
   if (!token) {
     throw new Error('Auth token verification failed');
   }
@@ -40,6 +41,7 @@ export async function verifyAuthToken(token: string, connectionId?: string): Pro
 }
 
 export async function verifyApiKey(
+  logger: Logger,
   apiKey: string,
   clientId?: string,
   connectionId?: string

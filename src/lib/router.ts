@@ -14,8 +14,8 @@ export type SocketMessageHandler = (
   isBinary: boolean
 ) => void;
 
-export function createRouter(handlersMap: Record<string, Function>): SocketMessageHandler {
-  logger.info(`Creating router`, { handlersMap });
+export function createRouter(eventHandlersMap: Record<string, Function>): SocketMessageHandler {
+  logger.info(`Creating router`, { eventHandlersMap });
 
   return function (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) {
     try {
@@ -24,7 +24,7 @@ export function createRouter(handlersMap: Record<string, Function>): SocketMessa
 
       logger.debug(`Handling socket message`, { type, ackId });
 
-      const handler = handlersMap[type as ClientEvent];
+      const handler = eventHandlersMap[type as ClientEvent];
 
       if (!handler) {
         logger.error(`Event ${type} not recognized`, { type, ackId });

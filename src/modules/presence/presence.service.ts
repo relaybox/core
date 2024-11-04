@@ -3,7 +3,7 @@ import { getReducedSession } from '@/modules/session/session.service';
 import { Session } from '@/types/session.types';
 import { Job } from 'bullmq';
 import { RedisClient } from '@/lib/redis';
-import * as repository from './presence.repository';
+import * as cache from './presence.cache';
 import { LatencyLog } from '@/types/request.types';
 
 export function addActiveMember(
@@ -73,11 +73,11 @@ export function updateActiveMember(
 }
 
 export function getActiveMembers(redisClient: RedisClient, nspRoomId: string): Promise<any[]> {
-  return repository.getActiveMembersByRoomId(redisClient, nspRoomId);
+  return cache.getActiveMembersByRoomId(redisClient, nspRoomId);
 }
 
 export function getActiveMemberCount(redisClient: RedisClient, nspRoomId: string): Promise<number> {
-  return repository.getActiveMemberCountByRoomId(redisClient, nspRoomId);
+  return cache.getActiveMemberCountByRoomId(redisClient, nspRoomId);
 }
 
 export async function isActiveMember(
@@ -85,7 +85,7 @@ export async function isActiveMember(
   uid: string,
   nspRoomId: string
 ): Promise<boolean> {
-  const activeMember = await repository.isActiveMember(redisClient, uid, nspRoomId);
+  const activeMember = await cache.isActiveMember(redisClient, uid, nspRoomId);
 
   return !!activeMember;
 }

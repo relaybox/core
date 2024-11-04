@@ -1,4 +1,3 @@
-import { getLogger } from '@/util/logger';
 import { ReducedSession, Session } from '@/types/session.types';
 import { pushRoomLeaveMetrics } from '@/modules/metrics/metrics.service';
 import { verifyApiKey, verifyAuthToken } from '@/modules/auth/auth.service';

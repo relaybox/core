@@ -1,7 +1,7 @@
 import { RedisClient } from '@/lib/redis';
 import { KeyNamespace, KeyPrefix } from '@/types/state.types';
 import { Logger } from 'winston';
-import * as repository from './user.repository';
+import * as cache from './user.cache';
 import { WebSocket } from 'uWebSockets.js';
 import { Session } from '@/types/session.types';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
@@ -36,7 +36,7 @@ export async function pushUserSubscription(
 
   try {
     const key = getUserHashKeyName(connectionId);
-    await repository.pushUserSubscription(redisClient, key, clientId);
+    await cache.pushUserSubscription(redisClient, key, clientId);
     socket.subscribe(userRoutingKey);
   } catch (err: any) {
     logger.error(`Failed to push user subscription`, { err });
@@ -66,9 +66,9 @@ export async function bindUserSubscription(
 
   try {
     const key = getUserSubscriptionKeyName(connectionId, nspClientId);
-    await repository.bindUserSubscription(redisClient, key, subscription);
+    await cache.bindUserSubscription(redisClient, key, subscription);
     socket.subscribe(subscription);
-    return repository.getUserSubscriptionCount(redisClient, key);
+    return cache.getUserSubscriptionCount(redisClient, key);
   } catch (err: any) {
     logger.error(`Failed to push user subscription`, { err });
     throw err;
@@ -87,7 +87,7 @@ export async function removeUserSubscription(
 
   try {
     const key = getUserHashKeyName(connectionId);
-    await repository.removeUserSubscription(redisClient, key, clientId);
+    await cache.removeUserSubscription(redisClient, key, clientId);
     socket.unsubscribe(userRoutingKey);
   } catch (err: any) {
     logger.error(`Failed to remove user subscription`, { err });
@@ -107,9 +107,9 @@ export async function unbindUserSubscription(
 
   try {
     const key = getUserSubscriptionKeyName(connectionId, nspClientId);
-    await repository.unbindUserSubscription(redisClient, key, subscription);
+    await cache.unbindUserSubscription(redisClient, key, subscription);
     socket.unsubscribe(subscription);
-    return repository.getUserSubscriptionCount(redisClient, key);
+    return cache.getUserSubscriptionCount(redisClient, key);
   } catch (err: any) {
     logger.error(`Failed to push user subscription`, { err });
     throw err;
@@ -126,7 +126,7 @@ export async function getUserSubscriptions(
 
   try {
     const key = getUserSubscriptionKeyName(connectionId, nspClientId);
-    const subscriptions = await repository.getUserSubscriptions(redisClient, key);
+    const subscriptions = await cache.getUserSubscriptions(redisClient, key);
     return Object.keys(subscriptions);
   } catch (err: any) {
     logger.error(`Failed to get user subscriptions`, { err });
@@ -140,7 +140,7 @@ export async function getCachedUsers(
 ): Promise<string[]> {
   try {
     const key = getUserHashKeyName(connectionId);
-    const users = await repository.getCachedUsers(redisClient, key);
+    const users = await cache.getCachedUsers(redisClient, key);
     return Object.keys(users);
   } catch (err: any) {
     throw err;

@@ -1,10 +1,6 @@
 import { WebSocket } from 'uWebSockets.js';
 import { KeyNamespace, KeyPrefix } from '@/types/state.types';
-import {
-  createSubscription,
-  deleteSubscription,
-  getAllSubscriptions
-} from './subscription.repository';
+import * as cache from './subscription.cache';
 import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
 import { Logger } from 'winston';
@@ -31,7 +27,7 @@ export async function bindSubscription(
   logger.debug(`Binding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
 
   try {
-    await createSubscription(redisClient, key, subscription);
+    await cache.createSubscription(redisClient, key, subscription);
     socket.subscribe(subscription);
   } catch (err: any) {
     logger.error(`Failed to bind subscription`, { key, err });
@@ -53,7 +49,7 @@ export async function unbindSubscription(
   logger.debug(`Unbinding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
 
   try {
-    await deleteSubscription(redisClient, key, subscription);
+    await cache.deleteSubscription(redisClient, key, subscription);
 
     if (socket) {
       socket.unsubscribe(subscription);
@@ -77,7 +73,7 @@ export async function unbindAllSubscriptions(
   logger.debug(`Unbinding all subscriptions`, { connectionId, keyNamespace, nspRoomId });
 
   try {
-    const subscriptions = await getAllSubscriptions(redisClient, key);
+    const subscriptions = await cache.getAllSubscriptions(redisClient, key);
 
     if (socket) {
       subscriptions.forEach((subscription) => socket.unsubscribe(subscription));
@@ -116,7 +112,7 @@ export async function restoreRoomSubscriptions(
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
   try {
-    const subscriptions = await getAllSubscriptions(redisClient, key);
+    const subscriptions = await cache.getAllSubscriptions(redisClient, key);
     subscriptions.forEach((subscription) => socket.subscribe(subscription));
   } catch (err: any) {
     logger.error(`Failed to restore subscriptions for ${connectionId}`, { key, err });

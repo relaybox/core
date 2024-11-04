@@ -42,8 +42,6 @@ const services = createServices(app, CONTAINER_HOSTNAME);
 const eventHandlersMap = createEventHandlersMap(services);
 const router = createRouter(eventHandlersMap);
 
-console.log(router);
-
 app.options('/*', (res: HttpResponse) => {
   const corsReponse = getCorsResponse(res);
   corsReponse.end();

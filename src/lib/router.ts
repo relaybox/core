@@ -9,7 +9,7 @@ const logger = getLogger('router');
 const decoder = new TextDecoder('utf-8');
 
 export function createRouter(handlersMap: Record<string, Function>) {
-  console.log(handlersMap);
+  logger.info(`Creating router`, { handlersMap });
 
   return function (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) {
     logger.debug(`Handling socket message`);
@@ -31,7 +31,7 @@ export function createRouter(handlersMap: Record<string, Function>) {
 
       const res = ackHandler(socket, ackId);
 
-      return handler(socket, body, res);
+      return handler(socket, body, res, createdAt);
     } catch (err: any) {
       logger.error(`Failed to handle socket message`, { err });
     }

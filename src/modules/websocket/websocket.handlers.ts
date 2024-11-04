@@ -25,9 +25,9 @@ import {
   clientMetricsSubscribe,
   clientMetricsUnsubscribe
 } from '@/modules/metrics/metrics.handlers';
-import { handler as clientRoomJoin } from '@/modules/room/handlers/room-join.handler';
-import { handler as clientRoomLeave } from '@/modules/room/handlers/room-leave.handler';
-import { handler as clientPublish } from '@/modules/room/handlers/room-publish.handler';
+import { handler as clientRoomJoin } from '@/handlers/room/join';
+import { handler as clientRoomLeave } from '@/handlers/room/leave';
+import { handler as clientPublish } from '@/handlers/room/publish';
 
 export const eventHandlersMap = {
   [ClientEvent.ROOM_JOIN]: clientRoomJoin,

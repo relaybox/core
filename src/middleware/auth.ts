@@ -7,15 +7,12 @@ import {
   getSecretKey,
   parsePublicKey,
   verifyAuthTokenSignature
-} from './auth.service';
+} from '@/modules/auth/auth.service';
+import Services from '@/lib/services';
 
-export function verifyAuthToken(logger: Logger, pgPool: Pool | null): HttpMiddleware {
+export function verifyAuthToken(logger: Logger, { pgPool }: Services): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest, next: HttpMiddlewareNext) => {
-    if (!pgPool) {
-      throw new Error('Postgres pool not initialized');
-    }
-
-    const pgClient = await pgPool.connect();
+    const pgClient = await pgPool!.connect();
 
     try {
       const authHeader = req.headers['authorization'];

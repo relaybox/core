@@ -8,6 +8,9 @@ import {
   unbindAllSubscriptions,
   unbindSubscription
 } from '@/modules/subscription/subscription.service';
+import { getLogger } from '@/util/logger';
+
+const logger = getLogger('');
 
 const mockSubscriptionRepository = vi.hoisted(() => ({
   createSubscription: vi.fn(),
@@ -15,7 +18,7 @@ const mockSubscriptionRepository = vi.hoisted(() => ({
   getAllSubscriptions: vi.fn()
 }));
 
-vi.mock('@/modules/subscription/subscription.repository', () => mockSubscriptionRepository);
+vi.mock('@/modules/subscription/subscription.cache', () => mockSubscriptionRepository);
 
 describe('subscription.service', () => {
   let redisClient: RedisClient;
@@ -42,6 +45,7 @@ describe('subscription.service', () => {
       const expectedCacheKey = `${KeyPrefix.CONNECTION}:${connectionId}:${keyNamespace}:${nspRoomId}`;
 
       await bindSubscription(
+        logger,
         redisClient,
         connectionId,
         nspRoomId,
@@ -68,6 +72,7 @@ describe('subscription.service', () => {
       const expectedCacheKey = `${KeyPrefix.CONNECTION}:${connectionId}:${keyNamespace}:${nspRoomId}`;
 
       await unbindSubscription(
+        logger,
         redisClient,
         connectionId,
         nspRoomId,
@@ -97,7 +102,14 @@ describe('subscription.service', () => {
         'subscription:leave'
       ]);
 
-      await unbindAllSubscriptions(redisClient, connectionId, nspRoomId, keyNamespace, socket);
+      await unbindAllSubscriptions(
+        logger,
+        redisClient,
+        connectionId,
+        nspRoomId,
+        keyNamespace,
+        socket
+      );
 
       expect(mockSubscriptionRepository.getAllSubscriptions).toHaveBeenCalledWith(
         redisClient,

@@ -2,10 +2,7 @@ import { HttpResponse } from 'uWebSockets.js';
 import { getErrorResponse, getSuccessResponse } from '@/util/http';
 import { getLogger } from '@/util/logger';
 import { v4 as uuid } from 'uuid';
-import { RedisClient } from '@/lib/redis';
-import { Pool } from 'pg';
-import AmqpManager from '@/lib/amqp-manager/amqp-manager';
-import { getLatencyLog } from './events.service';
+import { getLatencyLog } from '@/modules/events/events.service';
 import { DsPermission } from '@/types/permissions.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
@@ -18,21 +15,20 @@ import {
   verifyTimestamp
 } from '@/modules/auth/auth.service';
 import { getPermissions } from '@/modules/permissions/permissions.service';
-import { addMessageToCache, enqueueMessageForPersistence } from '../history/history.service';
-import { getPublisher } from '@/lib/publisher';
+import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
+import Services from '@/lib/services';
 
 const logger = getLogger('event');
 
 const MAX_TIMESTAMP_DIFF_SECS = 30;
 
-export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpMiddleware {
+export function handler({ pgPool, redisClient, amqpManager, publisher }: Services): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
     const requestId = uuid();
 
     logger.info('Publishing event', { requestId });
 
-    const pgClient = await pgPool.connect();
-    const publisher = getPublisher();
+    const pgClient = await pgPool!.connect();
 
     try {
       const publicKey = req.headers['x-ds-public-key'];
@@ -83,8 +79,6 @@ export function handleClientEvent(pgPool: Pool, redisClient: RedisClient): HttpM
         timestamp: new Date().getTime(),
         event
       };
-
-      const amqpManager = AmqpManager.getInstance();
 
       const processedMessageData = amqpManager.dispatchHandler
         .to(nspRoomId)

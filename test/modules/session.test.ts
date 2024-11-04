@@ -60,12 +60,17 @@ describe('session.service', () => {
     it('should initialize a session with API key', async () => {
       mockAuthService.verifyApiKey.mockResolvedValue(session);
 
-      const result = await initializeSession({
+      const result = await initializeSession(logger, {
         apiKey: 'testKey',
         clientId: 'client1'
       });
 
-      expect(mockAuthService.verifyApiKey).toHaveBeenCalledWith('testKey', 'client1', undefined);
+      expect(mockAuthService.verifyApiKey).toHaveBeenCalledWith(
+        logger,
+        'testKey',
+        'client1',
+        undefined
+      );
       expect(result).toEqual(session);
     });
 
@@ -73,7 +78,7 @@ describe('session.service', () => {
       mockAuthService.verifyApiKey.mockRejectedValue(new Error('Invalid API Key'));
 
       await expect(
-        initializeSession({
+        initializeSession(logger, {
           apiKey: 'invalidKey',
           clientId: 'client1'
         })
@@ -83,12 +88,12 @@ describe('session.service', () => {
     it('should initialize session with Auth token', async () => {
       mockAuthService.verifyAuthToken.mockResolvedValue(session);
 
-      const result = await initializeSession({
+      const result = await initializeSession(logger, {
         token: 'validToken',
         connectionId: 'conn123'
       });
 
-      expect(mockAuthService.verifyAuthToken).toHaveBeenCalledWith('validToken', 'conn123');
+      expect(mockAuthService.verifyAuthToken).toHaveBeenCalledWith(logger, 'validToken', 'conn123');
       expect(result).toEqual(session);
     });
 
@@ -96,7 +101,7 @@ describe('session.service', () => {
       mockAuthService.verifyAuthToken.mockRejectedValue(new Error('Invalid Auth token'));
 
       await expect(
-        initializeSession({
+        initializeSession(logger, {
           token: 'invalidAuthToken',
           connectionId: '12345'
         })
@@ -117,7 +122,7 @@ describe('session.service', () => {
       mockRoomService.restoreCachedRooms.mockResolvedValueOnce(undefined);
       mockUserService.restoreCachedUsers.mockResolvedValueOnce(undefined);
 
-      await restoreSession(redisClient, session, socket);
+      await restoreSession(logger, redisClient, session, socket);
 
       expect(mockRoomService.restoreCachedRooms).toHaveBeenCalledWith(
         logger,
@@ -135,7 +140,9 @@ describe('session.service', () => {
 
     it('should log and throw an error if session restoration fails', async () => {
       mockRoomService.restoreCachedRooms.mockRejectedValueOnce(new Error('Redis error'));
-      await expect(restoreSession(redisClient, session, socket)).rejects.toThrow('Redis error');
+      await expect(restoreSession(logger, redisClient, session, socket)).rejects.toThrow(
+        'Redis error'
+      );
     });
   });
 
@@ -153,7 +160,7 @@ describe('session.service', () => {
       mockRoomService.getCachedRooms.mockResolvedValueOnce(mockRooms);
       mockMetricsService.pushRoomLeaveMetrics.mockResolvedValueOnce(undefined);
 
-      await clearSessionMetrics(redisClient, session);
+      await clearSessionMetrics(logger, redisClient, session);
 
       expect(mockRoomService.getCachedRooms).toHaveBeenCalledWith(
         logger,
@@ -176,7 +183,7 @@ describe('session.service', () => {
     it('should handle no rooms without pushing metrics', async () => {
       mockRoomService.getCachedRooms.mockResolvedValueOnce([]);
 
-      await clearSessionMetrics(redisClient, session);
+      await clearSessionMetrics(logger, redisClient, session);
 
       expect(mockRoomService.getCachedRooms).toHaveBeenCalledWith(
         logger,
@@ -188,7 +195,9 @@ describe('session.service', () => {
 
     it('should log and throw an error if getCachedRooms fails', async () => {
       mockRoomService.getCachedRooms.mockRejectedValueOnce(new Error('Redis error'));
-      await expect(clearSessionMetrics(redisClient, session)).rejects.toThrow('Redis error');
+      await expect(clearSessionMetrics(logger, redisClient, session)).rejects.toThrow(
+        'Redis error'
+      );
     });
   });
 
@@ -211,7 +220,7 @@ describe('session.service', () => {
         instanceId
       };
 
-      await markSessionForDeletion(session, instanceId);
+      await markSessionForDeletion(logger, session, instanceId);
 
       expect(mockQueue.getJob).toHaveBeenCalledWith(connectionId);
 
@@ -239,7 +248,7 @@ describe('session.service', () => {
         instanceId
       };
 
-      await markSessionForDeletion(session, instanceId);
+      await markSessionForDeletion(logger, session, instanceId);
 
       expect(existingJob.remove).toHaveBeenCalled();
 
@@ -257,7 +266,7 @@ describe('session.service', () => {
       mockQueue.getJob.mockResolvedValueOnce(null);
       mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
-      await expect(markSessionForDeletion(session, instanceId)).rejects.toThrow(
+      await expect(markSessionForDeletion(logger, session, instanceId)).rejects.toThrow(
         'Failed to add job'
       );
     });
@@ -280,7 +289,7 @@ describe('session.service', () => {
         instanceId
       };
 
-      await markSessionUserInactive(session, instanceId);
+      await markSessionUserInactive(logger, session, instanceId);
 
       const jobId = getNspJobId(session.appPid, uid);
 
@@ -298,7 +307,7 @@ describe('session.service', () => {
       mockQueue.getJob.mockResolvedValueOnce(null);
       mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
-      await expect(markSessionUserInactive(session, instanceId)).rejects.toThrow(
+      await expect(markSessionUserInactive(logger, session, instanceId)).rejects.toThrow(
         'Failed to add job'
       );
     });
@@ -318,7 +327,7 @@ describe('session.service', () => {
 
       mockQueue.getJob.mockResolvedValueOnce(existingJob);
 
-      await unmarkSessionForDeletion(connectionId);
+      await unmarkSessionForDeletion(logger, connectionId);
 
       expect(existingJob.remove).toHaveBeenCalled();
     });
@@ -326,7 +335,9 @@ describe('session.service', () => {
     it('should throw an error if removing a session destroy job fails', async () => {
       mockQueue.getJob.mockRejectedValueOnce(new Error('Failed to add job'));
 
-      await expect(unmarkSessionForDeletion(connectionId)).rejects.toThrow('Failed to add job');
+      await expect(unmarkSessionForDeletion(logger, connectionId)).rejects.toThrow(
+        'Failed to add job'
+      );
     });
   });
 
@@ -348,7 +359,7 @@ describe('session.service', () => {
       const appPid = session.appPid;
       const jobId = getNspJobId(appPid, uid);
 
-      await markSessionUserActive(appPid, uid);
+      await markSessionUserActive(logger, appPid, uid);
 
       expect(mockQueue.getJob).toHaveBeenCalledWith(jobId);
       expect(existingJob.remove).toHaveBeenCalled();
@@ -359,7 +370,7 @@ describe('session.service', () => {
 
       const appPid = session.appPid;
 
-      await expect(markSessionUserActive(appPid, uid)).rejects.toThrow('Failed to add job');
+      await expect(markSessionUserActive(logger, appPid, uid)).rejects.toThrow('Failed to add job');
     });
   });
 
@@ -382,7 +393,7 @@ describe('session.service', () => {
     });
 
     it('should add a session active job when active connection is established', async () => {
-      await setSessionActive(session, socket);
+      await setSessionActive(logger, session, socket);
 
       const { permissions, ...rest } = session;
 
@@ -402,7 +413,7 @@ describe('session.service', () => {
     it('should throw an error if adding set session active job fails', async () => {
       mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
-      await expect(setSessionActive(session, socket)).rejects.toThrow('Failed to add job');
+      await expect(setSessionActive(logger, session, socket)).rejects.toThrow('Failed to add job');
     });
   });
 
@@ -443,7 +454,7 @@ describe('session.service', () => {
         ...connectionEvent
       };
 
-      await recordConnnectionEvent(session, socket, connectionEventType);
+      await recordConnnectionEvent(logger, session, socket, connectionEventType);
 
       expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_SOCKET_CONNECTION_EVENT,
@@ -455,7 +466,7 @@ describe('session.service', () => {
     it('should throw an error if removing a session destroy job fails', async () => {
       mockQueue.add.mockRejectedValueOnce(new Error('Failed to add job'));
 
-      await expect(setSessionActive(session, socket)).rejects.toThrow('Failed to add job');
+      await expect(setSessionActive(logger, session, socket)).rejects.toThrow('Failed to add job');
     });
   });
 });

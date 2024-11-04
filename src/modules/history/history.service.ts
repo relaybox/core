@@ -1,5 +1,5 @@
 import * as db from './history.db';
-import * as repository from './history.repository';
+import * as cache from './history.cache';
 import { HistoryNextPageTokenData, HistoryRequestParams, Message } from '@/types/history.types';
 import { Logger } from 'winston';
 import { PoolClient } from 'pg';
@@ -106,7 +106,7 @@ export async function addMessageToCache(
     const timestamp = message.data.timestamp;
     const key = `${KeyPrefix.HISTORY}:buffer:${message.nspRoomId}`;
 
-    await repository.setCachedMessage(redisClient, key, messageData, timestamp);
+    await cache.setCachedMessage(redisClient, key, messageData, timestamp);
   } catch (err: unknown) {
     logger.error(`Failed to cache message`, { err });
     throw err;
@@ -131,7 +131,7 @@ export async function getCachedMessagesForRange(
     const endFromCache = end ?? Date.now();
     const key = `${KeyPrefix.HISTORY}:buffer:${appPid}:${roomId}`;
 
-    const cachedMessagedForRange = await repository.getCachedMessagesForRange(
+    const cachedMessagedForRange = await cache.getCachedMessagesForRange(
       redisClient,
       key,
       startFromCache,

@@ -1,15 +1,9 @@
 import { WebSocket } from 'uWebSockets.js';
 import { KeyNamespace, KeyPrefix } from '@/types/state.types';
-import { getLogger } from '@/util/logger';
-import {
-  createSubscription,
-  deleteSubscription,
-  getAllSubscriptions
-} from './subscription.repository';
+import * as cache from './subscription.cache';
 import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
-
-const logger = getLogger('subscription');
+import { Logger } from 'winston';
 
 function getSubscriptionKeyName(
   connectionId: string,
@@ -20,6 +14,7 @@ function getSubscriptionKeyName(
 }
 
 export async function bindSubscription(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,
@@ -32,7 +27,7 @@ export async function bindSubscription(
   logger.debug(`Binding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
 
   try {
-    await createSubscription(redisClient, key, subscription);
+    await cache.createSubscription(redisClient, key, subscription);
     socket.subscribe(subscription);
   } catch (err: any) {
     logger.error(`Failed to bind subscription`, { key, err });
@@ -41,6 +36,7 @@ export async function bindSubscription(
 }
 
 export async function unbindSubscription(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,
@@ -53,7 +49,7 @@ export async function unbindSubscription(
   logger.debug(`Unbinding subscription ${subscription}`, { connectionId, keyNamespace, nspRoomId });
 
   try {
-    await deleteSubscription(redisClient, key, subscription);
+    await cache.deleteSubscription(redisClient, key, subscription);
 
     if (socket) {
       socket.unsubscribe(subscription);
@@ -65,6 +61,7 @@ export async function unbindSubscription(
 }
 
 export async function unbindAllSubscriptions(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,
@@ -76,7 +73,7 @@ export async function unbindAllSubscriptions(
   logger.debug(`Unbinding all subscriptions`, { connectionId, keyNamespace, nspRoomId });
 
   try {
-    const subscriptions = await getAllSubscriptions(redisClient, key);
+    const subscriptions = await cache.getAllSubscriptions(redisClient, key);
 
     if (socket) {
       subscriptions.forEach((subscription) => socket.unsubscribe(subscription));
@@ -85,7 +82,14 @@ export async function unbindAllSubscriptions(
     if (subscriptions) {
       await Promise.all(
         subscriptions.map(async (subscription) =>
-          unbindSubscription(redisClient, connectionId, nspRoomId, subscription, keyNamespace)
+          unbindSubscription(
+            logger,
+            redisClient,
+            connectionId,
+            nspRoomId,
+            subscription,
+            keyNamespace
+          )
         )
       );
     }
@@ -96,6 +100,7 @@ export async function unbindAllSubscriptions(
 }
 
 export async function restoreRoomSubscriptions(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string,
@@ -107,7 +112,7 @@ export async function restoreRoomSubscriptions(
   const key = getSubscriptionKeyName(connectionId, keyNamespace, nspRoomId);
 
   try {
-    const subscriptions = await getAllSubscriptions(redisClient, key);
+    const subscriptions = await cache.getAllSubscriptions(redisClient, key);
     subscriptions.forEach((subscription) => socket.subscribe(subscription));
   } catch (err: any) {
     logger.error(`Failed to restore subscriptions for ${connectionId}`, { key, err });

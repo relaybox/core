@@ -1,4 +1,3 @@
-import { getLogger } from '@/util/logger';
 import { ReducedSession, Session } from '@/types/session.types';
 import { pushRoomLeaveMetrics } from '@/modules/metrics/metrics.service';
 import { verifyApiKey, verifyAuthToken } from '@/modules/auth/auth.service';
@@ -14,8 +13,7 @@ import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { getNspJobId } from '@/util/helpers';
 import { ConnectionAuth } from '@/types/auth.types';
-
-const logger = getLogger('session');
+import { Logger } from 'winston';
 
 const SESSION_INACTIVE_JOB_DELAY_MS = 5000;
 
@@ -23,17 +21,20 @@ const SESSION_INACTIVE_JOB_DELAY_MS = 5000;
 // ...in conjunction with socket heartbeat
 const SESSION_DESTROY_JOB_DELAY_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) * 4;
 
-export async function initializeSession(connectionAuthParams: ConnectionAuth): Promise<Session> {
+export async function initializeSession(
+  logger: Logger,
+  connectionAuthParams: ConnectionAuth
+): Promise<Session> {
   try {
     const { token, apiKey, clientId, connectionId, uid } = connectionAuthParams;
 
     const verifiedSession = apiKey
-      ? await verifyApiKey(apiKey, clientId, connectionId)
-      : await verifyAuthToken(token!, connectionId);
+      ? await verifyApiKey(logger, apiKey, clientId, connectionId)
+      : await verifyAuthToken(logger, token!, connectionId);
 
     logger.info(`Initializing verified session ${connectionId}`, { clientId, connectionId });
 
-    await enqueueWebhookEvent(WebhookEvent.AUTH_SESSION_INITIALIZE, null, verifiedSession);
+    await enqueueWebhookEvent(logger, WebhookEvent.AUTH_SESSION_INITIALIZE, null, verifiedSession);
 
     return verifiedSession;
   } catch (err: any) {
@@ -43,6 +44,7 @@ export async function initializeSession(connectionAuthParams: ConnectionAuth): P
 }
 
 export async function restoreSession(
+  logger: Logger,
   redisClient: RedisClient,
   session: Session,
   socket: WebSocket<Session>
@@ -59,6 +61,7 @@ export async function restoreSession(
 }
 
 export async function clearSessionMetrics(
+  logger: Logger,
   redisClient: RedisClient,
   session: Session
 ): Promise<void> {
@@ -79,6 +82,7 @@ export async function clearSessionMetrics(
 }
 
 export async function markSessionForDeletion(
+  logger: Logger,
   session: Session,
   instanceId: string | number
 ): Promise<Job> {
@@ -110,6 +114,7 @@ export async function markSessionForDeletion(
 }
 
 export async function markSessionUserInactive(
+  logger: Logger,
   session: Session,
   instanceId: string | number
 ): Promise<Job> {
@@ -140,30 +145,34 @@ export async function markSessionUserInactive(
   return sessionQueue.add(SessionJobName.SESSION_USER_INACTIVE, jobData, jobConfig);
 }
 
-export async function unmarkSessionForDeletion(connectionId: string): Promise<any> {
+export async function unmarkSessionForDeletion(logger: Logger, connectionId: string): Promise<any> {
   logger.debug('Unmarking session for deletion', { connectionId });
 
   try {
-    await clearDelayedSessionJob(connectionId);
+    await clearDelayedSessionJob(logger, connectionId);
   } catch (err) {
     logger.error(`Failed to delete job with ID ${connectionId}:`, { err });
     throw err;
   }
 }
 
-export async function markSessionUserActive(appPid: string, uid: string): Promise<any> {
+export async function markSessionUserActive(
+  logger: Logger,
+  appPid: string,
+  uid: string
+): Promise<any> {
   logger.debug('Setting session user as active', { appPid, uid });
 
   try {
     const jobId = getNspJobId(appPid, uid);
-    await clearDelayedSessionJob(jobId);
+    await clearDelayedSessionJob(logger, jobId);
   } catch (err) {
     logger.error(`Failed to delete job with ID ${uid}:`, { err });
     throw err;
   }
 }
 
-async function clearDelayedSessionJob(id: string) {
+async function clearDelayedSessionJob(logger: Logger, id: string) {
   logger.debug('Clearing delayed session job', { id });
 
   try {
@@ -179,7 +188,11 @@ async function clearDelayedSessionJob(id: string) {
   }
 }
 
-export function setSessionActive(session: Session, socket: WebSocket<Session>): Promise<Job> {
+export function setSessionActive(
+  logger: Logger,
+  session: Session,
+  socket: WebSocket<Session>
+): Promise<Job> {
   logger.debug(`Setting session active, ${session.connectionId}`, { session });
 
   const { permissions, ...rest } = session;
@@ -214,6 +227,7 @@ export function getReducedSession(session: Session, socket?: WebSocket<Session>)
 }
 
 export function recordConnnectionEvent(
+  logger: Logger,
   session: Session,
   socket: WebSocket<Session>,
   connectionEventType: SocketConnectionEventType
@@ -243,7 +257,7 @@ export function recordConnnectionEvent(
   );
 }
 
-export function enqueueSessionHeartbeat(session: Session): Promise<Job> {
+export function enqueueSessionHeartbeat(logger: Logger, session: Session): Promise<Job> {
   logger.debug('Setting session heartbeat', { session });
 
   const { permissions, ...rest } = session;

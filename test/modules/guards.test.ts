@@ -8,6 +8,9 @@ import {
 } from '@/modules/guards/guards.service';
 import { RedisClient } from '@/lib/redis';
 import { getMockSession } from '@/modules/session/session.mock';
+import { getLogger } from '@/util/logger';
+
+const logger = getLogger('');
 
 const { mockBullMQAdd, mockBullMQGetJob } = vi.hoisted(() => {
   return {
@@ -285,13 +288,15 @@ describe('guards.service', () => {
     it('should return true if the client is a member of the room', async () => {
       mockRoomService.getRoomByConnectionId.mockResolvedValue(timestamp);
 
-      await expect(roomMemberGuard(redisClient, connectionId, nspRoomId)).resolves.toBe(true);
+      await expect(roomMemberGuard(logger, redisClient, connectionId, nspRoomId)).resolves.toBe(
+        true
+      );
     });
 
     it('should throw an error if the client is not a member of the room', async () => {
       mockRoomService.getRoomByConnectionId.mockResolvedValue(undefined);
 
-      await expect(roomMemberGuard(redisClient, connectionId, nspRoomId)).rejects.toThrow(
+      await expect(roomMemberGuard(logger, redisClient, connectionId, nspRoomId)).rejects.toThrow(
         'Client not active in room'
       );
     });

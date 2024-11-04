@@ -29,8 +29,12 @@ export async function evaluateRateLimit(
 ): Promise<any> {
   const now = Date.now().toString();
 
-  return redisClient.eval(zRateLimiterScript, {
+  const requestAllowed = await redisClient.eval(zRateLimiterScript, {
     keys: [key],
     arguments: [now, evaluationPeriodMs, entryLimit]
   });
+
+  if (!requestAllowed) {
+    throw new Error('Rate limit exceeded');
+  }
 }

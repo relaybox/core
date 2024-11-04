@@ -12,7 +12,7 @@ import {
 import { getLogger } from '@/util/logger';
 import { v4 as uuid } from 'uuid';
 import { Session } from '@/types/session.types';
-import { ClientEvent, ServerEvent } from '@/types/event.types';
+import { ServerEvent } from '@/types/event.types';
 import {
   SocketConnectionEventType,
   SocketDisconnectReason,
@@ -22,24 +22,13 @@ import { RedisClient } from '@/lib/redis';
 import { DsErrorResponse } from '@/types/request.types';
 import { eventEmitter } from '@/lib/event-bus';
 import { getQueryParamRealValue } from '@/util/helpers';
-import {
-  HttpRequest,
-  HttpResponse,
-  TemplatedApp,
-  us_socket_context_t,
-  WebSocket
-} from 'uWebSockets.js';
+import { HttpRequest, HttpResponse, us_socket_context_t, WebSocket } from 'uWebSockets.js';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
-import { KeyPrefix, KeySuffix } from '@/types/state.types';
-import { eventHandlersMap } from './websocket.handlers';
-import * as repository from './websocket.repository';
 import { ConnectionAuth } from '@/types/auth.types';
 
-const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
+const logger = getLogger('websocket');
 
 const decoder = new TextDecoder('utf-8');
-
-const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
 
 export function handleConnectionUpgrade(
   res: HttpResponse,
@@ -66,7 +55,7 @@ export function handleConnectionUpgrade(
   const secWebsocketProtocol = req.getHeader('sec-websocket-protocol');
   const secWebsocketExtensions = req.getHeader('sec-websocket-extensions');
 
-  initializeSession(connectionAuthParams)
+  initializeSession(logger, connectionAuthParams)
     .then((verifiedSession: Session) => {
       verifiedSession.socketId = uuid();
 
@@ -104,15 +93,17 @@ export async function handleSocketOpen(
 
     logger.debug(`Socket connect event, ${connectionId}`, verifiedSession);
 
-    await setSessionActive(verifiedSession, socket);
-    await markSessionUserActive(appPid, uid);
-    await restoreSession(redisClient, verifiedSession, socket);
-    await recordConnnectionEvent(verifiedSession, socket, SocketConnectionEventType.CONNECT);
-
-    logger.info(
-      `Session initialization complete, emitting CONNECTION_ACKNOWLEDGED (${connectionId})`,
-      verifiedSession
+    await setSessionActive(logger, verifiedSession, socket);
+    await markSessionUserActive(logger, appPid, uid);
+    await restoreSession(logger, redisClient, verifiedSession, socket);
+    await recordConnnectionEvent(
+      logger,
+      verifiedSession,
+      socket,
+      SocketConnectionEventType.CONNECT
     );
+
+    logger.info(`Session initialization complete (${connectionId})`, { verifiedSession });
 
     emit(socket, ServerEvent.CONNECTION_ACKNOWLEDGED, {
       uid,
@@ -133,35 +124,6 @@ export function emit(socket: WebSocket<Session>, type: ServerEvent, body: any): 
   socket.send(data);
 }
 
-export async function handleSocketMessage(
-  socket: WebSocket<Session>,
-  redisClient: RedisClient,
-  message: ArrayBuffer,
-  isBinary: boolean,
-  app: TemplatedApp
-): Promise<void> {
-  try {
-    const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
-
-    if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {
-      handleByteLengthError(socket, ackId);
-    }
-
-    const handler = eventHandlersMap[type as ClientEvent];
-
-    if (!handler) {
-      logger.error(`Event ${type} not recognized`, { type, ackId });
-      return;
-    }
-
-    const res = ackHandler(socket, ackId);
-
-    return handler(logger, redisClient, socket, body, res, createdAt);
-  } catch (err: any) {
-    logger.error(`Failed to handle socket message`, { err });
-  }
-}
-
 export function ackHandler(socket: WebSocket<Session>, ackId: string) {
   return function (data: any, err?: DsErrorResponse) {
     try {
@@ -170,18 +132,6 @@ export function ackHandler(socket: WebSocket<Session>, ackId: string) {
       logger.error(`Failed to send message acknowledgment`, { err });
     }
   };
-}
-
-export function handleByteLengthError(socket: WebSocket<Session>, ackId: string) {
-  const res = ackHandler(socket, ackId);
-
-  const message = `Message size exceeds maximum allowed size (${MESSAGE_MAX_BYTE_LENGTH})`;
-
-  if (res) {
-    res(null, { message });
-  }
-
-  throw new Error(message);
 }
 
 export async function handleDisconnect(
@@ -201,10 +151,10 @@ export async function handleDisconnect(
   try {
     logger.info(`Socket disconnection event: ${code}`, { session });
 
-    await clearSessionMetrics(redisClient, session);
-    await markSessionForDeletion(session, serverInstanceId);
-    await markSessionUserInactive(session, serverInstanceId);
-    await recordConnnectionEvent(session, socket, SocketConnectionEventType.DISCONNECT);
+    await clearSessionMetrics(logger, redisClient, session);
+    await markSessionForDeletion(logger, session, serverInstanceId);
+    await markSessionUserInactive(logger, session, serverInstanceId);
+    await recordConnnectionEvent(logger, session, socket, SocketConnectionEventType.DISCONNECT);
   } catch (err: any) {
     logger.error(`Failed to perform session clean up`, { err });
   }
@@ -226,7 +176,7 @@ export async function handleSubscriptionBindings(
     return;
   }
 
-  logger.info(`Emitting subscription create for "${appPid}:${hashedNamespace}"`, {
+  logger.debug(`Emitting subscription create for "${appPid}:${hashedNamespace}"`, {
     oldCount,
     newCount,
     decodedTopic
@@ -251,19 +201,8 @@ export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise
   });
 
   try {
-    await setSessionActive(session, socket);
+    await setSessionActive(logger, session, socket);
   } catch (err: any) {
     logger.error(`Failed to set session heartbeat`, { session });
   }
-}
-
-export async function rateLimitGuard(
-  redisClient: RedisClient,
-  connectionId: string,
-  evaluationPeriodMs: number,
-  entryLimit: number
-): Promise<number> {
-  const key = `${KeyPrefix.RATE}:messages:${connectionId}:${KeySuffix.COUNT}`;
-
-  return repository.evaluateRateLimit(redisClient, key, `${evaluationPeriodMs}`, `${entryLimit}`);
 }

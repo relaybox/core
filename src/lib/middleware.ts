@@ -77,14 +77,13 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
           )
         ]);
 
-        clearRequestTimeout();
-
         return;
       } catch (err: unknown) {
         aborted = true;
-        clearRequestTimeout();
         res.cork(() => getErrorResponse(res, err));
         return;
+      } finally {
+        clearRequestTimeout();
       }
     }
 

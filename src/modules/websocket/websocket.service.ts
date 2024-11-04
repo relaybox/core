@@ -30,8 +30,6 @@ const logger = getLogger('websocket');
 
 const decoder = new TextDecoder('utf-8');
 
-const MESSAGE_MAX_BYTE_LENGTH = 64 * 1024;
-
 export function handleConnectionUpgrade(
   res: HttpResponse,
   req: HttpRequest,
@@ -134,18 +132,6 @@ export function ackHandler(socket: WebSocket<Session>, ackId: string) {
       logger.error(`Failed to send message acknowledgment`, { err });
     }
   };
-}
-
-export function handleByteLengthError(socket: WebSocket<Session>, ackId: string) {
-  const res = ackHandler(socket, ackId);
-
-  const message = `Message size exceeds maximum allowed size (${MESSAGE_MAX_BYTE_LENGTH})`;
-
-  if (res) {
-    res(null, { message });
-  }
-
-  throw new Error(message);
 }
 
 export async function handleDisconnect(

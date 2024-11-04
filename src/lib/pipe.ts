@@ -14,15 +14,14 @@ export function pipe(...middlewares: EventHandler[]): EventHandler {
     socket: WebSocket<Session>,
     body: any,
     res: SocketAckHandler,
-    createdAt?: string
+    createdAt?: string,
+    byteLength?: number
   ): Promise<void> => {
     for (const middleware of middlewares) {
-      const { requestTimeout, clearRequestTimeout } = getMiddlewareTimeout(
-        DEFAULT_MIDDLEWARE_TIMEOUT_MS
-      );
+      const { requestTimeout, clearRequestTimeout } = getMiddlewareTimeout();
 
       try {
-        await Promise.race([requestTimeout, middleware(socket, body, res, createdAt)]);
+        await Promise.race([requestTimeout, middleware(socket, body, res, createdAt, byteLength)]);
       } catch (err: any) {
         logger.error(`Failed to handle socket message`, { err });
 
@@ -38,7 +37,7 @@ export function pipe(...middlewares: EventHandler[]): EventHandler {
   };
 }
 
-function getMiddlewareTimeout(duration = 500) {
+function getMiddlewareTimeout(duration = DEFAULT_MIDDLEWARE_TIMEOUT_MS) {
   let timeoutId: NodeJS.Timeout;
 
   const requestTimeout = new Promise((_, reject) => {

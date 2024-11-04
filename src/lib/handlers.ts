@@ -1,6 +1,6 @@
 import { ClientEvent } from '@/types/event.types';
 import Services from '@/lib/services';
-import { rateLimitMiddleware } from '@/middleware/request';
+import { rateLimitMiddleware, sizeLimitMiddleware } from '@/middleware/request';
 import { pipe } from '@/lib/pipe';
 import { WebSocket } from 'uWebSockets.js';
 import { SocketAckHandler } from '@/types/socket.types';
@@ -29,14 +29,19 @@ export type EventHandler = (
   socket: WebSocket<Session>,
   body: any,
   res: SocketAckHandler,
-  createdAt?: string
+  createdAt?: string,
+  byteLength?: number
 ) => Promise<void> | void;
 
 export function createEventHandlersMap(services: Services): Record<ClientEvent, EventHandler> {
   return {
     [ClientEvent.ROOM_JOIN]: roomJoinHandler(services),
     [ClientEvent.ROOM_LEAVE]: roomLeaveHandler(services),
-    [ClientEvent.PUBLISH]: pipe(rateLimitMiddleware(services), roomPublishHandler(services)),
+    [ClientEvent.PUBLISH]: pipe(
+      rateLimitMiddleware(services),
+      sizeLimitMiddleware,
+      roomPublishHandler(services)
+    ),
     [ClientEvent.ROOM_SUBSCRIPTION_BIND]: subscriptionBindHandler(services),
     [ClientEvent.ROOM_SUBSCRIPTION_UNBIND]: subscriptionUnbindHandler(services),
     [ClientEvent.ROOM_PRESENCE_SUBSCRIBE]: presenceSubscribeHandler(services),
@@ -46,6 +51,7 @@ export function createEventHandlersMap(services: Services): Record<ClientEvent, 
     [ClientEvent.ROOM_PRESENCE_LEAVE]: presenceLeaveHandler(services),
     [ClientEvent.ROOM_PRESENCE_UPDATE]: pipe(
       rateLimitMiddleware(services),
+      sizeLimitMiddleware,
       presenceUpdateHandler(services)
     ),
     [ClientEvent.ROOM_PRESENCE_GET]: presenceGetHandler(services),

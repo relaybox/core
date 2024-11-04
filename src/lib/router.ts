@@ -14,13 +14,9 @@ export function createRouter(handlersMap: Record<string, Function>) {
   return function (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) {
     try {
       const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
+      const byteLength = message.byteLength;
 
       logger.debug(`Handling socket message`, { type, ackId });
-
-      // IMPLEMENT AS MIDDLEWARE!!!!
-      // if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {
-      //   handleByteLengthError(socket, ackId);
-      // }
 
       const handler = handlersMap[type as ClientEvent];
 
@@ -31,7 +27,7 @@ export function createRouter(handlersMap: Record<string, Function>) {
 
       const res = ackHandler(socket, ackId);
 
-      return handler(socket, body, res, createdAt);
+      return handler(socket, body, res, createdAt, byteLength);
     } catch (err: any) {
       logger.error(`Failed to handle socket message`, { err });
     }

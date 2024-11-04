@@ -1,6 +1,4 @@
-import { Logger } from 'winston';
 import { WebSocket } from 'uWebSockets.js';
-import { RedisClient } from '@/lib/redis';
 import { DsPermission } from '@/types/permissions.types';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
@@ -8,28 +6,33 @@ import { formatErrorResponse } from '@/util/format';
 import { getNspRoomId } from '@/util/helpers';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getActiveMembers } from '@/modules/presence/presence.service';
+import { Services } from '@/lib/services';
+import { getLogger } from '@/util/logger';
+import { ClientEvent } from '@/types/event.types';
 
-export async function clientPresenceGet(
-  logger: Logger,
-  redisClient: RedisClient,
-  socket: WebSocket<Session>,
-  data: any,
-  res: SocketAckHandler,
-  createdAt: string
-): Promise<void> {
-  const session = socket.getUserData();
-  const { roomId } = data;
-  const { appPid, permissions } = session;
+const logger = getLogger(ClientEvent.ROOM_PRESENCE_GET);
 
-  const nspRoomId = getNspRoomId(appPid, roomId);
+export function handler({ redisClient }: Services) {
+  return async function (
+    socket: WebSocket<Session>,
+    data: any,
+    res: SocketAckHandler
+  ): Promise<void> {
+    const session = socket.getUserData();
+    const { roomId } = data;
+    const { appPid, permissions } = session;
 
-  try {
-    permissionsGuard(roomId, DsPermission.PRESENCE, permissions);
+    const nspRoomId = getNspRoomId(appPid, roomId);
 
-    const members = await getActiveMembers(redisClient, nspRoomId);
+    try {
+      permissionsGuard(roomId, DsPermission.PRESENCE, permissions);
 
-    res(members || []);
-  } catch (err: any) {
-    res(null, formatErrorResponse(err));
-  }
+      const members = await getActiveMembers(redisClient, nspRoomId);
+
+      res(members || []);
+    } catch (err: any) {
+      logger.error(`Failed to get presence members`, { roomId, err });
+      res(null, formatErrorResponse(err));
+    }
+  };
 }

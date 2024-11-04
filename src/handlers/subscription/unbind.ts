@@ -1,13 +1,8 @@
-import { Logger } from 'winston';
 import { SocketAckHandler } from '@/types/socket.types';
 import { Session } from '@/types/session.types';
 import { formatDefaultSubscription, formatErrorResponse } from '@/util/format';
 import { getNspRoomId } from '@/util/helpers';
-import { permissionsGuard, roomMemberGuard } from '@/modules/guards/guards.service';
-import { DsPermission } from '@/types/permissions.types';
-import { RedisClient } from '@/lib/redis';
 import {
-  bindSubscription,
   unbindAllSubscriptions,
   unbindSubscription
 } from '@/modules/subscription/subscription.service';

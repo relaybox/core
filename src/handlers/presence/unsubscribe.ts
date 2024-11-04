@@ -7,47 +7,51 @@ import { formatErrorResponse, formatPresenceSubscription } from '@/util/format';
 import { getNspRoomId } from '@/util/helpers';
 import { unbindSubscription } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
+import { Services } from '@/lib/services';
+import { getLogger } from '@/util/logger';
+import { ClientEvent } from '@/types/event.types';
 
-export async function clientPresenceUnsubscribe(
-  logger: Logger,
-  redisClient: RedisClient,
-  socket: WebSocket<Session>,
-  data: any,
-  res: SocketAckHandler,
-  createdAt: string
-): Promise<void> {
-  const session = socket.getUserData();
-  const { roomId, event } = data;
-  const { uid, appPid, connectionId } = session;
+const logger = getLogger(ClientEvent.ROOM_PRESENCE_UNSUBSCRIBE);
 
-  const nspRoomId = getNspRoomId(appPid, roomId);
-  const subscription = formatPresenceSubscription(nspRoomId, event);
+export function handler({ redisClient }: Services) {
+  return async function (
+    socket: WebSocket<Session>,
+    data: any,
+    res: SocketAckHandler
+  ): Promise<void> {
+    const session = socket.getUserData();
+    const { roomId, event } = data;
+    const { appPid, connectionId } = session;
 
-  logger.debug('Unsubscribing from presence', {
-    session,
-    nspRoomId,
-    event,
-    subscription
-  });
+    const nspRoomId = getNspRoomId(appPid, roomId);
+    const subscription = formatPresenceSubscription(nspRoomId, event);
 
-  try {
-    await unbindSubscription(
-      redisClient,
-      connectionId,
-      nspRoomId,
-      subscription,
-      KeyNamespace.PRESENCE,
-      socket
-    );
-    res(subscription);
-  } catch (err: any) {
-    logger.error(`Failed to unsubscribe from presence`, {
+    logger.debug('Unsubscribing from presence', {
       session,
       nspRoomId,
       event,
       subscription
     });
 
-    res(null, formatErrorResponse(err));
-  }
+    try {
+      await unbindSubscription(
+        redisClient,
+        connectionId,
+        nspRoomId,
+        subscription,
+        KeyNamespace.PRESENCE,
+        socket
+      );
+      res(subscription);
+    } catch (err: any) {
+      logger.error(`Failed to unsubscribe from presence`, {
+        session,
+        nspRoomId,
+        event,
+        subscription
+      });
+
+      res(null, formatErrorResponse(err));
+    }
+  };
 }

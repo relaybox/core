@@ -14,11 +14,11 @@ import {
 import { Session } from '@/types/session.types';
 import { getCorsResponse } from '@/util/http';
 import { compose } from '@/lib/middleware';
-import { verifyAuthToken } from './modules/auth/auth.middleware';
 import { createEventHandlersMap } from './lib/handlers';
-import { createRouter } from './lib/router';
+import { createRouter } from '@/lib/router';
 import { handler as handleClientEvent } from '@/handlers/events/post';
 import { handler as handleHistoryGet } from '@/handlers/history/get';
+import { verifyAuthToken } from '@/middleware/auth';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();

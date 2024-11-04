@@ -12,10 +12,10 @@ export function createRouter(handlersMap: Record<string, Function>) {
   logger.info(`Creating router`, { handlersMap });
 
   return function (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) {
-    logger.debug(`Handling socket message`);
-
     try {
       const { type, body, ackId, createdAt } = JSON.parse(decoder.decode(message));
+
+      logger.debug(`Handling socket message`, { type, ackId });
 
       // IMPLEMENT AS MIDDLEWARE!!!!
       // if (message.byteLength > MESSAGE_MAX_BYTE_LENGTH) {

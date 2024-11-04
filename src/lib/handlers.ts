@@ -1,6 +1,5 @@
 import { ClientEvent } from '@/types/event.types';
 import Services from '@/lib/services';
-import { rateLimitMiddleware } from '@/modules/websocket/websocket.middleware';
 import { handler as userStatusUpdateHandler } from '@/handlers/user/status';
 import { handler as userSubscribeHandler } from '@/handlers/user/subscribe';
 import { handler as userUnsubscribeHandler } from '@/handlers/user/unsubscribe';
@@ -20,15 +19,16 @@ import { handler as metricsUnsubscribeHandler } from '@/handlers/metrics/unsubsc
 import { handler as roomJoinHandler } from '@/handlers/room/join';
 import { handler as roomLeaveHandler } from '@/handlers/room/leave';
 import { handler as roomPublishHandler } from '@/handlers/room/publish';
+import { rateLimitMiddleware } from '@/middleware/request';
+import { pipe } from './pipe';
 
 type EventHandler = (...args: any[]) => Promise<void>;
 
-export function createEventHandlersMap(services: Services): Record<ClientEvent, any> {
+export function createEventHandlersMap(services: Services): Record<ClientEvent, EventHandler> {
   return {
     [ClientEvent.ROOM_JOIN]: roomJoinHandler(services),
     [ClientEvent.ROOM_LEAVE]: roomLeaveHandler(services),
-    // [ClientEvent.PUBLISH]: rateLimitMiddleware(roomPublishHandler(services)),
-    [ClientEvent.PUBLISH]: roomPublishHandler(services),
+    [ClientEvent.PUBLISH]: pipe(rateLimitMiddleware(services), roomPublishHandler(services)),
     [ClientEvent.ROOM_SUBSCRIPTION_BIND]: subscriptionBindHandler(services),
     [ClientEvent.ROOM_SUBSCRIPTION_UNBIND]: subscriptionUnbindHandler(services),
     [ClientEvent.ROOM_PRESENCE_SUBSCRIBE]: presenceSubscribeHandler(services),
@@ -36,8 +36,10 @@ export function createEventHandlersMap(services: Services): Record<ClientEvent, 
     [ClientEvent.ROOM_PRESENCE_UNSUBSCRIBE_ALL]: presenceUnsubscribeAllHandler(services),
     [ClientEvent.ROOM_PRESENCE_JOIN]: presenceJoinHandler(services),
     [ClientEvent.ROOM_PRESENCE_LEAVE]: presenceLeaveHandler(services),
-    // [ClientEvent.ROOM_PRESENCE_UPDATE]: rateLimitMiddleware(presenceUpdateHandler(services)),
-    [ClientEvent.ROOM_PRESENCE_UPDATE]: presenceUpdateHandler(services),
+    [ClientEvent.ROOM_PRESENCE_UPDATE]: pipe(
+      rateLimitMiddleware(services),
+      presenceUpdateHandler(services)
+    ),
     [ClientEvent.ROOM_PRESENCE_GET]: presenceGetHandler(services),
     [ClientEvent.ROOM_PRESENCE_COUNT]: presenceCountHandler(services),
     [ClientEvent.ROOM_METRICS_SUBSCRIBE]: metricsSubscribeHandler(services),

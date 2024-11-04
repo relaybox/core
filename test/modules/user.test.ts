@@ -28,7 +28,7 @@ const mockUserRepository = vi.hoisted(() => ({
   getUserSubscriptionCount: vi.fn()
 }));
 
-vi.mock('@/modules/user/user.repository', () => mockUserRepository);
+vi.mock('@/modules/user/user.cache', () => mockUserRepository);
 
 describe('user.service', () => {
   let redisClient: RedisClient;

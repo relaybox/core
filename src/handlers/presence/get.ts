@@ -1,3 +1,4 @@
+import Services from '@/lib/services';
 import { WebSocket } from 'uWebSockets.js';
 import { DsPermission } from '@/types/permissions.types';
 import { Session } from '@/types/session.types';
@@ -6,7 +7,6 @@ import { formatErrorResponse } from '@/util/format';
 import { getNspRoomId } from '@/util/helpers';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getActiveMembers } from '@/modules/presence/presence.service';
-import Services from '@/lib/services';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 

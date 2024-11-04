@@ -1,3 +1,4 @@
+import Services from '@/lib/services';
 import { SocketAckHandler } from '@/types/socket.types';
 import { Session } from '@/types/session.types';
 import { formatDefaultSubscription, formatErrorResponse } from '@/util/format';
@@ -9,7 +10,6 @@ import { KeyNamespace } from '@/types/state.types';
 import { WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
-import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.ROOM_SUBSCRIPTION_BIND);
 

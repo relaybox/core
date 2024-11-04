@@ -1,3 +1,4 @@
+import Services from '@/lib/services';
 import { WebSocket } from 'uWebSockets.js';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
@@ -10,7 +11,6 @@ import { getLatencyLog, publishMetric } from '@/modules/metrics/metrics.service'
 import { MetricType } from '@/types/metric.types';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
-import Services from '@/lib/services';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 

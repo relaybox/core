@@ -1,5 +1,5 @@
+import Services from '@/lib/services';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
-import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { getNspRoomId } from '@/util/helpers';
@@ -11,7 +11,6 @@ import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
-import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.ROOM_JOIN);
 

@@ -1,5 +1,5 @@
+import Services from '@/lib/services';
 import { v4 as uuid } from 'uuid';
-import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { getNspEvent, getNspRoomId } from '@/util/helpers';
@@ -14,7 +14,6 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { getReducedSession } from '@/modules/session/session.service';
 import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
-import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.PUBLISH);
 

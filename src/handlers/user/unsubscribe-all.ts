@@ -1,3 +1,4 @@
+import Services from '@/lib/services';
 import { WebSocket } from 'uWebSockets.js';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
@@ -10,7 +11,6 @@ import {
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { getNspClientId } from '@/util/helpers';
 import { KeyNamespace } from '@/types/state.types';
-import Services from '@/lib/services';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 

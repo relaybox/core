@@ -9,18 +9,17 @@ import {
   HISTORY_MAX_LIMIT,
   parseRequestQueryParams
 } from './history.service';
-import { Pool } from 'pg';
 import { BadRequestError } from '@/lib/errors';
 import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
-import { RedisClient } from '@/lib/redis';
+import Services from '@/lib/services';
 
 const logger = getLogger('history-http');
 
-export function getHistoryMessages(pgPool: Pool, redisClient: RedisClient): HttpMiddleware {
+export function getHistoryMessages({ pgPool, redisClient }: Services): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
     logger.debug(`Getting room history messages`);
 
-    const pgClient = await pgPool.connect();
+    const pgClient = await pgPool!.connect();
 
     try {
       const appPid = req.auth.appPid;

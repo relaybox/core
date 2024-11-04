@@ -42,14 +42,11 @@ app.get('/', (res: HttpResponse) => {
   res.end(process.uptime().toString());
 });
 
-app.post('/events', compose(handleClientEvent(services.pgPool!, services.redisClient)));
+app.post('/events', compose(handleClientEvent(services)));
 
 app.get(
   '/history/:roomId/messages',
-  compose(
-    verifyAuthToken(logger, services.pgPool),
-    getHistoryMessages(services.pgPool!, services.redisClient!)
-  )
+  compose(verifyAuthToken(logger, services), getHistoryMessages(services))
 );
 
 app.ws('/*', {

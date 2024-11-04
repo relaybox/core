@@ -19,20 +19,19 @@ import {
 } from '@/modules/auth/auth.service';
 import { getPermissions } from '@/modules/permissions/permissions.service';
 import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
-import { getPublisher } from '@/lib/publisher';
+import Services from '@/lib/services';
 
 const logger = getLogger('event');
 
 const MAX_TIMESTAMP_DIFF_SECS = 30;
 
-export function handler(pgPool: Pool, redisClient: RedisClient): HttpMiddleware {
+export function handler({ pgPool, redisClient, amqpManager, publisher }: Services): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
     const requestId = uuid();
 
     logger.info('Publishing event', { requestId });
 
-    const pgClient = await pgPool.connect();
-    const publisher = getPublisher();
+    const pgClient = await pgPool!.connect();
 
     try {
       const publicKey = req.headers['x-ds-public-key'];
@@ -83,8 +82,6 @@ export function handler(pgPool: Pool, redisClient: RedisClient): HttpMiddleware 
         timestamp: new Date().getTime(),
         event
       };
-
-      const amqpManager = AmqpManager.getInstance();
 
       const processedMessageData = amqpManager.dispatchHandler
         .to(nspRoomId)

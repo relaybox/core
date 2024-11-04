@@ -1,3 +1,4 @@
+import Services from '@/lib/services';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
@@ -15,8 +16,6 @@ import { SubscriptionType } from '@/types/subscription.types';
 import { removeActiveMember } from '@/modules/presence/presence.service';
 import { unbindAllSubscriptions } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
-import { Logger } from 'winston';
-import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.ROOM_LEAVE);
 

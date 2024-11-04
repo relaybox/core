@@ -3,6 +3,9 @@ import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { formatErrorResponse } from '@/util/format';
 import { EventHandler } from '@/lib/handlers';
+import { getLogger } from '@/util/logger';
+
+const logger = getLogger('pipe');
 
 const DEFAULT_MIDDLEWARE_TIMEOUT_MS = 5000;
 
@@ -21,9 +24,12 @@ export function pipe(...middlewares: EventHandler[]) {
       try {
         await Promise.race([requestTimeout, middleware(socket, body, res, createdAt)]);
       } catch (err: any) {
+        logger.error(`Failed to handle socket message`, { err });
+
         if (res) {
           res(null, formatErrorResponse(err));
         }
+
         return;
       } finally {
         clearRequestTimeout();

@@ -8,6 +8,7 @@ import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
 import { cleanupRedisClient, getRedisClient, RedisClient } from '@/lib/redis';
 import { eventEmitter } from '@/lib/event-bus';
 import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
+import { getLogger } from '@/util/logger';
 
 export default class Services {
   public pgPool: Pool | null;
@@ -19,8 +20,9 @@ export default class Services {
   private instanceId: string;
   private app: TemplatedApp;
 
-  constructor(logger: Logger, app: TemplatedApp, instanceId: string) {
-    this.logger = logger;
+  constructor(app: TemplatedApp, instanceId: string) {
+    this.logger = getLogger('services');
+
     this.app = app;
     this.instanceId = instanceId;
 

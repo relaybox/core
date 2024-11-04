@@ -29,7 +29,7 @@ const WS_MAX_LIFETIME_MINS = 60;
 const logger = getLogger('core-socket-server');
 
 const app = App();
-const services = new Services(logger, app, CONTAINER_HOSTNAME);
+const services = new Services(app, CONTAINER_HOSTNAME);
 const eventHandlersMap = createEventHandlersMap(services);
 const eventRouter = createRouter(eventHandlersMap);
 

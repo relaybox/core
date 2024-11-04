@@ -19,7 +19,7 @@ export function handler({ redisClient }: Services) {
     socket: WebSocket<Session>,
     data: any,
     res: SocketAckHandler,
-    createdAt: string
+    createdAt?: string
   ): Promise<void> {
     logger.debug('Updating user status');
 
@@ -34,7 +34,7 @@ export function handler({ redisClient }: Services) {
       const nspClientId = getNspClientId(KeyNamespace.USERS, session.user!.clientId);
       const subscription = formatUserSubscription(nspClientId, event);
       const amqpManager = AmqpManager.getInstance();
-      const latencyLog = getLatencyLog(createdAt);
+      const latencyLog = getLatencyLog(createdAt!);
 
       const messageData = {
         status,

@@ -2,39 +2,33 @@ import { WebSocket } from 'uWebSockets.js';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { formatErrorResponse } from '@/util/format';
+import { EventHandler } from '@/lib/handlers';
 
 const DEFAULT_MIDDLEWARE_TIMEOUT_MS = 5000;
 
-export function pipe(...middlewares: Function[]) {
-  return async (socket: WebSocket<Session>, body: any, res: SocketAckHandler): Promise<void> => {
-    async function dispatch(i: number) {
-      const nextMiddleware = middlewares[i];
-
-      if (!nextMiddleware) {
-        return;
-      }
-
+export function pipe(...middlewares: EventHandler[]) {
+  return async (
+    socket: WebSocket<Session>,
+    body: any,
+    res: SocketAckHandler,
+    createdAt?: string
+  ): Promise<void> => {
+    for (const middleware of middlewares) {
       const { requestTimeout, clearRequestTimeout } = getMiddlewareTimeout(
         DEFAULT_MIDDLEWARE_TIMEOUT_MS
       );
 
       try {
-        await Promise.race([requestTimeout, nextMiddleware(socket, body, res)]);
-        clearRequestTimeout();
-
-        if (middlewares[i + 1]) {
-          await dispatch(i + 1);
-        }
-
-        return;
+        await Promise.race([requestTimeout, middleware(socket, body, res, createdAt)]);
       } catch (err: any) {
         if (res) {
           res(null, formatErrorResponse(err));
         }
+        return;
+      } finally {
+        clearRequestTimeout();
       }
     }
-
-    dispatch(0);
   };
 }
 

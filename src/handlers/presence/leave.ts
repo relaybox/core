@@ -21,7 +21,7 @@ export function handler({ redisClient }: Services) {
     socket: WebSocket<Session>,
     data: any,
     res: SocketAckHandler,
-    createdAt: string
+    createdAt?: string
   ): Promise<void> {
     const session = socket.getUserData();
     const { roomId, userData } = data;
@@ -30,7 +30,7 @@ export function handler({ redisClient }: Services) {
     const nspRoomId = getNspRoomId(appPid, roomId);
     const subscription = formatPresenceSubscription(nspRoomId, SubscriptionType.LEAVE);
     const timestamp = new Date().toISOString();
-    const latencyLog = getLatencyLog(createdAt);
+    const latencyLog = getLatencyLog(createdAt!);
 
     const message = {
       clientId,

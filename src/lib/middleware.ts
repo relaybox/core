@@ -79,6 +79,7 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
         return;
       } catch (err: unknown) {
         aborted = true;
+        clearRequestTimeout();
         res.cork(() => getErrorResponse(res, err));
         return;
       }

@@ -21,8 +21,16 @@ import { handler as roomLeaveHandler } from '@/handlers/room/leave';
 import { handler as roomPublishHandler } from '@/handlers/room/publish';
 import { rateLimitMiddleware } from '@/middleware/request';
 import { pipe } from './pipe';
+import { WebSocket } from 'uWebSockets.js';
+import { SocketAckHandler } from '@/types/socket.types';
+import { Session } from '@/types/session.types';
 
-type EventHandler = (...args: any[]) => Promise<void>;
+export type EventHandler = (
+  socket: WebSocket<Session>,
+  body: any,
+  res: SocketAckHandler,
+  createdAt?: string
+) => Promise<void> | void;
 
 export function createEventHandlersMap(services: Services): Record<ClientEvent, EventHandler> {
   return {

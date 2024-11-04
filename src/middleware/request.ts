@@ -12,7 +12,6 @@ const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD =
   Number(process.env.RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD) || 30;
 
 export function rateLimitMiddleware({ redisClient }: Services): SocketAckHandler {
-  console.log('SETUP');
   return async (socket: WebSocket<Session>): Promise<void> => {
     logger.debug('Rate limiting request');
 

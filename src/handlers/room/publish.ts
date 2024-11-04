@@ -13,7 +13,6 @@ import { ClientEvent } from '@/types/event.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { getReducedSession } from '@/modules/session/session.service';
-import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
 import { Services } from '@/lib/services';
 

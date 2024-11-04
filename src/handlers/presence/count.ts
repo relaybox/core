@@ -9,10 +9,11 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getActiveMemberCount } from '@/modules/presence/presence.service';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
+import { EventHandler } from '@/lib/handlers';
 
 const logger = getLogger(ClientEvent.ROOM_PRESENCE_COUNT);
 
-export function handler({ redisClient }: Services) {
+export function handler({ redisClient }: Services): EventHandler {
   return async function (
     socket: WebSocket<Session>,
     data: any,

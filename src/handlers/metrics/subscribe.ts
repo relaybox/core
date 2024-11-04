@@ -10,10 +10,11 @@ import { WebSocket } from 'uWebSockets.js';
 import Services from '@/lib/services';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
+import { EventHandler } from '@/lib/handlers';
 
 const logger = getLogger(ClientEvent.ROOM_METRICS_SUBSCRIBE);
 
-export function handler({ redisClient }: Services) {
+export function handler({ redisClient }: Services): EventHandler {
   return async function (
     socket: WebSocket<Session>,
     data: any,

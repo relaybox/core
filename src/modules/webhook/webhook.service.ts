@@ -1,5 +1,4 @@
 import { WebhookJobName, defaultJobConfig, webhookQueue } from './webhook.queue';
-import { getLogger } from '@/util/logger';
 import { Session } from '@/types/session.types';
 import { v4 as uuid } from 'uuid';
 import { ReducedWebhookSessionData, WebhookEvent, WebhookPayload } from '@/types/webhook.types';

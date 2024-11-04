@@ -8,10 +8,11 @@ import { KeyNamespace } from '@/types/state.types';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
 import Services from '@/lib/services';
+import { EventHandler } from '@/lib/handlers';
 
 const logger = getLogger(ClientEvent.ROOM_METRICS_UNSUBSCRIBE);
 
-export function handler({ redisClient }: Services) {
+export function handler({ redisClient }: Services): EventHandler {
   return async function (
     socket: WebSocket<Session>,
     data: any,

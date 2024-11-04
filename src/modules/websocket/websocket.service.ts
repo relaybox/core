@@ -24,8 +24,6 @@ import { eventEmitter } from '@/lib/event-bus';
 import { getQueryParamRealValue } from '@/util/helpers';
 import { HttpRequest, HttpResponse, us_socket_context_t, WebSocket } from 'uWebSockets.js';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
-import { KeyPrefix, KeySuffix } from '@/types/state.types';
-import * as cache from './websocket.cache';
 import { ConnectionAuth } from '@/types/auth.types';
 
 const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE

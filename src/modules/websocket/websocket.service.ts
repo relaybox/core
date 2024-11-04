@@ -26,7 +26,7 @@ import { HttpRequest, HttpResponse, us_socket_context_t, WebSocket } from 'uWebS
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { ConnectionAuth } from '@/types/auth.types';
 
-const logger = getLogger('websocket'); // TODO: MOVE LOGGER TO HANDLERS INSTEAD OF PASSING HERE
+const logger = getLogger('websocket');
 
 const decoder = new TextDecoder('utf-8');
 
@@ -105,10 +105,7 @@ export async function handleSocketOpen(
       SocketConnectionEventType.CONNECT
     );
 
-    logger.info(
-      `Session initialization complete, emitting CONNECTION_ACKNOWLEDGED (${connectionId})`,
-      verifiedSession
-    );
+    logger.info(`Session initialization complete (${connectionId})`, { verifiedSession });
 
     emit(socket, ServerEvent.CONNECTION_ACKNOWLEDGED, {
       uid,
@@ -193,7 +190,7 @@ export async function handleSubscriptionBindings(
     return;
   }
 
-  logger.info(`Emitting subscription create for "${appPid}:${hashedNamespace}"`, {
+  logger.debug(`Emitting subscription create for "${appPid}:${hashedNamespace}"`, {
     oldCount,
     newCount,
     decodedTopic

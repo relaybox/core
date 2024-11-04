@@ -1,5 +1,10 @@
 import { ClientEvent } from '@/types/event.types';
 import Services from '@/lib/services';
+import { rateLimitMiddleware } from '@/middleware/request';
+import { pipe } from '@/lib/pipe';
+import { WebSocket } from 'uWebSockets.js';
+import { SocketAckHandler } from '@/types/socket.types';
+import { Session } from '@/types/session.types';
 import { handler as userStatusUpdateHandler } from '@/handlers/user/status';
 import { handler as userSubscribeHandler } from '@/handlers/user/subscribe';
 import { handler as userUnsubscribeHandler } from '@/handlers/user/unsubscribe';
@@ -19,11 +24,6 @@ import { handler as metricsUnsubscribeHandler } from '@/handlers/metrics/unsubsc
 import { handler as roomJoinHandler } from '@/handlers/room/join';
 import { handler as roomLeaveHandler } from '@/handlers/room/leave';
 import { handler as roomPublishHandler } from '@/handlers/room/publish';
-import { rateLimitMiddleware } from '@/middleware/request';
-import { pipe } from './pipe';
-import { WebSocket } from 'uWebSockets.js';
-import { SocketAckHandler } from '@/types/socket.types';
-import { Session } from '@/types/session.types';
 
 export type EventHandler = (
   socket: WebSocket<Session>,

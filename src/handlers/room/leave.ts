@@ -1,6 +1,5 @@
 import Services from '@/lib/services';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
-import { RedisClient } from '@/lib/redis';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { getNspRoomId } from '@/util/helpers';

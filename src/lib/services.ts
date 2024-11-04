@@ -55,7 +55,7 @@ export default class Services {
       await this.amqpManager.connect();
       await this.redisClient.connect();
     } catch (err: unknown) {
-      this.logger.error(`Failed to connect to Redis: ${err}`);
+      this.logger.error(`Failed to connect services: ${err}`);
       throw err;
     }
   }

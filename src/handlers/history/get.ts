@@ -8,14 +8,14 @@ import {
   getNextPageToken,
   HISTORY_MAX_LIMIT,
   parseRequestQueryParams
-} from './history.service';
+} from '@/modules/history/history.service';
 import { BadRequestError } from '@/lib/errors';
 import { HttpMiddleware, ParsedHttpRequest } from '@/lib/middleware';
 import Services from '@/lib/services';
 
-const logger = getLogger('history-http');
+const logger = getLogger('history-get');
 
-export function getHistoryMessages({ pgPool, redisClient }: Services): HttpMiddleware {
+export function handler({ pgPool, redisClient }: Services): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
     logger.debug(`Getting room history messages`);
 

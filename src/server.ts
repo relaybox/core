@@ -1,6 +1,7 @@
 import 'dotenv/config';
 
 import os from 'os';
+import Services from './lib/services';
 import { App, HttpResponse, WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import {
@@ -11,14 +12,13 @@ import {
   handleSubscriptionBindings
 } from '@/modules/websocket/websocket.service';
 import { Session } from '@/types/session.types';
-import { getHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
 import { compose } from '@/lib/middleware';
 import { verifyAuthToken } from './modules/auth/auth.middleware';
 import { createEventHandlersMap } from './lib/handlers';
 import { createRouter } from './lib/router';
-import Services from './lib/services';
 import { handler as handleClientEvent } from '@/handlers/events/post';
+import { handler as handleHistoryGet } from '@/handlers/history/get';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -46,7 +46,7 @@ app.post('/events', compose(handleClientEvent(services)));
 
 app.get(
   '/history/:roomId/messages',
-  compose(verifyAuthToken(logger, services), getHistoryMessages(services))
+  compose(verifyAuthToken(logger, services), handleHistoryGet(services))
 );
 
 app.ws('/*', {

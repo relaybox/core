@@ -225,14 +225,3 @@ export async function handleClientHeartbeat(socket: WebSocket<Session>): Promise
     logger.error(`Failed to set session heartbeat`, { session });
   }
 }
-
-export async function rateLimitGuard(
-  redisClient: RedisClient,
-  connectionId: string,
-  evaluationPeriodMs: number,
-  entryLimit: number
-): Promise<number> {
-  const key = `${KeyPrefix.RATE}:messages:${connectionId}:${KeySuffix.COUNT}`;
-
-  return cache.evaluateRateLimit(redisClient, key, `${evaluationPeriodMs}`, `${entryLimit}`);
-}

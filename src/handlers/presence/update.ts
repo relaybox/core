@@ -55,7 +55,7 @@ export function handler({ redisClient }: Services) {
       await activeMemberGuard(redisClient, uid, nspRoomId);
 
       updateActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog);
-      enqueueWebhookEvent(WebhookEvent.PRESENCE_UPDATE, webhookData, session);
+      enqueueWebhookEvent(logger, WebhookEvent.PRESENCE_UPDATE, webhookData, session);
 
       logger.info('Client updated presence', {
         session,

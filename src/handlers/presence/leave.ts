@@ -51,7 +51,7 @@ export function handler({ redisClient }: Services) {
       await Promise.all([
         removeActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog),
         unpublishMetric(clientId, nspRoomId, MetricType.PRESENCE_MEMBER, session),
-        enqueueWebhookEvent(WebhookEvent.PRESENCE_LEAVE, webhookData, session)
+        enqueueWebhookEvent(logger, WebhookEvent.PRESENCE_LEAVE, webhookData, session)
       ]);
 
       logger.info('Client left presence', { session, subscription });

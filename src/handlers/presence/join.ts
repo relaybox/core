@@ -53,7 +53,7 @@ export function handler({ redisClient }: Services) {
       await Promise.all([
         addActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog),
         publishMetric(clientId, nspRoomId, MetricType.PRESENCE_MEMBER, session),
-        enqueueWebhookEvent(WebhookEvent.PRESENCE_JOIN, webhookData, session)
+        enqueueWebhookEvent(logger, WebhookEvent.PRESENCE_JOIN, webhookData, session)
       ]);
 
       logger.info('Client joined presence', { session, subscription });

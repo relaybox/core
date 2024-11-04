@@ -70,7 +70,10 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
         await Promise.race([
           timeoutPromise,
           nextMiddleware(res, currentRequest, (nextRequest?: Record<string, any>) =>
-            dispatch(i + 1, { ...currentRequest, ...(nextRequest || {}) })
+            dispatch(i + 1, {
+              ...currentRequest,
+              ...(nextRequest || {})
+            })
           )
         ]);
 

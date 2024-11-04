@@ -50,7 +50,7 @@ export function handler({ redisClient }: Services) {
         .to(nspClientId)
         .dispatch(subscription, messageData, session, latencyLog);
 
-      await enqueueWebhookEvent(WebhookEvent.USER_STATUS_UPDATE, webhookData, session);
+      await enqueueWebhookEvent(logger, WebhookEvent.USER_STATUS_UPDATE, webhookData, session);
 
       res(messageData);
     } catch (err: any) {

@@ -9,7 +9,7 @@ const logger = getLogger('pipe');
 
 const DEFAULT_MIDDLEWARE_TIMEOUT_MS = 5000;
 
-export function pipe(...middlewares: EventHandler[]) {
+export function pipe(...middlewares: EventHandler[]): EventHandler {
   return async (
     socket: WebSocket<Session>,
     body: any,

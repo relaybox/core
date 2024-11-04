@@ -37,7 +37,7 @@ export function handler({ redisClient }: Services) {
         joinRoom(logger, redisClient, session, nspRoomId, socket),
         joinRoom(logger, redisClient, session, nspRoomRoutingKey, socket),
         pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId),
-        enqueueWebhookEvent(WebhookEvent.ROOM_JOIN, webhookdata, session)
+        enqueueWebhookEvent(logger, WebhookEvent.ROOM_JOIN, webhookdata, session)
       ]);
 
       res(nspRoomId);

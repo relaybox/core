@@ -83,6 +83,7 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
 
       // TODO: pass logger to enqueueWebhookEvent
       await enqueueWebhookEvent(
+        logger,
         WebhookEvent.ROOM_PUBLISH,
         webhookData,
         session,

@@ -5,6 +5,8 @@ import { RedisClient } from '@/lib/redis';
 import { isActiveMember } from '@/modules/presence/presence.service';
 import { getRoomByConnectionId } from '@/modules/room/room.service';
 import { Logger } from 'winston';
+import { KeyPrefix, KeySuffix } from '@/types/state.types';
+import * as cache from '@/modules/guards/guards.cache';
 
 export function authenticatedSessionGuard(session: Session): boolean {
   if (!session.clientId) {
@@ -69,4 +71,15 @@ export async function roomMemberGuard(
   }
 
   return true;
+}
+
+export async function rateLimitGuard(
+  redisClient: RedisClient,
+  connectionId: string,
+  evaluationPeriodMs: number,
+  entryLimit: number
+): Promise<number> {
+  const key = `${KeyPrefix.RATE}:messages:${connectionId}:${KeySuffix.COUNT}`;
+
+  return cache.evaluateRateLimit(redisClient, key, `${evaluationPeriodMs}`, `${entryLimit}`);
 }

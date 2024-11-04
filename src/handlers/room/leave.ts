@@ -76,7 +76,7 @@ export function handler({ redisClient }: Services) {
           socket
         ),
         pushRoomLeaveMetrics(uid, nspRoomId, session),
-        enqueueWebhookEvent(WebhookEvent.ROOM_LEAVE, webhookdata, session)
+        enqueueWebhookEvent(logger, WebhookEvent.ROOM_LEAVE, webhookdata, session)
       ]);
 
       res(nspRoomId);

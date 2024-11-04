@@ -12,8 +12,6 @@ const RATE_LIMIT_MAX_MESSAGES_PER_EVALUATION_PERIOD =
 
 export function rateLimitMiddleware(handler: SocketAckHandler): SocketAckHandler {
   return async (
-    logger: Logger,
-    redisClient: RedisClient,
     socket: WebSocket<Session>,
     body: any,
     res: SocketAckHandler,

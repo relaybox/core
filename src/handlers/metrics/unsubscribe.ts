@@ -7,7 +7,7 @@ import { unbindSubscription } from '@/modules/subscription/subscription.service'
 import { KeyNamespace } from '@/types/state.types';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.ROOM_METRICS_UNSUBSCRIBE);
 

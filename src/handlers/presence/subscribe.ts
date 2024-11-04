@@ -1,4 +1,5 @@
 import { WebSocket } from 'uWebSockets.js';
+import Services from '@/lib/services';
 import { DsPermission } from '@/types/permissions.types';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
@@ -7,7 +8,6 @@ import { getNspRoomId } from '@/util/helpers';
 import { permissionsGuard, roomMemberGuard } from '@/modules/guards/guards.service';
 import { bindSubscription } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
-import { Services } from '@/lib/services';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 
@@ -35,7 +35,7 @@ export function handler({ redisClient }: Services) {
 
     try {
       permissionsGuard(roomId, DsPermission.PRESENCE, permissions);
-      await roomMemberGuard(redisClient, connectionId, nspRoomId);
+      await roomMemberGuard(logger, redisClient, connectionId, nspRoomId);
       await bindSubscription(
         redisClient,
         connectionId,

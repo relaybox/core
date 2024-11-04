@@ -9,7 +9,6 @@ import {
 import { getLogger } from '@/util/logger';
 import fs from 'fs';
 import path from 'path';
-import { addAndCleanup, setKeyExpiry } from '@/scripts/redis';
 
 const logger = getLogger('redis');
 
@@ -48,10 +47,6 @@ export const connectionOptions: RedisClientOptions = {
     ...socketOptions,
     reconnectStrategy
   }
-  // scripts: {
-  //   addAndCleanup,
-  //   setKeyExpiry
-  // }
 };
 
 // IO redis client options (BullMQ)
@@ -105,10 +100,6 @@ export function getRedisClient(): RedisClient {
 
   redisClient.on('end', () => {
     logger.info('Redis client disconnected');
-  });
-
-  redisClient.connect().catch((err) => {
-    logger.error(`Failed to connect to Redis: ${err.message}`);
   });
 
   return redisClient;

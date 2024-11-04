@@ -7,7 +7,7 @@ import { DsPermission } from '@/types/permissions.types';
 import { bindSubscription } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
 import { WebSocket } from 'uWebSockets.js';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
 

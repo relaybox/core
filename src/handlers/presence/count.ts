@@ -8,7 +8,7 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { getActiveMemberCount } from '@/modules/presence/presence.service';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.ROOM_PRESENCE_COUNT);
 

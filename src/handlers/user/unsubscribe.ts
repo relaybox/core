@@ -8,7 +8,7 @@ import { getNspClientId } from '@/util/helpers';
 import { KeyNamespace } from '@/types/state.types';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.AUTH_USER_STATUS_UPDATE);
 

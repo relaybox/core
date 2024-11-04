@@ -8,7 +8,7 @@ import {
 } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
 import { WebSocket } from 'uWebSockets.js';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 

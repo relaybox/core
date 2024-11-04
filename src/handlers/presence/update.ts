@@ -1,4 +1,5 @@
 import { WebSocket } from 'uWebSockets.js';
+import Services from '@/lib/services';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { formatErrorResponse, formatPresenceSubscription } from '@/util/format';
@@ -13,7 +14,6 @@ import { updateActiveMember } from '@/modules/presence/presence.service';
 import { getLatencyLog } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
-import { Services } from '@/lib/services';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 
@@ -51,7 +51,7 @@ export function handler({ redisClient }: Services) {
     try {
       authenticatedSessionGuard(session);
 
-      await roomMemberGuard(redisClient, connectionId, nspRoomId);
+      await roomMemberGuard(logger, redisClient, connectionId, nspRoomId);
       await activeMemberGuard(redisClient, uid, nspRoomId);
 
       updateActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog);

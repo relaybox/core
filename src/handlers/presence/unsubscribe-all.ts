@@ -5,7 +5,7 @@ import { formatErrorResponse } from '@/util/format';
 import { getNspRoomId } from '@/util/helpers';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 import { unbindAllSubscriptions } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
 

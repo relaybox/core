@@ -7,26 +7,18 @@ import {
   handleClientHeartbeat,
   handleConnectionUpgrade,
   handleDisconnect,
-  // handleSocketMessage,
   handleSocketOpen,
   handleSubscriptionBindings
 } from '@/modules/websocket/websocket.service';
 import { Session } from '@/types/session.types';
-import { enqueueDeliveryMetrics } from '@/modules/metrics/metrics.service';
-import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { getHistoryMessages } from '@/modules/history/history.http';
 import { getCorsResponse } from '@/util/http';
-import { eventEmitter } from '@/lib/event-bus';
-import { cleanupRedisClient, getRedisClient } from '@/lib/redis';
-import { cleanupPgPool, getPgPool } from '@/lib/pg';
 import { handleClientEvent } from './modules/events/events.handlers';
-import { cleanupAmqpPublisher, getPublisher } from '@/lib/publisher';
 import { compose } from '@/lib/middleware';
 import { verifyAuthToken } from './modules/auth/auth.middleware';
-import { handleSocketMessage } from './modules/websocket/websocket.router';
-import { createServices } from './lib/services';
 import { createEventHandlersMap } from './lib/handlers';
 import { createRouter } from './lib/router';
+import Services from './lib/services';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
 const CONTAINER_HOSTNAME = process.env.SERVER_PORT || os.hostname();
@@ -37,8 +29,7 @@ const WS_MAX_LIFETIME_MINS = 60;
 const logger = getLogger('core-socket-server');
 
 const app = App();
-
-const services = createServices(app, CONTAINER_HOSTNAME);
+const services = new Services(logger, app, CONTAINER_HOSTNAME);
 const eventHandlersMap = createEventHandlersMap(services);
 const router = createRouter(eventHandlersMap);
 
@@ -70,20 +61,12 @@ app.ws('/*', {
   open: (socket: WebSocket<Session>) => handleSocketOpen(socket, services.redisClient),
   pong: handleClientHeartbeat,
   message: router,
-  // message: (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) => {
-  //   handleSocketMessage(socket, services.redisClient, message, isBinary, app);
-  // },
   close: (socket: WebSocket<Session>, code: number, message: ArrayBuffer) => {
     handleDisconnect(socket, services.redisClient, code, message, CONTAINER_HOSTNAME);
   }
 });
 
-const amqpManager = AmqpManager.getInstance(app, eventEmitter, {
-  instanceId: CONTAINER_HOSTNAME,
-  enqueueDeliveryMetrics
-});
-
-amqpManager.connect().then((_) => {
+services.connect().then((_) => {
   const port = Number(SERVER_PORT);
 
   app.listen(port, LISTEN_EXCLUSIVE_PORT, (socket) => {
@@ -95,27 +78,5 @@ amqpManager.connect().then((_) => {
   });
 });
 
-async function shutdown(signal: string): Promise<void> {
-  logger.info(`${signal} received, shutting down...`);
-
-  const shutdownTimeout = setTimeout(() => {
-    logger.error('Shutdown timed out, forcing exit');
-    process.exit(1);
-  }, 20000);
-
-  try {
-    await Promise.all([cleanupRedisClient(), cleanupPgPool(), cleanupAmqpPublisher()]);
-
-    clearTimeout(shutdownTimeout);
-
-    logger.info('Shutdown complete');
-
-    process.exit(0);
-  } catch (err) {
-    logger.error('Error during shutdown', { err });
-    process.exit(1);
-  }
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => services.disconnect('SIGTERM'));
+process.on('SIGINT', () => services.disconnect('SIGINT'));

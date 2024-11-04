@@ -9,7 +9,7 @@ import { KeyNamespace } from '@/types/state.types';
 import { WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.ROOM_SUBSCRIPTION_BIND);
 
@@ -32,7 +32,7 @@ export function handler({ redisClient }: Services) {
     try {
       permissionsGuard(roomId, DsPermission.SUBSCRIBE, permissions);
 
-      await roomMemberGuard(redisClient, connectionId, nspRoomId);
+      await roomMemberGuard(logger, redisClient, connectionId, nspRoomId);
       await bindSubscription(
         redisClient,
         connectionId,

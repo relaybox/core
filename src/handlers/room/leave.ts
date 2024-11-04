@@ -16,7 +16,7 @@ import { removeActiveMember } from '@/modules/presence/presence.service';
 import { unbindAllSubscriptions } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
 import { Logger } from 'winston';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.ROOM_LEAVE);
 
@@ -49,8 +49,8 @@ export function handler({ redisClient }: Services) {
       };
 
       await Promise.all([
-        leaveRoom(redisClient, session, nspRoomId, socket),
-        leaveRoom(redisClient, session, nspRoomRoutingKey, socket),
+        leaveRoom(logger, redisClient, session, nspRoomId, socket),
+        leaveRoom(logger, redisClient, session, nspRoomRoutingKey, socket),
         removeActiveMember(uid, nspRoomId, presenceSubsciption, session, presenceLeaveMessage),
         unbindAllSubscriptions(
           redisClient,

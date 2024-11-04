@@ -7,7 +7,7 @@ import { formatErrorResponse, formatPresenceSubscription } from '@/util/format';
 import { getNspRoomId } from '@/util/helpers';
 import { unbindSubscription } from '@/modules/subscription/subscription.service';
 import { KeyNamespace } from '@/types/state.types';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 

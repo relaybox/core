@@ -14,7 +14,7 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { getReducedSession } from '@/modules/session/session.service';
 import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
-import { Services } from '@/lib/services';
+import Services from '@/lib/services';
 
 const logger = getLogger(ClientEvent.PUBLISH);
 

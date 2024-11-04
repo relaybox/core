@@ -38,8 +38,8 @@ export function createEventHandlersMap(services: Services): Record<ClientEvent, 
     [ClientEvent.ROOM_JOIN]: roomJoinHandler(services),
     [ClientEvent.ROOM_LEAVE]: roomLeaveHandler(services),
     [ClientEvent.PUBLISH]: compose(
-      rateLimitMiddleware(services),
       sizeLimitMiddleware,
+      rateLimitMiddleware(services),
       roomPublishHandler(services)
     ),
     [ClientEvent.ROOM_SUBSCRIPTION_BIND]: subscriptionBindHandler(services),
@@ -50,8 +50,8 @@ export function createEventHandlersMap(services: Services): Record<ClientEvent, 
     [ClientEvent.ROOM_PRESENCE_JOIN]: presenceJoinHandler(services),
     [ClientEvent.ROOM_PRESENCE_LEAVE]: presenceLeaveHandler(services),
     [ClientEvent.ROOM_PRESENCE_UPDATE]: compose(
-      rateLimitMiddleware(services),
       sizeLimitMiddleware,
+      rateLimitMiddleware(services),
       presenceUpdateHandler(services)
     ),
     [ClientEvent.ROOM_PRESENCE_GET]: presenceGetHandler(services),

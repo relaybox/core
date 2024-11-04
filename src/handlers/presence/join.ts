@@ -24,6 +24,7 @@ export function handler({ redisClient }: Services) {
     createdAt: string
   ): Promise<void> {
     const session = socket.getUserData();
+
     const { roomId, userData } = data;
     const { appPid, clientId, connectionId, user } = session;
 
@@ -47,7 +48,7 @@ export function handler({ redisClient }: Services) {
 
     try {
       authenticatedSessionGuard(session);
-      await roomMemberGuard(redisClient, connectionId, nspRoomId);
+      await roomMemberGuard(logger, redisClient, connectionId, nspRoomId);
 
       await Promise.all([
         addActiveMember(clientId, nspRoomId, subscription, session, message, latencyLog),

@@ -4,6 +4,7 @@ import { Session } from '@/types/session.types';
 import { RedisClient } from '@/lib/redis';
 import { isActiveMember } from '@/modules/presence/presence.service';
 import { getRoomByConnectionId } from '@/modules/room/room.service';
+import { Logger } from 'winston';
 
 export function authenticatedSessionGuard(session: Session): boolean {
   if (!session.clientId) {
@@ -51,11 +52,17 @@ export function permissionsGuard(
 }
 
 export async function roomMemberGuard(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string
 ): Promise<boolean> {
-  const roomJoinedTimestamp = await getRoomByConnectionId(redisClient, connectionId, nspRoomId);
+  const roomJoinedTimestamp = await getRoomByConnectionId(
+    logger,
+    redisClient,
+    connectionId,
+    nspRoomId
+  );
 
   if (!roomJoinedTimestamp) {
     throw new Error(`Client not active in room`);

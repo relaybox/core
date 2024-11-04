@@ -1,15 +1,13 @@
 import { RedisClient } from '@/lib/redis';
 import * as repository from './room.repository';
 import { Session } from '@/types/session.types';
-import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 
-const logger = getLogger('room');
-
 export async function joinRoom(
+  logger: Logger,
   redisClient: RedisClient,
   session: Session,
   nspRoomId: string,
@@ -29,6 +27,7 @@ export async function joinRoom(
 }
 
 export async function leaveRoom(
+  logger: Logger,
   redisClient: RedisClient,
   session: Session,
   nspRoomId: string,
@@ -78,7 +77,7 @@ export async function restoreCachedRooms(
       await Promise.all(
         rooms.map(async (nspRoomId) =>
           Promise.all([
-            joinRoom(redisClient, session, nspRoomId, socket),
+            joinRoom(logger, redisClient, session, nspRoomId, socket),
             restoreRoomSubscriptions(
               redisClient,
               connectionId,
@@ -111,6 +110,7 @@ export async function restoreCachedRooms(
 }
 
 export async function getRoomByConnectionId(
+  logger: Logger,
   redisClient: RedisClient,
   connectionId: string,
   nspRoomId: string

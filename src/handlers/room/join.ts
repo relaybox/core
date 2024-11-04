@@ -35,8 +35,8 @@ export function handler({ redisClient }: Services) {
       };
 
       await Promise.all([
-        joinRoom(redisClient, session, nspRoomId, socket),
-        joinRoom(redisClient, session, nspRoomRoutingKey, socket),
+        joinRoom(logger, redisClient, session, nspRoomId, socket),
+        joinRoom(logger, redisClient, session, nspRoomRoutingKey, socket),
         pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId),
         enqueueWebhookEvent(WebhookEvent.ROOM_JOIN, webhookdata, session)
       ]);

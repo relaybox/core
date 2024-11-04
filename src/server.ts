@@ -13,7 +13,7 @@ import {
 } from '@/modules/websocket/websocket.service';
 import { Session } from '@/types/session.types';
 import { getCorsResponse } from '@/util/http';
-import { compose } from '@/lib/middleware';
+import { pipe } from '@/lib/middleware';
 import { createEventHandlersMap } from './lib/handlers';
 import { createRouter } from '@/lib/router';
 import { handler as handleClientEvent } from '@/handlers/events/post';
@@ -42,11 +42,11 @@ app.get('/', (res: HttpResponse) => {
   res.end(process.uptime().toString());
 });
 
-app.post('/events', compose(handleClientEvent(services)));
+app.post('/events', pipe(handleClientEvent(services)));
 
 app.get(
   '/history/:roomId/messages',
-  compose(verifyAuthToken(logger, services), handleHistoryGet(services))
+  pipe(verifyAuthToken(logger, services), handleHistoryGet(services))
 );
 
 app.ws('/*', {

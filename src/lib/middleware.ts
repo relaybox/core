@@ -1,4 +1,4 @@
-import { HttpRequest, HttpResponse } from 'uWebSockets.js';
+import { HttpRequest, HttpResponse, WebSocket } from 'uWebSockets.js';
 import {
   getErrorResponse,
   getHeaders,
@@ -6,6 +6,13 @@ import {
   getQueryParams,
   parseRequestBody
 } from '@/util/http';
+import { EventHandler } from './handlers';
+import { SocketAckHandler } from '@/types/socket.types';
+import { getLogger } from '@/util/logger';
+import { formatErrorResponse } from '@/util/format';
+import { Session } from '@/types/session.types';
+
+const logger = getLogger('middleware');
 
 const DEFAULT_MIDDLEWARE_TIMEOUT_MS = 5000;
 
@@ -28,7 +35,7 @@ export type HttpMiddleware = (
 export type HttpRequestHandler = (res: HttpResponse, req: HttpRequest) => Promise<void>;
 export type HttpMiddlewareNext = (extendRequest?: Record<string, any>) => Promise<void> | void;
 
-export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
+export function pipe(...middlewares: HttpMiddleware[]): HttpRequestHandler {
   return async (res: HttpResponse, req: HttpRequest) => {
     let aborted = false;
 
@@ -62,13 +69,11 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
 
       const nextMiddleware = middlewares[i];
 
-      const { promise: timeoutPromise, clearRequestTimeout } = getMiddlewareTimeout(
-        DEFAULT_MIDDLEWARE_TIMEOUT_MS
-      );
+      const { requestTimeout, clearRequestTimeout } = getMiddlewareTimeout();
 
       try {
         await Promise.race([
-          timeoutPromise,
+          requestTimeout,
           nextMiddleware(res, currentRequest, (nextRequest?: Record<string, any>) =>
             dispatch(i + 1, {
               ...currentRequest,
@@ -91,17 +96,45 @@ export function compose(...middlewares: HttpMiddleware[]): HttpRequestHandler {
   };
 }
 
-function getMiddlewareTimeout(duration = 500) {
+export function compose(...middlewares: EventHandler[]): EventHandler {
+  return async (
+    socket: WebSocket<Session>,
+    body: any,
+    res: SocketAckHandler,
+    createdAt?: string,
+    byteLength?: number
+  ): Promise<void> => {
+    for (const middleware of middlewares) {
+      const { requestTimeout, clearRequestTimeout } = getMiddlewareTimeout();
+
+      try {
+        await Promise.race([requestTimeout, middleware(socket, body, res, createdAt, byteLength)]);
+      } catch (err: any) {
+        logger.error(`Failed to handle socket message`, { err });
+
+        if (res) {
+          res(null, formatErrorResponse(err));
+        }
+
+        return;
+      } finally {
+        clearRequestTimeout();
+      }
+    }
+  };
+}
+
+function getMiddlewareTimeout(duration = DEFAULT_MIDDLEWARE_TIMEOUT_MS) {
   let timeoutId: NodeJS.Timeout;
 
-  const promise = new Promise((_, reject) => {
+  const requestTimeout = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
       reject(new Error('Timeout occurred'));
     }, duration);
   });
 
   return {
-    promise,
+    requestTimeout,
     clearRequestTimeout: () => clearTimeout(timeoutId)
   };
 }

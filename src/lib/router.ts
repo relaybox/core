@@ -8,7 +8,13 @@ const logger = getLogger('router');
 
 const decoder = new TextDecoder('utf-8');
 
-export function createRouter(handlersMap: Record<string, Function>) {
+export type SocketMessageHandler = (
+  socket: WebSocket<Session>,
+  message: ArrayBuffer,
+  isBinary: boolean
+) => void;
+
+export function createRouter(handlersMap: Record<string, Function>): SocketMessageHandler {
   logger.info(`Creating router`, { handlersMap });
 
   return function (socket: WebSocket<Session>, message: ArrayBuffer, isBinary: boolean) {

@@ -59,10 +59,10 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
 
       const webhookData = {
         id: messageId,
-        roomId,
-        event,
         body: messageData,
-        timestamp
+        roomId,
+        timestamp,
+        event
       };
 
       const webhookFilterAttributes = {

@@ -82,8 +82,6 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
 
       await addMessageToCache(logger, redisClient, persistedMessageData);
       await enqueueMessageForPersistence(logger, publisher, persistedMessageData);
-
-      // TODO: pass logger to enqueueWebhookEvent
       await enqueueWebhookEvent(
         logger,
         WebhookEvent.ROOM_PUBLISH,

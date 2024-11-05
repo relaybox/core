@@ -25,29 +25,10 @@ export default class Services {
 
     this.app = app;
     this.instanceId = instanceId;
-
     this.pgPool = this.getPgPool();
     this.redisClient = this.getRedisClient();
     this.publisher = this.getPublisher();
     this.amqpManager = this.getAmqpManager();
-  }
-
-  private getPgPool(): Pool | null {
-    return getPgPool();
-  }
-  private getRedisClient(): RedisClient {
-    return getRedisClient();
-  }
-
-  private getPublisher(): Publisher {
-    return getPublisher();
-  }
-
-  private getAmqpManager(): AmqpManager {
-    return AmqpManager.getInstance(this.app, eventEmitter, {
-      instanceId: this.instanceId,
-      enqueueDeliveryMetrics
-    });
   }
 
   public async connect(): Promise<void> {
@@ -80,5 +61,23 @@ export default class Services {
       this.logger.error('Error during shutdown', { err });
       process.exit(1);
     }
+  }
+
+  private getPgPool(): Pool | null {
+    return getPgPool();
+  }
+  private getRedisClient(): RedisClient {
+    return getRedisClient();
+  }
+
+  private getPublisher(): Publisher {
+    return getPublisher();
+  }
+
+  private getAmqpManager(): AmqpManager {
+    return AmqpManager.getInstance(this.app, eventEmitter, {
+      instanceId: this.instanceId,
+      enqueueDeliveryMetrics
+    });
   }
 }

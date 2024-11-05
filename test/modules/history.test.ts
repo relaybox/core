@@ -12,11 +12,13 @@ describe('history.service', () => {
       { id: '1' },
       { id: '2' },
       { id: '3' },
-      { id: '4' },
+      { id: '4', body: 'static' },
       { id: '5', body: 'static' }
     ] as Message[];
 
     const cachedMessagesForRange = [
+      { id: '2', body: 'cached' },
+      { id: '4', body: 'cached' },
       { id: '5', body: 'cached' },
       { id: '6' },
       { id: '7' },
@@ -44,7 +46,7 @@ describe('history.service', () => {
         { id: '7' },
         { id: '6' },
         { id: '5', body: 'static' },
-        { id: '4' },
+        { id: '4', body: 'static' },
         { id: '3' },
         { id: '2' },
         { id: '1' }
@@ -66,7 +68,7 @@ describe('history.service', () => {
         { id: '1' },
         { id: '2' },
         { id: '3' },
-        { id: '4' },
+        { id: '4', body: 'static' },
         { id: '5', body: 'static' },
         { id: '6' },
         { id: '7' },

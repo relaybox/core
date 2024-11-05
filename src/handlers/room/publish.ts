@@ -47,20 +47,22 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
       };
 
       const messageId = uuid();
+      const timestamp = Date.now();
 
       const extendedMessageData = {
         id: messageId,
         body: messageData,
         sender,
-        timestamp: new Date().getTime(),
+        timestamp,
         event
       };
 
       const webhookData = {
-        ...messageData,
         id: messageId,
         roomId,
-        event
+        event,
+        body: messageData,
+        timestamp
       };
 
       const webhookFilterAttributes = {

@@ -1,5 +1,5 @@
 import { getLogger } from '@/util/logger';
-import { Connection, Envelope, Publisher, PublisherProps } from 'rabbitmq-client';
+import { Connection, Publisher, PublisherProps } from 'rabbitmq-client';
 
 const logger = getLogger('publisher');
 

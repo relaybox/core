@@ -57,6 +57,4 @@ export function getMessagesByRoomId(
   }
 
   return pgClient.query(query, queryParams);
-
-  // return getPaginatedQuery(pgClient, query, 0, limit!, queryParams);
 }

@@ -1,5 +1,4 @@
 import { HttpMiddleware, HttpMiddlewareNext, ParsedHttpRequest } from '@/lib/middleware';
-import { Pool } from 'pg';
 import { HttpResponse } from 'uWebSockets.js';
 import { Logger } from 'winston';
 import {
@@ -17,10 +16,6 @@ export function verifyAuthToken(logger: Logger, { pgPool }: Services): HttpMiddl
     try {
       const authHeader = req.headers['authorization'];
       const bearerToken = authHeader.substring(7);
-
-      const decodedAuthToken = decodeAuthToken(bearerToken);
-
-      console.log(decodedAuthToken);
 
       const { publicKey, permissions } = decodeAuthToken(bearerToken);
       const { appPid, keyId } = parsePublicKey(publicKey);

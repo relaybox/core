@@ -134,11 +134,6 @@ export async function markSessionUserInactive(
   const jobConfig = {
     jobId,
     delay: SESSION_INACTIVE_JOB_DELAY_MS,
-    // attempts: SESSION_DESTROY_JOB_MAX_ATTEMPTS,
-    // backoff: {
-    //   type: 'exponential',
-    //   delay: 1000
-    // },
     ...defaultJobConfig
   };
 

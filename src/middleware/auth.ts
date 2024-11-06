@@ -18,14 +18,18 @@ export function verifyAuthToken(logger: Logger, { pgPool }: Services): HttpMiddl
       const authHeader = req.headers['authorization'];
       const bearerToken = authHeader.substring(7);
 
-      const { publicKey } = decodeAuthToken(bearerToken);
+      const decodedAuthToken = decodeAuthToken(bearerToken);
+
+      console.log(decodedAuthToken);
+
+      const { publicKey, permissions } = decodeAuthToken(bearerToken);
       const { appPid, keyId } = parsePublicKey(publicKey);
 
       const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
 
       verifyAuthTokenSignature(logger, bearerToken, secretKey);
 
-      next({ auth: { appPid, keyId } });
+      next({ auth: { appPid, keyId, permissions } });
     } catch (err: unknown) {
       logger.error(`Failed to verify token`, { err });
       throw err;

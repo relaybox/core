@@ -47,19 +47,21 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
       };
 
       const messageId = uuid();
+      const timestamp = Date.now();
 
       const extendedMessageData = {
         id: messageId,
         body: messageData,
         sender,
-        timestamp: new Date().getTime(),
+        timestamp,
         event
       };
 
       const webhookData = {
-        ...messageData,
         id: messageId,
+        body: messageData,
         roomId,
+        timestamp,
         event
       };
 
@@ -80,8 +82,6 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
 
       await addMessageToCache(logger, redisClient, persistedMessageData);
       await enqueueMessageForPersistence(logger, publisher, persistedMessageData);
-
-      // TODO: pass logger to enqueueWebhookEvent
       await enqueueWebhookEvent(
         logger,
         WebhookEvent.ROOM_PUBLISH,

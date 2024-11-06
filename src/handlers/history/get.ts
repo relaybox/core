@@ -28,11 +28,6 @@ export function handler({ pgPool, redisClient }: Services): HttpMiddleware {
       const roomId = req.params[0];
 
       const { appPid, keyId, permissions: userPermissions } = req.auth;
-
-      const permissions = userPermissions ?? (await getPermissions(logger, pgClient, keyId));
-
-      permissionsGuard(roomId, DsPermission.HISTORY, permissions);
-
       const { start, end, order, limit, lastItemId } = parseRequestQueryParams(req);
 
       if (limit > HISTORY_MAX_LIMIT) {
@@ -42,6 +37,10 @@ export function handler({ pgPool, redisClient }: Services): HttpMiddleware {
       if (end && start && end < start) {
         throw new BadRequestError('End must be greater than start');
       }
+
+      const permissions = userPermissions ?? (await getPermissions(logger, pgClient, keyId));
+
+      permissionsGuard(roomId, DsPermission.HISTORY, permissions);
 
       const items = await getMessagesByRoomId(
         logger,

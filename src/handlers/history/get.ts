@@ -25,8 +25,9 @@ export function handler({ pgPool, redisClient }: Services): HttpMiddleware {
     const pgClient = await pgPool!.connect();
 
     try {
-      const { appPid, keyId, permissions: userPermissions } = req.auth;
       const roomId = req.params[0];
+
+      const { appPid, keyId, permissions: userPermissions } = req.auth;
 
       const permissions = userPermissions ?? (await getPermissions(logger, pgClient, keyId));
 

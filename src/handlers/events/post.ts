@@ -15,7 +15,7 @@ import {
   verifyTimestamp
 } from '@/modules/auth/auth.service';
 import { getPermissions } from '@/modules/permissions/permissions.service';
-import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
+import { addMessageToCache, enqueueHistoryMessage } from '@/modules/history/history.service';
 import Services from '@/lib/services';
 
 const logger = getLogger('event');
@@ -85,13 +85,14 @@ export function handler({ pgPool, redisClient, amqpManager, publisher }: Service
         .dispatch(nspEvent, extendedMessageData, session, latencyLog);
 
       const persistedMessageData = {
+        appPid,
         roomId,
         event,
         message: processedMessageData
       };
 
       await addMessageToCache(logger, redisClient, persistedMessageData);
-      await enqueueMessageForPersistence(logger, publisher, persistedMessageData);
+      await enqueueHistoryMessage(logger, publisher, persistedMessageData);
 
       res.cork(() =>
         getSuccessResponse(res, {

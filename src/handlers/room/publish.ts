@@ -13,7 +13,7 @@ import { ClientEvent } from '@/types/event.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { getReducedSession } from '@/modules/session/session.service';
-import { addMessageToCache, enqueueMessageForPersistence } from '@/modules/history/history.service';
+import { addMessageToCache, enqueueHistoryMessage } from '@/modules/history/history.service';
 
 const logger = getLogger(ClientEvent.PUBLISH);
 
@@ -75,13 +75,14 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         .dispatch(nspEvent, extendedMessageData, reducedSession, latencyLog);
 
       const persistedMessageData = {
+        appPid,
         roomId,
         event,
         message: processedMessageData
       };
 
       await addMessageToCache(logger, redisClient, persistedMessageData);
-      await enqueueMessageForPersistence(logger, publisher, persistedMessageData);
+      await enqueueHistoryMessage(logger, publisher, persistedMessageData);
       await enqueueWebhookEvent(
         logger,
         WebhookEvent.ROOM_PUBLISH,

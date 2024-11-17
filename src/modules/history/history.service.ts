@@ -222,7 +222,7 @@ export function decodeNextPageToken(token: string): HistoryNextPageTokenData | n
   return JSON.parse(Buffer.from(token, NEXT_PAGE_TOKEN_ENCODING).toString());
 }
 
-export async function enqueueMessageForPersistence(
+export async function enqueueHistoryMessage(
   logger: Logger,
   publisher: Publisher,
   data: any

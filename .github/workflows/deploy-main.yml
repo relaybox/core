@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/20241109_save_message_vectors
 
 jobs:
   test:

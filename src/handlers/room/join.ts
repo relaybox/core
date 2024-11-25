@@ -29,7 +29,7 @@ export function handler({ pgPool, redisClient }: Services) {
   ): Promise<void> {
     const session = socket.getUserData();
 
-    const { roomId, roomType } = data;
+    const { roomId, type: clientRoomType } = data;
     const { appPid, clientId } = session;
 
     logger.debug(`Joining room`, { roomId, clientId });
@@ -46,7 +46,7 @@ export function handler({ pgPool, redisClient }: Services) {
       const room = await getRoomById(logger, pgClient, roomId, clientId);
 
       if (room) {
-        evaluateRoomAccess(logger, room, session);
+        evaluateRoomAccess(logger, room, clientRoomType, session);
 
         if (!room.memberCreatedAt) {
           await addRoomMember(
@@ -59,13 +59,20 @@ export function handler({ pgPool, redisClient }: Services) {
           );
         }
       } else {
-        await initializeRoom(logger, pgClient, roomId, roomType, RoomMemberType.OWNER, session);
+        await initializeRoom(
+          logger,
+          pgClient,
+          roomId,
+          clientRoomType,
+          RoomMemberType.OWNER,
+          session
+        );
       }
 
       await Promise.all([
         joinRoom(logger, redisClient, session, nspRoomId, socket),
         joinRoom(logger, redisClient, session, nspRoomRoutingKey, socket),
-        pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId, roomType),
+        pushRoomJoinMetrics(redisClient, session, roomId, nspRoomId),
         enqueueWebhookEvent(logger, WebhookEvent.ROOM_JOIN, webhookdata, session)
       ]);
 

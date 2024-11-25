@@ -223,7 +223,12 @@ export async function addRoomMember(
   }
 }
 
-export function evaluateRoomAccess(logger: Logger, room: Room, session: Session): boolean {
+export function evaluateRoomAccess(
+  logger: Logger,
+  room: Room,
+  clientRoomType: string,
+  session: Session
+): boolean {
   logger.debug(`Evaluating room access`, { session });
 
   const { permissions } = session;
@@ -231,6 +236,10 @@ export function evaluateRoomAccess(logger: Logger, room: Room, session: Session)
 
   if (roomType === RoomType.PRIVATE) {
     permissionsGuard(roomId, DsPermission.PRIVACY, permissions);
+  }
+
+  if (clientRoomType !== roomType) {
+    throw new ForbiddenError('Room access denied');
   }
 
   if (roomType === RoomType.PRIVATE && !memberCreatedAt) {

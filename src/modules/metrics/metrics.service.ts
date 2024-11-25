@@ -50,8 +50,7 @@ export async function pushRoomJoinMetrics(
   redisClient: RedisClient,
   session: Session,
   roomId: string,
-  nspRoomId: string,
-  roomType: string = RoomType.PUBLIC
+  nspRoomId: string
 ): Promise<void> {
   const metrics = [];
 
@@ -85,7 +84,6 @@ export async function pushRoomJoinMetrics(
     uid,
     roomId,
     nspRoomId,
-    roomType,
     metrics,
     timestamp,
     session: reducedSession

@@ -29,21 +29,23 @@ export function handler({ pgPool, redisClient }: Services) {
     const session = socket.getUserData();
 
     const { roomId, roomType } = data;
+    const { appPid, clientId } = session;
 
-    logger.debug(`Joining room`, { roomId, session });
+    logger.debug(`Joining room`, { roomId, clientId });
 
     const pgClient = await pgPool!.connect();
 
     try {
-      const room = await getRoomById(logger, pgClient, roomId, session.clientId!);
-      const nspRoomId = getNspRoomId(session.appPid, roomId);
+      const nspRoomId = getNspRoomId(appPid, roomId);
       const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
       const webhookdata = {
         roomId
       };
 
+      const room = await getRoomById(logger, pgClient, roomId, clientId);
+
       if (room) {
-        evaluateRoomAccess(logger, room, session.clientId!);
+        evaluateRoomAccess(logger, room, clientId);
       } else {
         await initializeRoom(logger, pgClient, roomId, roomType, RoomMemberType.OWNER, session);
       }

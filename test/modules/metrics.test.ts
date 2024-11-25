@@ -12,6 +12,7 @@ import {
 import { MetricType } from '@/types/metric.types';
 import { MetricsJobName } from '@/modules/metrics/metrics.queue';
 import { RedisClient } from '@/lib/redis';
+import { RoomType } from '@/types/room.types';
 
 const mockPresenceService = vi.hoisted(() => ({
   isActiveMember: vi.fn()
@@ -21,7 +22,8 @@ vi.mock('@/modules/presence/presence.service', () => mockPresenceService);
 
 describe('metrics.service', () => {
   const uid = '12345';
-  const nspRoomId = 'nsp:chat:one';
+  const roomId = 'chat:one';
+  const nspRoomId = `nsp:${roomId}`;
   const metricType = MetricType.CONNECTION;
   const session = getMockSession({ uid });
 
@@ -105,6 +107,8 @@ describe('metrics.service', () => {
       const jobData = {
         uid: session.uid,
         nspRoomId,
+        roomId,
+        roomType: RoomType.PUBLIC,
         metrics: ['connection', 'subscriber', 'publisher', 'presenceSubscriber', 'presenceMember'],
         timestamp,
         session: reducedSession
@@ -135,6 +139,8 @@ describe('metrics.service', () => {
       const jobData = {
         uid: session.uid,
         nspRoomId,
+        roomId,
+        roomType: RoomType.PUBLIC,
         metrics: ['connection', 'subscriber', 'publisher'],
         timestamp,
         session: reducedSession

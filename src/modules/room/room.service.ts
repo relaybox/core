@@ -180,13 +180,13 @@ export async function initializeRoom(
       return null;
     }
 
-    const roomInternalId = rooms[0]?.id;
+    const internalId = rooms[0]?.id;
 
-    await addRoomMember(logger, pgClient, roomId, roomInternalId, roomMemberType, session);
+    await addRoomMember(logger, pgClient, roomId, internalId, roomMemberType, session);
 
     await pgClient.query('COMMIT');
 
-    return roomInternalId;
+    return internalId;
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to create room ${roomId}:`, err);
@@ -198,7 +198,7 @@ export async function addRoomMember(
   logger: Logger,
   pgClient: PoolClient,
   roomId: string,
-  roomInternalId: string,
+  internalId: string,
   roomMemberType: RoomMemberType,
   session: ReducedSession
 ): Promise<void> {
@@ -210,7 +210,7 @@ export async function addRoomMember(
     await db.addRoomMember(
       pgClient,
       roomId,
-      roomInternalId,
+      internalId,
       roomMemberType,
       appPid,
       clientId,

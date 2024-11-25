@@ -16,7 +16,7 @@ export function getRoomById(
       rm."createdAt" AS "memberCreatedAt",
       rm."memberType" AS "memberType"
     FROM rooms r
-    LEFT JOIN room_members rm ON rm."roomInternalId" = r."id" 
+    LEFT JOIN room_members rm ON rm."internalId" = r."id" 
       AND rm."clientId" = $2
       AND rm."deletedAt" IS NULL
     WHERE r."roomId" = $1;
@@ -62,7 +62,7 @@ export function createRoom(
 export async function addRoomMember(
   pgClient: PoolClient,
   roomId: string,
-  roomInternalId: string,
+  internalId: string,
   roomMemberType: RoomMemberType,
   appPid: string,
   clientId: string,
@@ -73,7 +73,7 @@ export async function addRoomMember(
 
   const query = `
     INSERT INTO room_members (
-      "appPid", "roomId", "roomInternalId", uid, "clientId", "memberType", 
+      "appPid", "roomId", "internalId", uid, "clientId", "memberType", 
       "connectionId", "createdAt", "updatedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9
@@ -83,7 +83,7 @@ export async function addRoomMember(
   return pgClient.query(query, [
     appPid,
     roomId,
-    roomInternalId,
+    internalId,
     uid,
     clientId,
     roomMemberType,

@@ -1,7 +1,6 @@
 import { Job } from 'bullmq';
 import { MetricType } from '@/types/metric.types';
 import { ReducedSession, Session } from '@/types/session.types';
-import { getLogger } from '@/util/logger';
 import { hasPermission, matchRoomPermissions } from '@/modules/permissions/permissions.service';
 import { DsPermission } from '@/types/permissions.types';
 import { MetricsJobName, defaultJobConfig, metricsQueue } from './metrics.queue';
@@ -9,6 +8,7 @@ import { getReducedSession } from '@/modules/session/session.service';
 import { LatencyLog } from 'src/types/request.types';
 import { RedisClient } from 'src/lib/redis';
 import { isActiveMember } from '@/modules/presence/presence.service';
+import { RoomType } from '@/types/room.types';
 
 export function publishMetric(
   uid: string,
@@ -50,7 +50,8 @@ export async function pushRoomJoinMetrics(
   redisClient: RedisClient,
   session: Session,
   roomId: string,
-  nspRoomId: string
+  nspRoomId: string,
+  roomType: string = RoomType.PUBLIC
 ): Promise<void> {
   const metrics = [];
 
@@ -82,7 +83,9 @@ export async function pushRoomJoinMetrics(
 
   const jobData = {
     uid,
+    roomId,
     nspRoomId,
+    roomType,
     metrics,
     timestamp,
     session: reducedSession

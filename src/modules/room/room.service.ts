@@ -9,6 +9,8 @@ import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.se
 import { PoolClient } from 'pg';
 import { Room, RoomMemberType, RoomType } from '@/types/room.types';
 import { ForbiddenError } from '@/lib/errors';
+import { permissionsGuard } from '../guards/guards.service';
+import { DsPermission } from '@/types/permissions.types';
 
 export async function joinRoom(
   logger: Logger,
@@ -221,10 +223,15 @@ export async function addRoomMember(
   }
 }
 
-export function evaluateRoomAccess(logger: Logger, room: Room, clientId: string): boolean {
-  logger.debug(`Evaluating room access`, { clientId, room });
+export function evaluateRoomAccess(logger: Logger, room: Room, session: Session): boolean {
+  logger.debug(`Evaluating room access`, { session });
 
-  const { roomType, memberCreatedAt } = room;
+  const { permissions } = session;
+  const { roomType, roomId, memberCreatedAt } = room;
+
+  if (roomType === RoomType.PRIVATE) {
+    permissionsGuard(roomId, DsPermission.PRIVACY, permissions);
+  }
 
   if (roomType === RoomType.PRIVATE && !memberCreatedAt) {
     throw new ForbiddenError('Room access denied');

@@ -45,7 +45,7 @@ export function handler({ pgPool, redisClient }: Services) {
       const room = await getRoomById(logger, pgClient, roomId, clientId);
 
       if (room) {
-        evaluateRoomAccess(logger, room, clientId);
+        evaluateRoomAccess(logger, room, session);
       } else {
         await initializeRoom(logger, pgClient, roomId, roomType, RoomMemberType.OWNER, session);
       }

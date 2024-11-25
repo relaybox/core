@@ -1,10 +1,13 @@
 import { RedisClient } from '@/lib/redis';
 import * as cache from './room.cache';
+import * as db from './room.db';
 import { Session } from '@/types/session.types';
 import { WebSocket } from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
+import { PoolClient } from 'pg';
+import { Room } from '@/types/room.types';
 
 export async function joinRoom(
   logger: Logger,
@@ -122,6 +125,26 @@ export async function getRoomByConnectionId(
     return await cache.getRoomByConnectionId(redisClient, connectionId, nspRoomId);
   } catch (err: any) {
     logger.error(`Failed to get room by connection id`, { err });
+    throw err;
+  }
+}
+
+export async function getRoomById(
+  logger: Logger,
+  pgClient: PoolClient,
+  roomId: string,
+  clientId: string
+): Promise<Room | undefined> {
+  try {
+    const { rows: rooms } = await db.getRoomById(pgClient, roomId, clientId);
+
+    if (!rooms.length) {
+      return undefined;
+    }
+
+    return rooms[0];
+  } catch (err: any) {
+    logger.error(`Failed to get room by id`, { err });
     throw err;
   }
 }

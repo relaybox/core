@@ -11,10 +11,11 @@ import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
+import { roomAccessGuard } from '@/modules/guards/guards.service';
 
 const logger = getLogger(ClientEvent.ROOM_JOIN);
 
-export function handler({ redisClient }: Services) {
+export function handler({ pgPool, redisClient }: Services) {
   return async function (
     socket: WebSocket<Session>,
     data: any,
@@ -26,7 +27,11 @@ export function handler({ redisClient }: Services) {
 
     logger.debug('Joining room', { roomId });
 
+    const pgClient = await pgPool!.connect();
+
     try {
+      await roomAccessGuard(logger, pgClient, roomId, session);
+
       const nspRoomId = getNspRoomId(session.appPid, roomId);
       const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
       const webhookdata = {
@@ -44,6 +49,10 @@ export function handler({ redisClient }: Services) {
     } catch (err: any) {
       logger.error(`Failed to join room "${roomId}"`, { err, roomId, session });
       res(null, formatErrorResponse(err));
+    } finally {
+      if (pgClient) {
+        pgClient.release();
+      }
     }
   };
 }

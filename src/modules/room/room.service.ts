@@ -1,13 +1,13 @@
 import { RedisClient } from '@/lib/redis';
 import * as cache from './room.cache';
 import * as db from './room.db';
-import { Session } from '@/types/session.types';
+import { ReducedSession, Session } from '@/types/session.types';
 import { WebSocket } from 'uWebSockets.js';
 import { Logger } from 'winston';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 import { PoolClient } from 'pg';
-import { Room } from '@/types/room.types';
+import { Room, RoomMemberType, RoomType } from '@/types/room.types';
 
 export async function joinRoom(
   logger: Logger,
@@ -145,6 +145,80 @@ export async function getRoomById(
     return rooms[0];
   } catch (err: any) {
     logger.error(`Failed to get room by id`, { err });
+    throw err;
+  }
+}
+
+export async function createRoomIfNotExists(
+  logger: Logger,
+  pgClient: PoolClient,
+  roomId: string,
+  roomType: RoomType = RoomType.PUBLIC,
+  session: ReducedSession
+): Promise<string | null> {
+  logger.debug(`Creating room, if not exists`, { roomId, session });
+
+  try {
+    await pgClient.query('BEGIN');
+
+    const { appPid, clientId, connectionId, socketId, uid } = session;
+
+    const { rows: rooms } = await db.createRoomIfNotExists(
+      pgClient,
+      roomId,
+      roomType,
+      appPid,
+      clientId,
+      connectionId!,
+      socketId!,
+      uid
+    );
+
+    if (!rooms.length) {
+      logger.debug(`Room exists, return null from create function`);
+      await pgClient.query('COMMIT');
+      return null;
+    }
+
+    const roomInternalId = rooms[0]?.id;
+
+    await addRoomMember(logger, pgClient, roomId, roomInternalId, RoomMemberType.OWNER, session);
+
+    await pgClient.query('COMMIT');
+
+    return roomInternalId;
+  } catch (err: any) {
+    await pgClient.query('ROLLBACK');
+    logger.error(`Failed to create room ${roomId}:`, err);
+    throw err;
+  }
+}
+
+export async function addRoomMember(
+  logger: Logger,
+  pgClient: PoolClient,
+  roomId: string,
+  roomInternalId: string,
+  roomMemberType: RoomMemberType,
+  session: ReducedSession
+): Promise<void> {
+  logger.debug(`Adding room owner ${session.uid} to room ${roomId}`, { roomId, session });
+
+  try {
+    const { appPid, clientId, connectionId, uid } = session;
+
+    await db.addRoomMember(
+      pgClient,
+      roomId,
+      roomInternalId,
+      roomMemberType,
+      appPid,
+      clientId,
+      connectionId!,
+      uid
+    );
+  } catch (err: any) {
+    logger.error(`Failed to add room owner ${session.uid} to room ${roomId}:`, err);
     throw err;
   }
 }

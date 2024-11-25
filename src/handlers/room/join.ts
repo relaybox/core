@@ -5,7 +5,7 @@ import { SocketAckHandler } from '@/types/socket.types';
 import { getNspRoomId } from '@/util/helpers';
 import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
-import { joinRoom } from '@/modules/room/room.service';
+import { createRoomIfNotExists, joinRoom } from '@/modules/room/room.service';
 import { pushRoomJoinMetrics } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
@@ -25,12 +25,22 @@ export function handler({ pgPool, redisClient }: Services) {
 
     const { roomId, roomType } = data;
 
-    logger.debug('Joining room', { roomId });
+    logger.debug(`Joining room`, { roomId, session });
 
     const pgClient = await pgPool!.connect();
 
     try {
-      await roomAccessGuard(logger, pgClient, roomId, session);
+      const roomCreatedId = await createRoomIfNotExists(
+        logger,
+        pgClient,
+        roomId,
+        roomType,
+        session
+      );
+
+      if (!roomCreatedId) {
+        await roomAccessGuard(logger, pgClient, roomId, session);
+      }
 
       const nspRoomId = getNspRoomId(session.appPid, roomId);
       const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);

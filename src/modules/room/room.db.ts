@@ -8,6 +8,7 @@ export function getRoomById(
 ): Promise<QueryResult> {
   const query = `
     SELECT 
+      r.id as "internalId",
       r."appPid", 
       r."roomId", 
       r."roomType", 

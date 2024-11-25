@@ -9,7 +9,8 @@ import {
   initializeRoom,
   evaluateRoomAccess,
   getRoomById,
-  joinRoom
+  joinRoom,
+  addRoomMember
 } from '@/modules/room/room.service';
 import { pushRoomJoinMetrics } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
@@ -46,6 +47,17 @@ export function handler({ pgPool, redisClient }: Services) {
 
       if (room) {
         evaluateRoomAccess(logger, room, session);
+
+        if (!room.memberCreatedAt) {
+          await addRoomMember(
+            logger,
+            pgClient,
+            roomId,
+            room.internalId,
+            RoomMemberType.MEMBER,
+            session
+          );
+        }
       } else {
         await initializeRoom(logger, pgClient, roomId, roomType, RoomMemberType.OWNER, session);
       }

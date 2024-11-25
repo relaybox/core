@@ -4,10 +4,12 @@ export enum RoomType {
 }
 
 export enum RoomMemberType {
-  OWNER = 'owner'
+  OWNER = 'owner',
+  MEMBER = 'member'
 }
 
 export interface Room {
+  internalId: string;
   appPid: string;
   roomId: string;
   roomType: RoomType;

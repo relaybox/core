@@ -24,7 +24,7 @@ export function handler({ redisClient }: Services) {
 
     const { roomId } = data;
 
-    logger.debug('Joining room', { session, data });
+    logger.debug('Joining room', { roomId });
 
     try {
       const nspRoomId = getNspRoomId(session.appPid, roomId);

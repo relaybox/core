@@ -5,7 +5,6 @@ import { SocketAckHandler } from '@/types/socket.types';
 import { formatErrorResponse, formatUserSubscription } from '@/util/format';
 import { getNspClientId } from '@/util/helpers';
 import { KeyNamespace } from '@/types/state.types';
-import AmqpManager from '@/lib/amqp-manager/amqp-manager';
 import { getLatencyLog } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
@@ -14,7 +13,7 @@ import { ClientEvent } from '@/types/event.types';
 
 const logger = getLogger(ClientEvent.AUTH_USER_STATUS_UPDATE);
 
-export function handler({ redisClient }: Services) {
+export function handler({ amqpManager }: Services) {
   return async function (
     socket: WebSocket<Session>,
     data: any,
@@ -33,7 +32,6 @@ export function handler({ redisClient }: Services) {
       const { status, event } = data;
       const nspClientId = getNspClientId(KeyNamespace.USERS, session.user!.clientId);
       const subscription = formatUserSubscription(nspClientId, event);
-      const amqpManager = AmqpManager.getInstance();
       const latencyLog = getLatencyLog(createdAt!);
 
       const messageData = {

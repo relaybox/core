@@ -8,6 +8,7 @@ import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 import { PoolClient } from 'pg';
 import { Room, RoomMemberType, RoomType } from '@/types/room.types';
+import { ForbiddenError } from '@/lib/errors';
 
 export async function joinRoom(
   logger: Logger,
@@ -138,10 +139,6 @@ export async function getRoomById(
   try {
     const { rows: rooms } = await db.getRoomById(pgClient, roomId, clientId);
 
-    if (!rooms.length) {
-      return undefined;
-    }
-
     return rooms[0];
   } catch (err: any) {
     logger.error(`Failed to get room by id`, { err });
@@ -149,11 +146,12 @@ export async function getRoomById(
   }
 }
 
-export async function createRoomIfNotExists(
+export async function initializeRoom(
   logger: Logger,
   pgClient: PoolClient,
   roomId: string,
   roomType: RoomType = RoomType.PUBLIC,
+  roomMemberType: RoomMemberType = RoomMemberType.OWNER,
   session: ReducedSession
 ): Promise<string | null> {
   logger.debug(`Creating room, if not exists`, { roomId, session });
@@ -163,7 +161,7 @@ export async function createRoomIfNotExists(
 
     const { appPid, clientId, connectionId, socketId, uid } = session;
 
-    const { rows: rooms } = await db.createRoomIfNotExists(
+    const { rows: rooms } = await db.createRoom(
       pgClient,
       roomId,
       roomType,
@@ -175,14 +173,14 @@ export async function createRoomIfNotExists(
     );
 
     if (!rooms.length) {
-      logger.debug(`Room exists, return null from create function`);
+      logger.debug(`Room already exists, no futher action required`);
       await pgClient.query('COMMIT');
       return null;
     }
 
     const roomInternalId = rooms[0]?.id;
 
-    await addRoomMember(logger, pgClient, roomId, roomInternalId, RoomMemberType.OWNER, session);
+    await addRoomMember(logger, pgClient, roomId, roomInternalId, roomMemberType, session);
 
     await pgClient.query('COMMIT');
 
@@ -221,4 +219,16 @@ export async function addRoomMember(
     logger.error(`Failed to add room owner ${session.uid} to room ${roomId}:`, err);
     throw err;
   }
+}
+
+export function evaluateRoomAccess(logger: Logger, room: Room, clientId: string): boolean {
+  logger.debug(`Evaluating room access`, { clientId, room });
+
+  const { roomType, memberCreatedAt } = room;
+
+  if (roomType === RoomType.PRIVATE && !memberCreatedAt) {
+    throw new ForbiddenError('Room access denied');
+  }
+
+  return true;
 }

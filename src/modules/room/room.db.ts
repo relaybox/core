@@ -24,7 +24,7 @@ export function getRoomById(
   return pgClient.query(query, [roomId, clientId]);
 }
 
-export function createRoomIfNotExists(
+export function createRoom(
   pgClient: PoolClient,
   roomId: string,
   roomType: RoomType,
@@ -76,7 +76,7 @@ export async function addRoomMember(
       "connectionId", "createdAt", "updatedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9
-    );
+    ) ON CONFLICT ("appPid", "roomId", "uid") DO NOTHING;
   `;
 
   return pgClient.query(query, [

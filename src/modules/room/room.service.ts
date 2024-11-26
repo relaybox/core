@@ -8,7 +8,7 @@ import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 import { PoolClient } from 'pg';
 import { Room, RoomMemberType, RoomType } from '@/types/room.types';
-import { ForbiddenError } from '@/lib/errors';
+import { ForbiddenError, ValidationError } from '@/lib/errors';
 import { permissionsGuard } from '../guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 
@@ -255,4 +255,18 @@ export function evaluateRoomCreationPermissions(
   }
 
   return true;
+}
+
+export function validateRoomId(roomId: string): boolean {
+  const roomIdRegex = /^[a-zA-Z0-9-_:.]+$/;
+
+  if (!roomId) {
+    return false;
+  }
+
+  if (roomIdRegex.test(roomId)) {
+    return true;
+  }
+
+  return false;
 }

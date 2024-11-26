@@ -6,7 +6,8 @@ import { WebSocket } from 'uWebSockets.js';
 import {
   initializeRoom,
   getRoomById,
-  evaluateRoomCreationPermissions
+  evaluateRoomCreationPermissions,
+  validateRoomId
 } from '@/modules/room/room.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
@@ -17,7 +18,7 @@ import { ForbiddenError, ValidationError } from '@/lib/errors';
 
 const logger = getLogger(ClientEvent.ROOM_CREATE);
 
-export function handler({ pgPool, redisClient }: Services) {
+export function handler({ pgPool }: Services) {
   return async function (
     socket: WebSocket<Session>,
     data: any,
@@ -33,6 +34,10 @@ export function handler({ pgPool, redisClient }: Services) {
     const pgClient = await pgPool!.connect();
 
     try {
+      if (!validateRoomId(roomId)) {
+        throw new ValidationError('Invalid room id');
+      }
+
       if (!Object.values(RoomType).includes(clientRoomType)) {
         throw new ValidationError('Unsupported room type');
       }
@@ -70,9 +75,7 @@ export function handler({ pgPool, redisClient }: Services) {
       logger.error(`Failed to create room "${roomId}"`, { err, roomId, session });
       res(null, formatErrorResponse(err));
     } finally {
-      if (pgClient) {
-        pgClient.release();
-      }
+      pgClient.release();
     }
   };
 }

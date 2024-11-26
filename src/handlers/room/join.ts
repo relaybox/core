@@ -33,6 +33,11 @@ export function handler({ pgPool, redisClient }: Services) {
 
     const { roomId } = data;
     const { appPid, clientId } = session;
+    const nspRoomId = getNspRoomId(appPid, roomId);
+    const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
+    const webhookdata = {
+      roomId
+    };
 
     logger.debug(`Joining room`, { roomId, clientId });
 
@@ -42,12 +47,6 @@ export function handler({ pgPool, redisClient }: Services) {
       if (!validateRoomId(roomId)) {
         throw new ValidationError('Invalid room id');
       }
-
-      const nspRoomId = getNspRoomId(appPid, roomId);
-      const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
-      const webhookdata = {
-        roomId
-      };
 
       let room = await getRoomById(logger, pgClient, roomId, clientId);
 
@@ -79,12 +78,12 @@ export function handler({ pgPool, redisClient }: Services) {
         enqueueWebhookEvent(logger, WebhookEvent.ROOM_JOIN, webhookdata, session)
       ]);
 
-      const respnseData = {
+      const responseData = {
         nspRoomId,
         type: room?.roomType || RoomType.PUBLIC
       };
 
-      res(respnseData);
+      res(responseData);
     } catch (err: any) {
       logger.error(`Failed to join room "${roomId}"`, { err, roomId, session });
       res(null, formatErrorResponse(err));

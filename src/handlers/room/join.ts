@@ -44,9 +44,7 @@ export function handler({ pgPool, redisClient }: Services) {
     const pgClient = await pgPool!.connect();
 
     try {
-      if (!validateRoomId(roomId)) {
-        throw new ValidationError('Invalid room id');
-      }
+      validateRoomId(roomId);
 
       let room = await getRoomById(logger, pgClient, roomId, clientId);
 

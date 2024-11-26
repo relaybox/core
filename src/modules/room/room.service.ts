@@ -8,7 +8,7 @@ import { ReducedSession, Session } from '@/types/session.types';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 import { Room, RoomMemberType, RoomVisibility } from '@/types/room.types';
-import { ForbiddenError } from '@/lib/errors';
+import { ForbiddenError, ValidationError } from '@/lib/errors';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 
@@ -260,9 +260,21 @@ export function evaluateRoomCreationPermissions(
 export function validateRoomId(roomId: string): boolean {
   const roomIdRegex = /^[a-zA-Z0-9-_:.]+$/;
 
-  return roomIdRegex.test(roomId);
+  if (!roomIdRegex.test(roomId)) {
+    throw new ValidationError(
+      'Invalid room id. Only alphanumeric characters, hyphens, underscores, colons and periods are allowed.'
+    );
+  }
+
+  return true;
 }
 
 export function validateRoomVisibility(visibility: RoomVisibility): boolean {
-  return Object.values(RoomVisibility).includes(visibility);
+  const values = Object.values(RoomVisibility);
+
+  if (!values.includes(visibility)) {
+    throw new ValidationError(`Unsupported room type. Supported values: ${values.join(', ')}`);
+  }
+
+  return true;
 }

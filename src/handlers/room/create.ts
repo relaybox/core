@@ -35,14 +35,8 @@ export function handler({ pgPool }: Services) {
     const pgClient = await pgPool!.connect();
 
     try {
-      if (!validateRoomId(roomId)) {
-        throw new ValidationError('Invalid room id');
-      }
-
-      if (!validateRoomVisibility(clientRoomVisibility)) {
-        throw new ValidationError(`Unsupported room type`);
-      }
-
+      validateRoomId(roomId);
+      validateRoomVisibility(clientRoomVisibility);
       evaluateRoomCreationPermissions(logger, roomId, clientRoomVisibility, session);
 
       const room = await getRoomById(logger, pgClient, roomId, clientId);

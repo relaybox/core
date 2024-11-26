@@ -1,4 +1,4 @@
-import { RoomMemberType, RoomType } from '@/types/room.types';
+import { RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { PoolClient, QueryResult } from 'pg';
 
 export function getRoomById(
@@ -11,7 +11,7 @@ export function getRoomById(
       r.id as "internalId",
       r."appPid", 
       r."roomId", 
-      r."roomType", 
+      r."visibility", 
       r."createdAt", 
       rm."createdAt" AS "memberCreatedAt",
       rm."memberType" AS "memberType"
@@ -28,7 +28,7 @@ export function getRoomById(
 export function createRoom(
   pgClient: PoolClient,
   roomId: string,
-  roomType: RoomType,
+  visibility: RoomVisibility,
   appPid: string,
   clientId: string,
   connectionId: string,
@@ -39,17 +39,17 @@ export function createRoom(
 
   const query = `
     INSERT INTO rooms (
-      "appPid", "roomId", "roomType", uid, "clientId", 
+      "appPid", "roomId", "visibility", uid, "clientId", 
       "connectionId", "socketId", "createdAt", "updatedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9
-    ) ON CONFLICT ("appPid", "roomId") DO NOTHING RETURNING id, "roomType";
+    ) ON CONFLICT ("appPid", "roomId") DO NOTHING RETURNING id, "visibility";
   `;
 
   return pgClient.query(query, [
     appPid,
     roomId,
-    roomType,
+    visibility,
     uid,
     clientId,
     connectionId,

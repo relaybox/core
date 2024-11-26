@@ -7,13 +7,14 @@ import {
   initializeRoom,
   getRoomById,
   evaluateRoomCreationPermissions,
-  validateRoomId
+  validateRoomId,
+  validateRoomVisibility
 } from '@/modules/room/room.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
-import { RoomMemberType, RoomType } from '@/types/room.types';
+import { RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { ForbiddenError, ValidationError } from '@/lib/errors';
 
 const logger = getLogger(ClientEvent.ROOM_CREATE);
@@ -27,7 +28,7 @@ export function handler({ pgPool }: Services) {
     const session = socket.getUserData();
 
     const { clientId } = session;
-    const { roomId, type: clientRoomType } = data;
+    const { roomId, visibility: clientRoomVisibility } = data;
 
     logger.debug(`Creating room`, { roomId, clientId });
 
@@ -38,11 +39,11 @@ export function handler({ pgPool }: Services) {
         throw new ValidationError('Invalid room id');
       }
 
-      if (!Object.values(RoomType).includes(clientRoomType)) {
-        throw new ValidationError('Unsupported room type');
+      if (!validateRoomVisibility(clientRoomVisibility)) {
+        throw new ValidationError(`Unsupported room type`);
       }
 
-      evaluateRoomCreationPermissions(logger, roomId, clientRoomType, session);
+      evaluateRoomCreationPermissions(logger, roomId, clientRoomVisibility, session);
 
       const room = await getRoomById(logger, pgClient, roomId, clientId);
 
@@ -54,7 +55,7 @@ export function handler({ pgPool }: Services) {
         logger,
         pgClient,
         roomId,
-        clientRoomType,
+        clientRoomVisibility,
         RoomMemberType.OWNER,
         session
       );
@@ -67,7 +68,7 @@ export function handler({ pgPool }: Services) {
 
       const responseData = {
         id: roomId,
-        type: createdRoom?.roomType || RoomType.PUBLIC
+        type: createdRoom?.visibility || RoomVisibility.PUBLIC
       };
 
       res(responseData);

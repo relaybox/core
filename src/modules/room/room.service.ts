@@ -1,15 +1,15 @@
-import { RedisClient } from '@/lib/redis';
-import * as cache from './room.cache';
-import * as db from './room.db';
-import { ReducedSession, Session } from '@/types/session.types';
-import { WebSocket } from 'uWebSockets.js';
+import { PoolClient } from 'pg';
 import { Logger } from 'winston';
+import { WebSocket } from 'uWebSockets.js';
+import { RedisClient } from '@/lib/redis';
+import * as cache from '@/modules/room/room.cache';
+import * as db from '@/modules/room/room.db';
+import { ReducedSession, Session } from '@/types/session.types';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
-import { PoolClient } from 'pg';
-import { Room, RoomMemberType, RoomType } from '@/types/room.types';
-import { ForbiddenError, ValidationError } from '@/lib/errors';
-import { permissionsGuard } from '../guards/guards.service';
+import { Room, RoomMemberType, RoomVisibility } from '@/types/room.types';
+import { ForbiddenError } from '@/lib/errors';
+import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 
 export async function joinRoom(
@@ -152,7 +152,7 @@ export async function initializeRoom(
   logger: Logger,
   pgClient: PoolClient,
   roomId: string,
-  roomType: RoomType = RoomType.PUBLIC,
+  visibility: RoomVisibility = RoomVisibility.PUBLIC,
   roomMemberType: RoomMemberType = RoomMemberType.OWNER,
   session: ReducedSession
 ): Promise<Room | undefined> {
@@ -166,7 +166,7 @@ export async function initializeRoom(
     const { rows: rooms } = await db.createRoom(
       pgClient,
       roomId,
-      roomType,
+      visibility,
       appPid,
       clientId,
       connectionId!,
@@ -227,13 +227,13 @@ export function evaluateRoomAccess(logger: Logger, room: Room, session: Session)
   logger.debug(`Evaluating room access`, { session });
 
   const { permissions } = session;
-  const { roomType, roomId, memberCreatedAt } = room;
+  const { visibility, roomId, memberCreatedAt } = room;
 
-  if (roomType === RoomType.PRIVATE) {
+  if (visibility === RoomVisibility.PRIVATE) {
     permissionsGuard(roomId, DsPermission.PRIVACY, permissions);
   }
 
-  if (roomType === RoomType.PRIVATE && !memberCreatedAt) {
+  if (visibility === RoomVisibility.PRIVATE && !memberCreatedAt) {
     throw new ForbiddenError('Room access denied');
   }
 
@@ -243,14 +243,14 @@ export function evaluateRoomAccess(logger: Logger, room: Room, session: Session)
 export function evaluateRoomCreationPermissions(
   logger: Logger,
   roomId: string,
-  roomType: RoomType,
+  visibility: RoomVisibility,
   session: Session
 ): boolean {
   logger.debug(`Evaluating room access`, { session });
 
   const { permissions } = session;
 
-  if (roomType === RoomType.PRIVATE) {
+  if (visibility === RoomVisibility.PRIVATE) {
     permissionsGuard(roomId, DsPermission.PRIVACY, permissions);
   }
 
@@ -260,13 +260,9 @@ export function evaluateRoomCreationPermissions(
 export function validateRoomId(roomId: string): boolean {
   const roomIdRegex = /^[a-zA-Z0-9-_:.]+$/;
 
-  if (!roomId) {
-    return false;
-  }
+  return roomIdRegex.test(roomId);
+}
 
-  if (roomIdRegex.test(roomId)) {
-    return true;
-  }
-
-  return false;
+export function validateRoomVisibility(visibility: RoomVisibility): boolean {
+  return Object.values(RoomVisibility).includes(visibility);
 }

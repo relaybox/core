@@ -3,13 +3,10 @@ import { matchRoomPermissions } from '@/modules/permissions/permissions.service'
 import { Session } from '@/types/session.types';
 import { RedisClient } from '@/lib/redis';
 import { isActiveMember } from '@/modules/presence/presence.service';
-import { getRoomByConnectionId, getRoomById } from '@/modules/room/room.service';
+import { getRoomByConnectionId } from '@/modules/room/room.service';
 import { Logger } from 'winston';
 import { KeyPrefix, KeySuffix } from '@/types/state.types';
 import * as cache from '@/modules/guards/guards.cache';
-import { PoolClient } from 'pg';
-import { RoomType } from '@/types/room.types';
-import { ForbiddenError } from '@/lib/errors';
 
 export function authenticatedSessionGuard(session: Session): boolean {
   if (!session.clientId) {
@@ -85,32 +82,4 @@ export async function rateLimitGuard(
   const key = `${KeyPrefix.RATE}:messages:${connectionId}:${KeySuffix.COUNT}`;
 
   return cache.evaluateRateLimit(redisClient, key, `${evaluationPeriodMs}`, `${entryLimit}`);
-}
-
-export async function roomAccessGuard(
-  logger: Logger,
-  pgClient: PoolClient,
-  roomId: string,
-  session: Session
-): Promise<boolean> {
-  logger.debug(`Checking room access`, { roomId, session });
-
-  try {
-    const { clientId } = session;
-
-    const room = await getRoomById(logger, pgClient, roomId, clientId);
-
-    if (!room || room.roomType === RoomType.PUBLIC) {
-      return true;
-    }
-
-    if (room.roomType === RoomType.PRIVATE && !room.memberCreatedAt) {
-      throw new ForbiddenError('Room access denied');
-    }
-
-    return true;
-  } catch (err: any) {
-    logger.error(`Failed to check room access:`, err);
-    throw err;
-  }
 }

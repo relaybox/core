@@ -12,7 +12,6 @@ import {
 import { MetricType } from '@/types/metric.types';
 import { MetricsJobName } from '@/modules/metrics/metrics.queue';
 import { RedisClient } from '@/lib/redis';
-import { RoomType } from '@/types/room.types';
 
 const mockPresenceService = vi.hoisted(() => ({
   isActiveMember: vi.fn()

@@ -1,4 +1,4 @@
-export enum RoomType {
+export enum RoomVisibility {
   PUBLIC = 'public',
   PRIVATE = 'private'
 }
@@ -10,7 +10,7 @@ export enum RoomMemberType {
 
 export interface Room {
   roomId: string;
-  roomType: RoomType;
+  visibility: RoomVisibility;
   appPid: string;
   internalId: string;
   createdAt: string;

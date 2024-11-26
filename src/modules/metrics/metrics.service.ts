@@ -8,7 +8,6 @@ import { getReducedSession } from '@/modules/session/session.service';
 import { LatencyLog } from 'src/types/request.types';
 import { RedisClient } from 'src/lib/redis';
 import { isActiveMember } from '@/modules/presence/presence.service';
-import { RoomType } from '@/types/room.types';
 
 export function publishMetric(
   uid: string,

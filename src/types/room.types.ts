@@ -1,6 +1,7 @@
 export enum RoomVisibility {
   PUBLIC = 'public',
-  PRIVATE = 'private'
+  PRIVATE = 'private',
+  PROTECTED = 'protected'
 }
 
 export enum RoomMemberType {

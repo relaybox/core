@@ -19,6 +19,7 @@ import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
+import { PasswordSaltPair } from '@/types/auth.types';
 
 const logger = getLogger(ClientEvent.ROOM_JOIN);
 
@@ -28,8 +29,12 @@ export function handler({ pgPool, redisClient }: Services) {
     data: any,
     res: SocketAckHandler
   ): Promise<void> {
-    const session = socket.getUserData();
+    let passwordSaltPair = {
+      password: null,
+      salt: null
+    } as PasswordSaltPair;
 
+    const session = socket.getUserData();
     const { roomId } = data;
     const { appPid, clientId } = session;
     const nspRoomId = getNspRoomId(appPid, roomId);
@@ -49,6 +54,7 @@ export function handler({ pgPool, redisClient }: Services) {
 
       if (room) {
         evaluateRoomAccess(logger, room, session);
+
         await upsertRoomMember(
           logger,
           pgClient,
@@ -64,7 +70,8 @@ export function handler({ pgPool, redisClient }: Services) {
           roomId,
           RoomVisibility.PUBLIC,
           RoomMemberType.OWNER,
-          session
+          session,
+          passwordSaltPair
         );
       }
 

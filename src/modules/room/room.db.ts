@@ -1,3 +1,4 @@
+import { PasswordSaltPair } from '@/types/auth.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { PoolClient, QueryResult } from 'pg';
 
@@ -14,7 +15,9 @@ export function getRoomById(
       r."visibility", 
       r."createdAt", 
       rm."createdAt" AS "memberCreatedAt",
-      rm."memberType" AS "memberType"
+      rm."memberType" AS "memberType",
+      r."password",
+      r."salt"
     FROM rooms r
     LEFT JOIN room_members rm ON rm."internalId" = r."id" 
       AND rm."clientId" = $2
@@ -33,19 +36,20 @@ export function createRoom(
   clientId: string,
   connectionId: string,
   socketId: string,
-  uid: string
+  uid: string,
+  passwordSaltPair: PasswordSaltPair
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const query = `
     INSERT INTO rooms (
-      "appPid", "roomId", "visibility", uid, "clientId", 
-      "connectionId", "socketId", "createdAt", "updatedAt"
+      "appPid", "roomId", "visibility", uid, "clientId", "connectionId", 
+      "socketId", "password", "salt", "createdAt", "updatedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
     ) ON CONFLICT ("appPid", "roomId") 
       DO NOTHING 
-      RETURNING id, "visibility";
+      RETURNING id, "roomId", "visibility";
   `;
 
   return pgClient.query(query, [
@@ -56,6 +60,8 @@ export function createRoom(
     clientId,
     connectionId,
     socketId,
+    passwordSaltPair.password,
+    passwordSaltPair.salt,
     now,
     now
   ]);

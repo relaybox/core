@@ -11,6 +11,8 @@ import { Room, RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { ForbiddenError, ValidationError } from '@/lib/errors';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
+import { generateSecret, strongHash } from '@/lib/encryption';
+import { PasswordSaltPair } from '@/types/auth.types';
 
 export async function joinRoom(
   logger: Logger,
@@ -154,7 +156,8 @@ export async function initializeRoom(
   roomId: string,
   visibility: RoomVisibility = RoomVisibility.PUBLIC,
   roomMemberType: RoomMemberType = RoomMemberType.OWNER,
-  session: ReducedSession
+  session: ReducedSession,
+  passwordSaltPair: PasswordSaltPair
 ): Promise<Room | undefined> {
   logger.debug(`Creating room, if not exists`, { roomId, session });
 
@@ -173,7 +176,8 @@ export async function initializeRoom(
       clientId,
       connectionId!,
       socketId!,
-      uid
+      uid,
+      passwordSaltPair
     );
 
     if (rooms.length > 0) {
@@ -277,4 +281,14 @@ export function validateRoomVisibility(visibility: RoomVisibility): boolean {
   }
 
   return true;
+}
+
+export function getPasswordSaltPair(password: string): PasswordSaltPair {
+  const salt = generateSecret();
+  const passwordHash = strongHash(password, salt);
+
+  return {
+    password: passwordHash,
+    salt
+  };
 }

@@ -8,7 +8,8 @@ import {
   getRoomById,
   evaluateRoomCreationPermissions,
   validateRoomId,
-  validateRoomVisibility
+  validateRoomVisibility,
+  getPasswordSaltPair
 } from '@/modules/room/room.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
@@ -16,6 +17,7 @@ import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { ForbiddenError } from '@/lib/errors';
+import { PasswordSaltPair } from '@/types/auth.types';
 
 const logger = getLogger(ClientEvent.ROOM_CREATE);
 
@@ -25,10 +27,14 @@ export function handler({ pgPool }: Services) {
     data: any,
     res: SocketAckHandler
   ): Promise<void> {
-    const session = socket.getUserData();
+    let passwordSaltPair = {
+      password: null,
+      salt: null
+    } as PasswordSaltPair;
 
+    const session = socket.getUserData();
     const { clientId } = session;
-    const { roomId, visibility: clientRoomVisibility } = data;
+    const { roomId, visibility: clientRoomVisibility, password } = data;
 
     logger.debug(`Creating room`, { roomId, clientId });
 
@@ -45,27 +51,28 @@ export function handler({ pgPool }: Services) {
         throw new ForbiddenError('Room already exists');
       }
 
+      if (clientRoomVisibility == RoomVisibility.PROTECTED) {
+        passwordSaltPair = getPasswordSaltPair(password);
+      }
+
       const createdRoom = await initializeRoom(
         logger,
         pgClient,
         roomId,
         clientRoomVisibility,
         RoomMemberType.OWNER,
-        session
+        session,
+        passwordSaltPair
       );
 
-      const webhookdata = {
-        roomId
-      };
-
-      await enqueueWebhookEvent(logger, WebhookEvent.ROOM_CREATE, webhookdata, session);
-
-      const responseData = {
+      const roomData = {
         id: roomId,
         type: createdRoom?.visibility || RoomVisibility.PUBLIC
       };
 
-      res(responseData);
+      await enqueueWebhookEvent(logger, WebhookEvent.ROOM_CREATE, roomData, session);
+
+      res(roomData);
     } catch (err: any) {
       logger.error(`Failed to create room "${roomId}"`, { err, roomId, session });
       res(null, formatErrorResponse(err));

@@ -244,7 +244,7 @@ export function evaluateRoomAccess(logger: Logger, room: Room, session: Session)
   return true;
 }
 
-export function evaluateRoomCreationPermissions(
+export function evaluateRoomCreatePermissions(
   logger: Logger,
   roomId: string,
   visibility: RoomVisibility,
@@ -293,7 +293,7 @@ export function getPasswordSaltPair(password: string): PasswordSaltPair {
   };
 }
 
-export function validateUserPassword(logger: Logger, room: Room, userPassword: string): void {
+export function validateClientPassword(logger: Logger, room: Room, userPassword: string): void {
   logger.debug(`Validating user password, ${room.roomId}`);
 
   const { password, salt } = room;

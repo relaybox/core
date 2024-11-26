@@ -6,7 +6,7 @@ import { WebSocket } from 'uWebSockets.js';
 import {
   initializeRoom,
   getRoomById,
-  evaluateRoomCreationPermissions,
+  evaluateRoomCreatePermissions,
   validateRoomId,
   validateRoomVisibility,
   getPasswordSaltPair
@@ -33,8 +33,9 @@ export function handler({ pgPool }: Services) {
     } as PasswordSaltPair;
 
     const session = socket.getUserData();
+
     const { clientId } = session;
-    const { roomId, visibility: clientRoomVisibility, password } = data;
+    const { roomId, visibility: clientRoomVisibility, password: clientPassword } = data;
 
     logger.debug(`Creating room`, { roomId, clientId });
 
@@ -43,7 +44,7 @@ export function handler({ pgPool }: Services) {
     try {
       validateRoomId(roomId);
       validateRoomVisibility(clientRoomVisibility);
-      evaluateRoomCreationPermissions(logger, roomId, clientRoomVisibility, session);
+      evaluateRoomCreatePermissions(logger, roomId, clientRoomVisibility, session);
 
       const room = await getRoomById(logger, pgClient, roomId, clientId);
 
@@ -52,7 +53,7 @@ export function handler({ pgPool }: Services) {
       }
 
       if (clientRoomVisibility == RoomVisibility.PROTECTED) {
-        passwordSaltPair = getPasswordSaltPair(password);
+        passwordSaltPair = getPasswordSaltPair(clientPassword);
       }
 
       const createdRoom = await initializeRoom(

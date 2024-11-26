@@ -21,6 +21,7 @@ import { handler as presenceUnsubscribeAllHandler } from '@/handlers/presence/un
 import { handler as presenceUpdateHandler } from '@/handlers/presence/update';
 import { handler as metricsSubscribeHandler } from '@/handlers/metrics/subscribe';
 import { handler as metricsUnsubscribeHandler } from '@/handlers/metrics/unsubscribe';
+import { handler as roomCreateHandler } from '@/handlers/room/create';
 import { handler as roomJoinHandler } from '@/handlers/room/join';
 import { handler as roomLeaveHandler } from '@/handlers/room/leave';
 import { handler as roomPublishHandler } from '@/handlers/room/publish';
@@ -35,6 +36,7 @@ export type EventHandler = (
 
 export function createEventHandlersMap(services: Services): Record<ClientEvent, EventHandler> {
   return {
+    [ClientEvent.ROOM_CREATE]: compose(rateLimitMiddleware(services), roomCreateHandler(services)),
     [ClientEvent.ROOM_JOIN]: roomJoinHandler(services),
     [ClientEvent.ROOM_LEAVE]: roomLeaveHandler(services),
     [ClientEvent.PUBLISH]: compose(

@@ -17,7 +17,7 @@ import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
-import { RoomMemberType } from '@/types/room.types';
+import { RoomMemberType, RoomType } from '@/types/room.types';
 
 const logger = getLogger(ClientEvent.ROOM_JOIN);
 
@@ -29,7 +29,7 @@ export function handler({ pgPool, redisClient }: Services) {
   ): Promise<void> {
     const session = socket.getUserData();
 
-    const { roomId, type: clientRoomType } = data;
+    const { roomId } = data;
     const { appPid, clientId } = session;
 
     logger.debug(`Joining room`, { roomId, clientId });
@@ -46,7 +46,7 @@ export function handler({ pgPool, redisClient }: Services) {
       const room = await getRoomById(logger, pgClient, roomId, clientId);
 
       if (room) {
-        evaluateRoomAccess(logger, room, clientRoomType, session);
+        evaluateRoomAccess(logger, room, session);
 
         if (!room.memberCreatedAt) {
           await addRoomMember(
@@ -63,7 +63,7 @@ export function handler({ pgPool, redisClient }: Services) {
           logger,
           pgClient,
           roomId,
-          clientRoomType,
+          RoomType.PUBLIC,
           RoomMemberType.OWNER,
           session
         );

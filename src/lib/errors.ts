@@ -12,6 +12,13 @@ export class UnauthorizedError extends Error {
   }
 }
 
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 export class NetworkError extends Error {
   public status: number;
 

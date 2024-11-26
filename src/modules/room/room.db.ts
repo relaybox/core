@@ -43,7 +43,7 @@ export function createRoom(
       "connectionId", "socketId", "createdAt", "updatedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9
-    ) ON CONFLICT ("appPid", "roomId") DO NOTHING RETURNING id;
+    ) ON CONFLICT ("appPid", "roomId") DO NOTHING RETURNING id, "roomType";
   `;
 
   return pgClient.query(query, [
@@ -59,7 +59,7 @@ export function createRoom(
   ]);
 }
 
-export async function addRoomMember(
+export async function upsertRoomMember(
   pgClient: PoolClient,
   roomId: string,
   internalId: string,
@@ -77,7 +77,10 @@ export async function addRoomMember(
       "connectionId", "createdAt", "updatedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9
-    ) ON CONFLICT ("appPid", "roomId", "uid") DO NOTHING;
+    ) ON CONFLICT ("appPid", "roomId", "uid") 
+      DO 
+        UPDATE SET "updatedAt" = EXCLUDED."updatedAt" 
+        WHERE room_members.uid = $4;
   `;
 
   return pgClient.query(query, [

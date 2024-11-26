@@ -10,7 +10,7 @@ import {
   evaluateRoomAccess,
   getRoomById,
   joinRoom,
-  addRoomMember
+  upsertRoomMember
 } from '@/modules/room/room.service';
 import { pushRoomJoinMetrics } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
@@ -43,23 +43,23 @@ export function handler({ pgPool, redisClient }: Services) {
         roomId
       };
 
-      const room = await getRoomById(logger, pgClient, roomId, clientId);
+      let room = await getRoomById(logger, pgClient, roomId, clientId);
 
       if (room) {
         evaluateRoomAccess(logger, room, session);
 
-        if (!room.memberCreatedAt) {
-          await addRoomMember(
-            logger,
-            pgClient,
-            roomId,
-            room.internalId,
-            RoomMemberType.MEMBER,
-            session
-          );
-        }
+        // if (!room.memberCreatedAt) {
+        await upsertRoomMember(
+          logger,
+          pgClient,
+          roomId,
+          room.internalId!,
+          RoomMemberType.MEMBER,
+          session
+        );
+        // }
       } else {
-        await initializeRoom(
+        room = await initializeRoom(
           logger,
           pgClient,
           roomId,
@@ -76,7 +76,12 @@ export function handler({ pgPool, redisClient }: Services) {
         enqueueWebhookEvent(logger, WebhookEvent.ROOM_JOIN, webhookdata, session)
       ]);
 
-      res(nspRoomId);
+      const respnseData = {
+        nspRoomId,
+        type: room?.roomType || RoomType.PUBLIC
+      };
+
+      res(respnseData);
     } catch (err: any) {
       logger.error(`Failed to join room "${roomId}"`, { err, roomId, session });
       res(null, formatErrorResponse(err));

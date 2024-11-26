@@ -22,6 +22,7 @@ export interface WebhookPayload {
 
 export enum WebhookEvent {
   AUTH_SESSION_INITIALIZE = 'auth:session:initialize',
+  ROOM_CREATE = 'room:create',
   ROOM_JOIN = 'room:join',
   ROOM_LEAVE = 'room:leave',
   ROOM_PUBLISH = 'room:publish',

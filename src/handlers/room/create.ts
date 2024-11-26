@@ -3,7 +3,11 @@ import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
-import { initializeRoom, getRoomById, evaluateRoomCreation } from '@/modules/room/room.service';
+import {
+  initializeRoom,
+  getRoomById,
+  evaluateRoomCreationPermissions
+} from '@/modules/room/room.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
@@ -33,7 +37,7 @@ export function handler({ pgPool, redisClient }: Services) {
         throw new ValidationError('Unsupported room type');
       }
 
-      evaluateRoomCreation(logger, roomId, clientRoomType, session);
+      evaluateRoomCreationPermissions(logger, roomId, clientRoomType, session);
 
       const room = await getRoomById(logger, pgClient, roomId, clientId);
 
@@ -41,10 +45,24 @@ export function handler({ pgPool, redisClient }: Services) {
         throw new ForbiddenError('Room already exists');
       }
 
-      await initializeRoom(logger, pgClient, roomId, clientRoomType, RoomMemberType.OWNER, session);
+      const createdRoom = await initializeRoom(
+        logger,
+        pgClient,
+        roomId,
+        clientRoomType,
+        RoomMemberType.OWNER,
+        session
+      );
+
+      const webhookdata = {
+        roomId
+      };
+
+      await enqueueWebhookEvent(logger, WebhookEvent.ROOM_CREATE, webhookdata, session);
 
       const responseData = {
-        id: roomId
+        id: roomId,
+        type: createdRoom?.roomType || RoomType.PUBLIC
       };
 
       res(responseData);

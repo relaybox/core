@@ -9,10 +9,10 @@ export enum RoomMemberType {
 }
 
 export interface Room {
-  internalId: string;
-  appPid: string;
   roomId: string;
   roomType: RoomType;
+  appPid: string;
+  internalId: string;
   createdAt: string;
   memberCreatedAt: string;
   memberType: RoomMemberType;

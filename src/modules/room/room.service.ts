@@ -155,7 +155,7 @@ export async function initializeRoom(
   roomType: RoomType = RoomType.PUBLIC,
   roomMemberType: RoomMemberType = RoomMemberType.OWNER,
   session: ReducedSession
-): Promise<string | null> {
+): Promise<Room | undefined> {
   logger.debug(`Creating room, if not exists`, { roomId, session });
 
   try {
@@ -177,16 +177,16 @@ export async function initializeRoom(
     if (!rooms.length) {
       logger.debug(`Room already exists, no futher action required`);
       await pgClient.query('COMMIT');
-      return null;
+      return undefined;
     }
 
     const internalId = rooms[0]?.id;
 
-    await addRoomMember(logger, pgClient, roomId, internalId, roomMemberType, session);
+    await upsertRoomMember(logger, pgClient, roomId, internalId, roomMemberType, session);
 
     await pgClient.query('COMMIT');
 
-    return internalId;
+    return rooms[0];
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to create room ${roomId}:`, err);
@@ -194,7 +194,7 @@ export async function initializeRoom(
   }
 }
 
-export async function addRoomMember(
+export async function upsertRoomMember(
   logger: Logger,
   pgClient: PoolClient,
   roomId: string,
@@ -207,7 +207,7 @@ export async function addRoomMember(
   try {
     const { appPid, clientId, connectionId, uid } = session;
 
-    await db.addRoomMember(
+    await db.upsertRoomMember(
       pgClient,
       roomId,
       internalId,
@@ -240,7 +240,7 @@ export function evaluateRoomAccess(logger: Logger, room: Room, session: Session)
   return true;
 }
 
-export function evaluateRoomCreation(
+export function evaluateRoomCreationPermissions(
   logger: Logger,
   roomId: string,
   roomType: RoomType,

@@ -17,4 +17,6 @@ export interface Room {
   createdAt: string;
   memberCreatedAt: string;
   memberType: RoomMemberType;
+  password: string | null;
+  salt: string | null;
 }

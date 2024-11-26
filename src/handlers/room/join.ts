@@ -11,7 +11,8 @@ import {
   getRoomById,
   joinRoom,
   upsertRoomMember,
-  validateRoomId
+  validateRoomId,
+  validateUserPassword
 } from '@/modules/room/room.service';
 import { pushRoomJoinMetrics } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
@@ -35,7 +36,7 @@ export function handler({ pgPool, redisClient }: Services) {
     } as PasswordSaltPair;
 
     const session = socket.getUserData();
-    const { roomId } = data;
+    const { roomId, password: userPassword } = data;
     const { appPid, clientId } = session;
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
@@ -54,6 +55,10 @@ export function handler({ pgPool, redisClient }: Services) {
 
       if (room) {
         evaluateRoomAccess(logger, room, session);
+
+        if (room.visibility == RoomVisibility.PROTECTED) {
+          validateUserPassword(logger, room, userPassword);
+        }
 
         await upsertRoomMember(
           logger,

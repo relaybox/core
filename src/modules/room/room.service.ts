@@ -292,3 +292,19 @@ export function getPasswordSaltPair(password: string): PasswordSaltPair {
     salt
   };
 }
+
+export function validateUserPassword(logger: Logger, room: Room, userPassword: string): void {
+  logger.debug(`Validating user password, ${room.roomId}`);
+
+  const { password, salt } = room;
+
+  if (!password || !salt || !userPassword) {
+    throw new ForbiddenError('Password required');
+  }
+
+  const passwordHash = strongHash(userPassword, salt);
+
+  if (!passwordHash || passwordHash !== password) {
+    throw new ForbiddenError('Password access denied');
+  }
+}

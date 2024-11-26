@@ -108,7 +108,6 @@ describe('metrics.service', () => {
         uid: session.uid,
         nspRoomId,
         roomId,
-        roomType: RoomType.PUBLIC,
         metrics: ['connection', 'subscriber', 'publisher', 'presenceSubscriber', 'presenceMember'],
         timestamp,
         session: reducedSession
@@ -140,7 +139,6 @@ describe('metrics.service', () => {
         uid: session.uid,
         nspRoomId,
         roomId,
-        roomType: RoomType.PUBLIC,
         metrics: ['connection', 'subscriber', 'publisher'],
         timestamp,
         session: reducedSession

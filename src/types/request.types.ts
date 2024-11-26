@@ -10,6 +10,7 @@ export interface DsResponse<T> {
 
 export interface DsErrorResponse {
   message: string;
+  name?: string;
   status?: number;
 }
 

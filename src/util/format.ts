@@ -21,6 +21,7 @@ export function formatUserSubscription(nspClientId: string, event: string): stri
 
 export function formatErrorResponse(error: Error, status?: number): DsErrorResponse {
   return {
+    name: error.name,
     message: error.message,
     ...(status && { status })
   };

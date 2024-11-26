@@ -19,6 +19,13 @@ export class ValidationError extends Error {
   }
 }
 
+export class PasswordRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PasswordRequiredError';
+  }
+}
+
 export class NetworkError extends Error {
   public status: number;
 

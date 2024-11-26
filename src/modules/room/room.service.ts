@@ -8,7 +8,7 @@ import { ReducedSession, Session } from '@/types/session.types';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 import { Room, RoomMemberType, RoomVisibility } from '@/types/room.types';
-import { ForbiddenError, ValidationError } from '@/lib/errors';
+import { ForbiddenError, PasswordRequiredError, ValidationError } from '@/lib/errors';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { generateSecret, strongHash } from '@/lib/encryption';
@@ -299,7 +299,7 @@ export function validateClientPassword(logger: Logger, room: Room, userPassword:
   const { password, salt } = room;
 
   if (!password || !salt || !userPassword) {
-    throw new ForbiddenError('Password required');
+    throw new PasswordRequiredError('Password required');
   }
 
   const passwordHash = strongHash(userPassword, salt);

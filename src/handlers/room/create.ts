@@ -15,7 +15,7 @@ import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
-import { ForbiddenError, ValidationError } from '@/lib/errors';
+import { ForbiddenError } from '@/lib/errors';
 
 const logger = getLogger(ClientEvent.ROOM_CREATE);
 

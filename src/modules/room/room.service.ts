@@ -158,10 +158,12 @@ export async function initializeRoom(
 ): Promise<Room | undefined> {
   logger.debug(`Creating room, if not exists`, { roomId, session });
 
+  let room: Room | undefined;
+
+  const { appPid, clientId, connectionId, socketId, uid } = session;
+
   try {
     await pgClient.query('BEGIN');
-
-    const { appPid, clientId, connectionId, socketId, uid } = session;
 
     const { rows: rooms } = await db.createRoom(
       pgClient,
@@ -174,24 +176,22 @@ export async function initializeRoom(
       uid
     );
 
-    if (!rooms.length) {
-      logger.debug(`Room already exists, no futher action required`);
-      await pgClient.query('COMMIT');
-      return undefined;
+    if (rooms.length > 0) {
+      room = rooms[0];
+      const internalId = room!.internalId;
+      await upsertRoomMember(logger, pgClient, roomId, internalId, roomMemberType, session);
+    } else {
+      logger.debug(`Room already exists, no further action required`);
     }
 
-    const internalId = rooms[0]?.id;
-
-    await upsertRoomMember(logger, pgClient, roomId, internalId, roomMemberType, session);
-
     await pgClient.query('COMMIT');
-
-    return rooms[0];
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to create room ${roomId}:`, err);
     throw err;
   }
+
+  return room;
 }
 
 export async function upsertRoomMember(

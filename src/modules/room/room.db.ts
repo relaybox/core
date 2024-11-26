@@ -43,7 +43,9 @@ export function createRoom(
       "connectionId", "socketId", "createdAt", "updatedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9
-    ) ON CONFLICT ("appPid", "roomId") DO NOTHING RETURNING id, "visibility";
+    ) ON CONFLICT ("appPid", "roomId") 
+      DO NOTHING 
+      RETURNING id, "visibility";
   `;
 
   return pgClient.query(query, [

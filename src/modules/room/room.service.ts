@@ -178,7 +178,7 @@ export async function initializeRoom(
 
     if (rooms.length > 0) {
       room = rooms[0];
-      const internalId = room!.internalId;
+      const internalId = rooms[0].id;
       await upsertRoomMember(logger, pgClient, roomId, internalId, roomMemberType, session);
     } else {
       logger.debug(`Room already exists, no further action required`);

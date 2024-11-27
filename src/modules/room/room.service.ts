@@ -169,7 +169,7 @@ export async function initializeRoom(
 
   let room: Room | undefined;
 
-  const { appPid, clientId, connectionId, socketId, uid } = session;
+  const { appPid } = session;
 
   try {
     await pgClient.query('BEGIN');
@@ -179,10 +179,6 @@ export async function initializeRoom(
       roomId,
       visibility,
       appPid,
-      clientId,
-      connectionId!,
-      socketId!,
-      uid,
       passwordSaltPair
     );
 

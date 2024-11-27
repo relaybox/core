@@ -36,20 +36,16 @@ export function createRoom(
   roomId: string,
   visibility: RoomVisibility,
   appPid: string,
-  clientId: string,
-  connectionId: string,
-  socketId: string,
-  uid: string,
   passwordSaltPair: PasswordSaltPair
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const query = `
     INSERT INTO rooms (
-      "appPid", "roomId", "visibility", uid, "clientId", "connectionId", 
-      "socketId", "password", "salt", "createdAt", "updatedAt"
+      "appPid", "roomId", "visibility", 
+      "password", "salt", "createdAt", "updatedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+      $1, $2, $3, $4, $5, $6, $6
     ) ON CONFLICT ("appPid", "roomId") 
       DO NOTHING 
       RETURNING id, "roomId", "visibility";
@@ -59,13 +55,8 @@ export function createRoom(
     appPid,
     roomId,
     visibility,
-    uid,
-    clientId,
-    connectionId,
-    socketId,
     passwordSaltPair.password,
     passwordSaltPair.salt,
-    now,
     now
   ]);
 }

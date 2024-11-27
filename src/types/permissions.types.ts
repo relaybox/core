@@ -5,7 +5,10 @@ export enum DsPermission {
   PUBLISH = 'publish',
   PRESENCE = 'presence',
   METRICS = 'metrics',
-  HISTORY = 'history'
+  HISTORY = 'history',
+  INTELLECT = 'intellect',
+  STORAGE = 'storage',
+  PRIVACY = 'privacy'
 }
 
 export interface DsPermissions {

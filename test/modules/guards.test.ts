@@ -7,7 +7,7 @@ import {
   roomMemberGuard
 } from '@/modules/guards/guards.service';
 import { RedisClient } from '@/lib/redis';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import { getLogger } from '@/util/logger';
 import { ForbiddenError } from '@/lib/errors';
 

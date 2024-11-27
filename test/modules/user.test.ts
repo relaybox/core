@@ -13,7 +13,7 @@ import {
   restoreCachedUsers,
   unbindUserSubscription
 } from '@/modules/user/user.service';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 
 const logger = getLogger('');

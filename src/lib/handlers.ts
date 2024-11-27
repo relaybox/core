@@ -21,9 +21,13 @@ import { handler as presenceUnsubscribeAllHandler } from '@/handlers/presence/un
 import { handler as presenceUpdateHandler } from '@/handlers/presence/update';
 import { handler as metricsSubscribeHandler } from '@/handlers/metrics/subscribe';
 import { handler as metricsUnsubscribeHandler } from '@/handlers/metrics/unsubscribe';
+import { handler as roomCreateHandler } from '@/handlers/room/create';
 import { handler as roomJoinHandler } from '@/handlers/room/join';
 import { handler as roomLeaveHandler } from '@/handlers/room/leave';
 import { handler as roomPublishHandler } from '@/handlers/room/publish';
+import { handler as roomPasswordUpdateHandler } from '@/handlers/room/password-update';
+import { handler as roomMemberAddHandler } from '@/handlers/room/member-add';
+import { handler as roomMemberRemoveHandler } from '@/handlers/room/member-remove';
 
 export type EventHandler = (
   socket: WebSocket<Session>,
@@ -35,6 +39,7 @@ export type EventHandler = (
 
 export function createEventHandlersMap(services: Services): Record<ClientEvent, EventHandler> {
   return {
+    [ClientEvent.ROOM_CREATE]: compose(rateLimitMiddleware(services), roomCreateHandler(services)),
     [ClientEvent.ROOM_JOIN]: roomJoinHandler(services),
     [ClientEvent.ROOM_LEAVE]: roomLeaveHandler(services),
     [ClientEvent.PUBLISH]: compose(
@@ -42,6 +47,9 @@ export function createEventHandlersMap(services: Services): Record<ClientEvent, 
       rateLimitMiddleware(services),
       roomPublishHandler(services)
     ),
+    [ClientEvent.ROOM_PASSWORD_UPDATE]: roomPasswordUpdateHandler(services),
+    [ClientEvent.ROOM_MEMBER_ADD]: roomMemberAddHandler(services),
+    [ClientEvent.ROOM_MEMBER_REMOVE]: roomMemberRemoveHandler(services),
     [ClientEvent.ROOM_SUBSCRIPTION_BIND]: subscriptionBindHandler(services),
     [ClientEvent.ROOM_SUBSCRIPTION_UNBIND]: subscriptionUnbindHandler(services),
     [ClientEvent.ROOM_PRESENCE_SUBSCRIBE]: presenceSubscribeHandler(services),

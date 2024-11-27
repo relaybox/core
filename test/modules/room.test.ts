@@ -1,16 +1,23 @@
+import { mockQueue } from '../__mocks__/external/bullmq';
 import { Session } from '@/types/session.types';
 import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import {
   getCachedRooms,
   joinRoom,
   leaveRoom,
-  restoreCachedRooms
+  restoreCachedRooms,
+  validateRoomAccess,
+  validateRoomCreatePermissions,
+  validateRoomId
 } from '@/modules/room/room.service';
 import { RedisClient } from '@/lib/redis';
 import { KeyNamespace } from '@/types/state.types';
+import { Room, RoomMemberType, RoomVisibility } from '@/types/room.types';
+import { getMockRoom } from 'test/__mocks__/internal/room.mock';
+import { ForbiddenError } from '@/lib/errors';
 
 const logger = getLogger('');
 
@@ -174,6 +181,107 @@ describe('room.service', async () => {
       expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledTimes(6);
       expect(mockRoomRepository.setRoomJoin).toHaveBeenCalledTimes(2);
       expect(socket.subscribe).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('validateRoomAccess', () => {
+    it('should allow client access to a public room', () => {
+      const mockSession = getMockSession();
+
+      const mockRoom = getMockRoom({
+        visibility: RoomVisibility.PUBLIC
+      });
+
+      expect(validateRoomAccess(logger, mockRoom, mockSession)).toBe(true);
+    });
+
+    it('should allow client access to a private room', () => {
+      const mockSession = getMockSession({
+        // @ts-ignore
+        permissions: ['privacy']
+      });
+
+      const mockRoom = getMockRoom({
+        visibility: RoomVisibility.PRIVATE,
+        memberCreatedAt: new Date().toISOString()
+      });
+
+      expect(validateRoomAccess(logger, mockRoom, mockSession)).toBe(true);
+    });
+
+    it('should deny client access to a private room if the client is not a member', () => {
+      const mockSession = getMockSession({
+        // @ts-ignore
+        permissions: ['privacy']
+      });
+
+      const mockRoom = getMockRoom({
+        visibility: RoomVisibility.PRIVATE,
+        memberCreatedAt: undefined
+      });
+
+      expect(() => validateRoomAccess(logger, mockRoom, mockSession)).toThrow(ForbiddenError);
+    });
+
+    it('should deny client access to a private room if the client does not have this required "privacy" permission', () => {
+      const mockSession = getMockSession();
+
+      const mockRoom = getMockRoom({
+        visibility: RoomVisibility.PRIVATE
+      });
+
+      expect(() => validateRoomAccess(logger, mockRoom, mockSession)).toThrow(ForbiddenError);
+    });
+  });
+
+  describe('validateRoomCreatePermissions', () => {
+    const requiredPermission = 'privacy';
+    const irrelevantPermission = 'subscribe';
+
+    it('should allow client to create a public room', () => {
+      const mockSession = getMockSession({
+        // @ts-ignore
+        permissions: [irrelevantPermission]
+      });
+
+      expect(
+        validateRoomCreatePermissions(logger, 'testRoom', RoomVisibility.PUBLIC, mockSession)
+      ).toBe(true);
+    });
+
+    it('should allow client to create a private room', () => {
+      const mockSession = getMockSession({
+        // @ts-ignore
+        permissions: [requiredPermission]
+      });
+
+      expect(
+        validateRoomCreatePermissions(logger, 'testRoom', RoomVisibility.PRIVATE, mockSession)
+      ).toBe(true);
+    });
+
+    it('should deny client to create a private room when reuired permission is missing', () => {
+      const mockSession = getMockSession({
+        // @ts-ignore
+        permissions: [irrelevantPermission]
+      });
+
+      expect(() =>
+        validateRoomCreatePermissions(logger, 'testRoom', RoomVisibility.PRIVATE, mockSession)
+      ).toThrow(ForbiddenError);
+    });
+  });
+
+  describe('validateRoomId', () => {
+    it('should throw an error if room id is invalid', () => {
+      const invalidRoomId1 = '1*2';
+      expect(() => validateRoomId(invalidRoomId1)).toThrow(Error);
+
+      const invalidRoomId2 = '1&2';
+      expect(() => validateRoomId(invalidRoomId2)).toThrow(Error);
+
+      const invalidRoomId3 = '1 2';
+      expect(() => validateRoomId(invalidRoomId3)).toThrow(Error);
     });
   });
 });

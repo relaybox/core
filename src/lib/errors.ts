@@ -12,6 +12,20 @@ export class UnauthorizedError extends Error {
   }
 }
 
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+export class PasswordRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PasswordRequiredError';
+  }
+}
+
 export class NetworkError extends Error {
   public status: number;
 
@@ -40,5 +54,12 @@ export class TokenError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'TokenError';
+  }
+}
+
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
   }
 }

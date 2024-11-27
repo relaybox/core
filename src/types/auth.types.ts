@@ -18,3 +18,8 @@ export interface ExtendedClientJwtPayload extends JwtPayload {
   clientId?: string | string[];
   timestamp: string;
 }
+
+export interface PasswordSaltPair {
+  password: string | null;
+  salt: string | null;
+}

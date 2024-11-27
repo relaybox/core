@@ -1,6 +1,6 @@
 import { mockQueue } from '../__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import { getReducedSession } from '@/modules/session/session.service';
 import {
   enqueueDeliveryMetrics,
@@ -21,7 +21,8 @@ vi.mock('@/modules/presence/presence.service', () => mockPresenceService);
 
 describe('metrics.service', () => {
   const uid = '12345';
-  const nspRoomId = 'nsp:chat:one';
+  const roomId = 'chat:one';
+  const nspRoomId = `nsp:${roomId}`;
   const metricType = MetricType.CONNECTION;
   const session = getMockSession({ uid });
 
@@ -105,6 +106,7 @@ describe('metrics.service', () => {
       const jobData = {
         uid: session.uid,
         nspRoomId,
+        roomId,
         metrics: ['connection', 'subscriber', 'publisher', 'presenceSubscriber', 'presenceMember'],
         timestamp,
         session: reducedSession
@@ -135,6 +137,7 @@ describe('metrics.service', () => {
       const jobData = {
         uid: session.uid,
         nspRoomId,
+        roomId,
         metrics: ['connection', 'subscriber', 'publisher'],
         timestamp,
         session: reducedSession

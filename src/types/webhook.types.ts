@@ -22,9 +22,13 @@ export interface WebhookPayload {
 
 export enum WebhookEvent {
   AUTH_SESSION_INITIALIZE = 'auth:session:initialize',
+  ROOM_CREATE = 'room:create',
   ROOM_JOIN = 'room:join',
   ROOM_LEAVE = 'room:leave',
   ROOM_PUBLISH = 'room:publish',
+  ROOM_PASSWORD_UPDATE = 'room:password:update',
+  ROOM_MEMBER_ADD = 'room:member:add',
+  ROOM_MEMBER_REMOVE = 'room:member:remove',
   PRESENCE_JOIN = 'presence:join',
   PRESENCE_LEAVE = 'presence:leave',
   PRESENCE_UPDATE = 'presence:update',

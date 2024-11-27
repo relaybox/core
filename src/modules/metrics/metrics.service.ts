@@ -1,7 +1,6 @@
 import { Job } from 'bullmq';
 import { MetricType } from '@/types/metric.types';
 import { ReducedSession, Session } from '@/types/session.types';
-import { getLogger } from '@/util/logger';
 import { hasPermission, matchRoomPermissions } from '@/modules/permissions/permissions.service';
 import { DsPermission } from '@/types/permissions.types';
 import { MetricsJobName, defaultJobConfig, metricsQueue } from './metrics.queue';
@@ -82,6 +81,7 @@ export async function pushRoomJoinMetrics(
 
   const jobData = {
     uid,
+    roomId,
     nspRoomId,
     metrics,
     timestamp,

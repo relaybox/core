@@ -7,7 +7,7 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
  * @param {Response} response - The response object from the fetch API.
  * @returns {Promise<DsResponse<T>>} The formatted response object.
  */
-async function formatDsResponse<T>(response: Response): Promise<DsResponse<T>> {
+async function formatResponse<T>(response: Response): Promise<DsResponse<T>> {
   const data = <T & DsApiData>await response.json();
 
   return {
@@ -32,7 +32,7 @@ export async function request<T>(requestUrl: string, params: RequestInit): Promi
 
   const response = await fetch(requestUrl, requestParams);
 
-  const formattedResponse = await formatDsResponse<T>(response);
+  const formattedResponse = await formatResponse<T>(response);
 
   if (!response.ok) {
     throw new Error(formattedResponse.message);

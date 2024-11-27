@@ -207,21 +207,15 @@ export async function upsertRoomMember(
   roomMemberType: RoomMemberType,
   session: ReducedSession
 ): Promise<void> {
-  logger.debug(`Adding room owner ${session.uid} to room ${roomId}`, { roomId, session });
+  logger.debug(`Upserting room member ${session.uid} as ${roomMemberType} to room ${roomId}`, {
+    roomId,
+    session
+  });
 
   try {
-    const { appPid, clientId, connectionId, uid } = session;
+    const { appPid, clientId, uid } = session;
 
-    await db.upsertRoomMember(
-      pgClient,
-      roomId,
-      internalId,
-      roomMemberType,
-      appPid,
-      clientId,
-      connectionId!,
-      uid
-    );
+    await db.upsertRoomMember(pgClient, roomId, internalId, roomMemberType, appPid, clientId, uid);
   } catch (err: any) {
     logger.error(`Failed to add room owner ${session.uid} to room ${roomId}:`, err);
     throw err;
@@ -313,16 +307,15 @@ export function validateClientPassword(logger: Logger, room: Room, userPassword:
 export async function updateRoomPassword(
   logger: Logger,
   pgClient: PoolClient,
-  appPid: string,
-  roomId: string,
+  internalId: string,
   passwordSaltPair: PasswordSaltPair
 ): Promise<void> {
-  logger.debug(`Updating room password`, { roomId });
+  logger.debug(`Updating room password`, { internalId });
 
   try {
-    await db.updateRoomPassword(pgClient, appPid, roomId, passwordSaltPair);
+    await db.updateRoomPassword(pgClient, internalId, passwordSaltPair);
   } catch (err: any) {
-    logger.error(`Failed to update room password`, { err, roomId });
+    logger.error(`Failed to update room password`, { err, internalId });
     throw err;
   }
 }

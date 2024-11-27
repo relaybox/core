@@ -77,7 +77,6 @@ export async function upsertRoomMember(
   roomMemberType: RoomMemberType,
   appPid: string,
   clientId: string,
-  connectionId: string,
   uid: string
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
@@ -85,9 +84,9 @@ export async function upsertRoomMember(
   const query = `
     INSERT INTO room_members (
       "appPid", "roomId", "internalId", uid, "clientId", "memberType", 
-      "connectionId", "createdAt", "updatedAt"
+      "createdAt", "updatedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9
+      $1, $2, $3, $4, $5, $6, $7, $7
     ) ON CONFLICT ("appPid", "roomId", "uid") 
       DO 
         UPDATE SET "updatedAt" = EXCLUDED."updatedAt" 
@@ -95,32 +94,21 @@ export async function upsertRoomMember(
         RETURNING id;
   `;
 
-  return pgClient.query(query, [
-    appPid,
-    roomId,
-    internalId,
-    uid,
-    clientId,
-    roomMemberType,
-    connectionId,
-    now,
-    now
-  ]);
+  return pgClient.query(query, [appPid, roomId, internalId, uid, clientId, roomMemberType, now]);
 }
 
 export function updateRoomPassword(
   pgClient: PoolClient,
-  appPid: string,
-  roomId: string,
+  internalId: string,
   passwordSaltPair: PasswordSaltPair
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const query = `
     UPDATE rooms
-    SET "password" = $3, "salt" = $4
-    WHERE "roomId" = $2 AND "appPid" = $1;
+    SET "password" = $2, "salt" = $3
+    WHERE "id" = $1;
   `;
 
-  return pgClient.query(query, [appPid, roomId, passwordSaltPair.password, passwordSaltPair.salt]);
+  return pgClient.query(query, [internalId, passwordSaltPair.password, passwordSaltPair.salt]);
 }

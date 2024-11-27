@@ -68,7 +68,7 @@ export function handler({ pgPool }: Services) {
 
       const roomData = {
         id: roomId,
-        type: createdRoom?.visibility || RoomVisibility.PUBLIC
+        visibility: createdRoom?.visibility || RoomVisibility.PUBLIC
       };
 
       await enqueueWebhookEvent(logger, WebhookEvent.ROOM_CREATE, roomData, session);

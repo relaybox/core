@@ -45,11 +45,11 @@ export function handler({ pgPool }: Services) {
 
       const passwordSaltPair = getPasswordSaltPair(clientPassword);
 
-      await updateRoomPassword(logger, pgClient, appPid, room.internalId, passwordSaltPair);
+      await updateRoomPassword(logger, pgClient, room.internalId, passwordSaltPair);
 
       const roomData = {
         id: roomId,
-        type: room?.visibility || RoomVisibility.PUBLIC
+        visibility: room?.visibility || RoomVisibility.PUBLIC
       };
 
       await enqueueWebhookEvent(logger, WebhookEvent.ROOM_PASSWORD_UPDATE, roomData, session);

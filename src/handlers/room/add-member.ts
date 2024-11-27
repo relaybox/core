@@ -1,5 +1,5 @@
 import Services from '@/lib/services';
-import { Session } from '@/types/session.types';
+import { ReducedSession, Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
@@ -20,11 +20,10 @@ export function handler({ pgPool }: Services) {
     res: SocketAckHandler
   ): Promise<void> {
     const session = socket.getUserData();
-
     const { appPid, clientId } = session;
-    const { roomId } = data;
+    const { roomId, clientId: addClientId } = data;
 
-    logger.debug(`Creating room`, { roomId, clientId });
+    logger.debug(`Adding member to private room`, { roomId, clientId });
 
     const pgClient = await pgPool!.connect();
 
@@ -43,13 +42,19 @@ export function handler({ pgPool }: Services) {
         throw new ForbiddenError('Room is not owned by the client');
       }
 
+      const addMemberSession = {
+        appPid,
+        clientId: addClientId,
+        uid: addClientId
+      } as ReducedSession;
+
       const member = await upsertRoomMember(
         logger,
         pgClient,
         roomId,
         room.internalId,
         RoomMemberType.MEMBER,
-        session
+        addMemberSession
       );
 
       await enqueueWebhookEvent(logger, WebhookEvent.ROOM_MEMBER_ADD, member, session);

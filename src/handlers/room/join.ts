@@ -64,7 +64,7 @@ export function handler({ pgPool, redisClient }: Services) {
           logger,
           pgClient,
           roomId,
-          room.internalId!,
+          room.internalId,
           RoomMemberType.MEMBER,
           session
         );

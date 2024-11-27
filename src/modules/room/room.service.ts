@@ -227,7 +227,7 @@ export async function upsertRoomMember(
   }
 }
 
-export function evaluateRoomAccess(logger: Logger, room: Room, session: Session): boolean {
+export function validateRoomAccess(logger: Logger, room: Room, session: Session): boolean {
   logger.debug(`Evaluating room access`, { session });
 
   const { permissions } = session;
@@ -244,7 +244,7 @@ export function evaluateRoomAccess(logger: Logger, room: Room, session: Session)
   return true;
 }
 
-export function evaluateRoomCreatePermissions(
+export function validateRoomCreatePermissions(
   logger: Logger,
   roomId: string,
   visibility: RoomVisibility,

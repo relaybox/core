@@ -6,7 +6,7 @@ import { WebSocket } from 'uWebSockets.js';
 import {
   initializeRoom,
   getRoomById,
-  evaluateRoomCreatePermissions,
+  validateRoomCreatePermissions,
   validateRoomId,
   validateRoomVisibility,
   getPasswordSaltPair
@@ -35,7 +35,7 @@ export function handler({ pgPool }: Services) {
     const session = socket.getUserData();
 
     const { clientId } = session;
-    const { roomId, visibility: clientRoomVisibility, password: clientPassword } = data;
+    const { roomId, visibility: clientVisibility, password: clientPassword } = data;
 
     logger.debug(`Creating room`, { roomId, clientId });
 
@@ -43,8 +43,8 @@ export function handler({ pgPool }: Services) {
 
     try {
       validateRoomId(roomId);
-      validateRoomVisibility(clientRoomVisibility);
-      evaluateRoomCreatePermissions(logger, roomId, clientRoomVisibility, session);
+      validateRoomVisibility(clientVisibility);
+      validateRoomCreatePermissions(logger, roomId, clientVisibility, session);
 
       const room = await getRoomById(logger, pgClient, roomId, clientId);
 
@@ -52,7 +52,7 @@ export function handler({ pgPool }: Services) {
         throw new ForbiddenError('Room already exists');
       }
 
-      if (clientRoomVisibility == RoomVisibility.PROTECTED) {
+      if (clientVisibility == RoomVisibility.PROTECTED) {
         passwordSaltPair = getPasswordSaltPair(clientPassword);
       }
 
@@ -60,7 +60,7 @@ export function handler({ pgPool }: Services) {
         logger,
         pgClient,
         roomId,
-        clientRoomVisibility,
+        clientVisibility,
         RoomMemberType.OWNER,
         session,
         passwordSaltPair

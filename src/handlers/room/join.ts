@@ -7,7 +7,7 @@ import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import {
   initializeRoom,
-  evaluateRoomAccess,
+  validateRoomAccess,
   getRoomById,
   joinRoom,
   upsertRoomMember,
@@ -54,7 +54,7 @@ export function handler({ pgPool, redisClient }: Services) {
       let room = await getRoomById(logger, pgClient, roomId, clientId);
 
       if (room) {
-        evaluateRoomAccess(logger, room, session);
+        validateRoomAccess(logger, room, session);
 
         if (room.visibility == RoomVisibility.PROTECTED) {
           validateClientPassword(logger, room, clientPassword);

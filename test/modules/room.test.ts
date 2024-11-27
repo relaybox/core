@@ -197,6 +197,7 @@ describe('room.service', async () => {
 
     it('should allow client access to a private room', () => {
       const mockSession = getMockSession({
+        // @ts-ignore
         permissions: ['privacy']
       });
 
@@ -210,6 +211,7 @@ describe('room.service', async () => {
 
     it('should deny client access to a private room if the client is not a member', () => {
       const mockSession = getMockSession({
+        // @ts-ignore
         permissions: ['privacy']
       });
 
@@ -238,6 +240,7 @@ describe('room.service', async () => {
 
     it('should allow client to create a public room', () => {
       const mockSession = getMockSession({
+        // @ts-ignore
         permissions: [irrelevantPermission]
       });
 
@@ -248,6 +251,7 @@ describe('room.service', async () => {
 
     it('should allow client to create a private room', () => {
       const mockSession = getMockSession({
+        // @ts-ignore
         permissions: [requiredPermission]
       });
 
@@ -258,6 +262,7 @@ describe('room.service', async () => {
 
     it('should deny client to create a private room when reuired permission is missing', () => {
       const mockSession = getMockSession({
+        // @ts-ignore
         permissions: [irrelevantPermission]
       });
 

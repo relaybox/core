@@ -7,6 +7,7 @@ import { getRoomByConnectionId } from '@/modules/room/room.service';
 import { Logger } from 'winston';
 import { KeyPrefix, KeySuffix } from '@/types/state.types';
 import * as cache from '@/modules/guards/guards.cache';
+import { ForbiddenError } from '@/lib/errors';
 
 export function authenticatedSessionGuard(session: Session): boolean {
   if (!session.clientId) {
@@ -50,7 +51,7 @@ export function permissionsGuard(
     }
   }
 
-  throw new Error(`Client not permitted to perform "${permission}" in "${roomId}"`);
+  throw new ForbiddenError(`Client not permitted to perform "${permission}" in "${roomId}"`);
 }
 
 export async function roomMemberGuard(

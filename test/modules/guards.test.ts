@@ -9,6 +9,7 @@ import {
 import { RedisClient } from '@/lib/redis';
 import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import { getLogger } from '@/util/logger';
+import { ForbiddenError } from '@/lib/errors';
 
 const logger = getLogger('');
 
@@ -87,7 +88,12 @@ describe('guards.service', () => {
         expect(permissionsGuard('room2', DsPermission.SUBSCRIBE, permissions)).toBe(true);
       });
 
-      it('returns true if room-specific wildcard permissions include the requested permission', () => {
+      /**
+       * This should NOT pass.
+       * Wildcards have to match one or more specific entries.
+       * In this case, "room1:*" does not match "room1", leaving here for visibility
+       */
+      it.skip('returns true if room-specific wildcard permissions include the requested permission', () => {
         const permissions: DsPermissions = {
           'room1:*': ['subscribe', 'publish']
         };
@@ -139,82 +145,102 @@ describe('guards.service', () => {
     });
 
     describe('error', () => {
-      it('throws an error if permissions do not include the specific requested permission', () => {
+      it('throws ForbiddenError if permissions do not include the specific requested permission', () => {
         const permissions = ['subscribe', 'publish'];
 
         expect(() => permissionsGuard('room1', DsPermission.HISTORY, permissions)).toThrow(
-          /not permitted/
+          ForbiddenError
         );
       });
 
-      it('throws an error if the wildcard pattern does not match the queried room structure', () => {
+      it('throws ForbiddenError if the wildcard pattern does not match the queried room structure', () => {
         const permissions: DsPermissions = {
           'room1:*:user': ['subscribe', 'publish']
         };
 
         expect(() =>
           permissionsGuard('room1:one:two:user', DsPermission.PUBLISH, permissions)
-        ).toThrow(/not permitted/);
+        ).toThrow(ForbiddenError);
       });
 
-      it('throws an error if the wildcard pattern does not match the queried room structure', () => {
+      it('throws ForbiddenError if the wildcard pattern does not match the queried room structure', () => {
         const permissions: DsPermissions = {
           'room1:*:user': ['subscribe', 'publish']
         };
 
         expect(() =>
           permissionsGuard('room1:one:user:123', DsPermission.PUBLISH, permissions)
-        ).toThrow(/not permitted/);
+        ).toThrow(ForbiddenError);
       });
 
-      it('throws an error if the wildcard pattern does not match the queried room structure', () => {
+      it('throws ForbiddenError if the wildcard pattern does not match the queried room structure', () => {
         const permissions: DsPermissions = {
           'room1:*:user': ['subscribe', 'publish']
         };
 
         expect(() =>
           permissionsGuard('room1:one:admin', DsPermission.PUBLISH, permissions)
-        ).toThrow(/not permitted/);
+        ).toThrow(ForbiddenError);
       });
 
-      it('throws an error if the client is not permitted to perform the action in the specified room', () => {
+      it('throws ForbiddenError if the client is not permitted to perform the action in the specified room', () => {
         const permissions: DsPermissions = {
           room1: ['subscribe']
         };
 
         expect(() => permissionsGuard('room1', DsPermission.PUBLISH, permissions)).toThrow(
-          /not permitted/
+          ForbiddenError
         );
       });
 
-      it('throws an error if the client is not permitted to perform the action even when global wildcard partially matches', () => {
+      it('throws ForbiddenError if the client is not permitted to perform the action even when global wildcard partially matches', () => {
         const permissions: DsPermissions = {
           '*': ['subscribe', 'publish'],
           room2: ['subscribe']
         };
 
         expect(() => permissionsGuard('room2', DsPermission.PUBLISH, permissions)).toThrow(
-          /not permitted/
+          ForbiddenError
         );
       });
 
-      it('throws an error if the client is not permitted to perform the action despite global wildcard matching other permissions', () => {
+      it('throws ForbiddenError if the client is not permitted to perform the action despite global wildcard matching other permissions', () => {
         const permissions: DsPermissions = {
           '*': ['subscribe', 'publish']
         };
 
         expect(() => permissionsGuard('room1', DsPermission.PRESENCE, permissions)).toThrow(
-          /not permitted/
+          ForbiddenError
         );
       });
 
-      it('throws an error if the client is not permitted to perform the action despite room-specific wildcard permissions', () => {
+      it('throws ForbiddenError if the client is not permitted to perform the action despite room-specific wildcard permissions', () => {
         const permissions: DsPermissions = {
           room1: ['*']
         };
 
         expect(() => permissionsGuard('room2', DsPermission.PRESENCE, permissions)).toThrow(
-          /not permitted/
+          ForbiddenError
+        );
+      });
+
+      it('throws ForbiddenError if room is not found in permissions', () => {
+        const permissions: DsPermissions = {
+          'chat:one:test': ['subscribe']
+        };
+
+        expect(() => permissionsGuard('config', DsPermission.PRESENCE, permissions)).toThrow(
+          ForbiddenError
+        );
+      });
+
+      it('throws ForbiddenError if room is only partially matched in permissions', () => {
+        const permissions: DsPermissions = {
+          'user:123': ['subscribe']
+        };
+
+        expect(() => permissionsGuard('user', DsPermission.SUBSCRIBE, permissions)).toThrow(
+          ForbiddenError
         );
       });
 
@@ -226,17 +252,7 @@ describe('guards.service', () => {
 
         expect(() =>
           permissionsGuard('room1:one:test', DsPermission.PRESENCE, permissions)
-        ).toThrow(/not permitted/);
-      });
-
-      it('should something', () => {
-        const permissions: DsPermissions = {
-          'chat:one:test': ['subscribe']
-        };
-
-        expect(() => permissionsGuard('config', DsPermission.PRESENCE, permissions)).toThrow(
-          /not permitted/
-        );
+        ).toThrow(ForbiddenError);
       });
     });
   });

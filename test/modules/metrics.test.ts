@@ -1,6 +1,6 @@
 import { mockQueue } from '../__mocks__/external/bullmq';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import { getReducedSession } from '@/modules/session/session.service';
 import {
   enqueueDeliveryMetrics,

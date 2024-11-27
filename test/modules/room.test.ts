@@ -1,16 +1,20 @@
+import { mockQueue } from '../__mocks__/external/bullmq';
 import { Session } from '@/types/session.types';
 import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import {
   getCachedRooms,
   joinRoom,
   leaveRoom,
-  restoreCachedRooms
+  restoreCachedRooms,
+  validateRoomAccess
 } from '@/modules/room/room.service';
 import { RedisClient } from '@/lib/redis';
 import { KeyNamespace } from '@/types/state.types';
+import { Room, RoomVisibility } from '@/types/room.types';
+import { getMockRoom } from 'test/__mocks__/internal/room.mock';
 
 const logger = getLogger('');
 
@@ -174,6 +178,24 @@ describe('room.service', async () => {
       expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledTimes(6);
       expect(mockRoomRepository.setRoomJoin).toHaveBeenCalledTimes(2);
       expect(socket.subscribe).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe.only('validateRoomAccess', () => {
+    const mockSession = getMockSession({
+      permissions: [{ 'test:*': ['privacy'] }]
+    });
+
+    console.log(mockSession);
+
+    it('should allow client access to a room if the room is public', () => {
+      const mockRoom = getMockRoom({ roomId: 'test', visibility: RoomVisibility.PUBLIC });
+      expect(validateRoomAccess(logger, mockRoom, mockSession)).toBe(true);
+    });
+
+    it('should deny client access to a room if the room is private', () => {
+      const mockRoom = getMockRoom({ roomId: 'test:123', visibility: RoomVisibility.PRIVATE });
+      expect(validateRoomAccess(logger, mockRoom, mockSession)).toBe(true);
     });
   });
 });

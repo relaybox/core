@@ -4,7 +4,7 @@ import PublisherManager from '@/lib/amqp-manager/publisher-manager';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import ConnectionManager from '@/lib/amqp-manager/connection-manager';
 import DispatchHandler from '@/lib/amqp-manager/dispatch-handler';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 
 describe('dispatch-handler', () => {

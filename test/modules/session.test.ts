@@ -13,7 +13,7 @@ import {
   unmarkSessionForDeletion
 } from '@/modules/session/session.service';
 import { Session } from '@/types/session.types';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import { RedisClient } from '@/lib/redis';
 import { WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';

@@ -1,6 +1,6 @@
 import { mockQueue } from '../__mocks__/external/bullmq';
 import { describe, expect, vi, it, afterEach } from 'vitest';
-import { getMockSession } from '@/modules/session/session.mock';
+import { getMockSession } from 'test/__mocks__/internal/session.mock';
 import {
   addActiveMember,
   removeActiveMember,

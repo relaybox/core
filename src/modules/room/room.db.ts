@@ -84,17 +84,28 @@ export async function upsertRoomMember(
   const query = `
     INSERT INTO room_members (
       "appPid", "roomId", "internalId", uid, "clientId", "memberType", 
-      "createdAt", "updatedAt"
+      "createdAt", "updatedAt", "deletedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $7
+      $1, $2, $3, $4, $5, $6, $7, $7, $8
     ) ON CONFLICT ("appPid", "roomId", "uid") 
       DO 
-        UPDATE SET "updatedAt" = EXCLUDED."updatedAt" 
+        UPDATE SET 
+          "updatedAt" = EXCLUDED."updatedAt", 
+          "deletedAt" = EXCLUDED."deletedAt"
         WHERE room_members.uid = $4
         RETURNING id;
   `;
 
-  return pgClient.query(query, [appPid, roomId, internalId, uid, clientId, roomMemberType, now]);
+  return pgClient.query(query, [
+    appPid,
+    roomId,
+    internalId,
+    uid,
+    clientId,
+    roomMemberType,
+    now,
+    null
+  ]);
 }
 
 export async function removeRoomMember(

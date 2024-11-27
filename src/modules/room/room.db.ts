@@ -70,6 +70,19 @@ export function createRoom(
   ]);
 }
 
+export async function getRoomMember(
+  pgClient: PoolClient,
+  clientId: string,
+  internalId: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT * FROM room_members 
+    WHERE "clientId" = $1 AND "internalId" = $2
+  `;
+
+  return await pgClient.query(query, [clientId, internalId]);
+}
+
 export async function upsertRoomMember(
   pgClient: PoolClient,
   roomId: string,

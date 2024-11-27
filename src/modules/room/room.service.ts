@@ -7,7 +7,7 @@ import * as db from '@/modules/room/room.db';
 import { ReducedSession, Session } from '@/types/session.types';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
-import { Room, RoomMemberType, RoomVisibility } from '@/types/room.types';
+import { Room, RoomMember, RoomMemberType, RoomVisibility } from '@/types/room.types';
 import {
   ForbiddenError,
   NotFoundError,
@@ -236,11 +236,39 @@ export async function removeRoomMember(
   logger.debug(`Removing room member`, { internalId, clientId });
 
   try {
+    const { rows: existingMembers } = await db.getRoomMember(pgClient, clientId, internalId);
+
+    if (!existingMembers.length) {
+      throw new NotFoundError('Room member not found');
+    }
+
+    if (existingMembers[0].memberType === RoomMemberType.OWNER) {
+      throw new ForbiddenError('Room member is owner');
+    }
+
     const { rows: members } = await db.removeRoomMember(pgClient, clientId, internalId);
 
     return members[0].id;
   } catch (err: any) {
     logger.error(`Failed to remove room member ${internalId}:`, err);
+    throw err;
+  }
+}
+
+export async function getRoomMember(
+  logger: Logger,
+  pgClient: PoolClient,
+  clientId: string,
+  internalId: string
+): Promise<RoomMember> {
+  logger.debug(`Getting room member ${internalId}:`, { clientId });
+
+  try {
+    const { rows: members } = await db.getRoomMember(pgClient, clientId, internalId);
+
+    return members[0];
+  } catch (err: any) {
+    logger.error(`Failed to get room member ${internalId}:`, err);
     throw err;
   }
 }

@@ -20,3 +20,16 @@ export interface Room {
   password: string | null;
   salt: string | null;
 }
+
+export interface RoomMember {
+  id: string;
+  appPid: string;
+  roomId: string;
+  uid: string;
+  clientId: string;
+  memberType: RoomMemberType;
+  internalId: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}

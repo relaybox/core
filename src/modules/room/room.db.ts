@@ -97,6 +97,23 @@ export async function upsertRoomMember(
   return pgClient.query(query, [appPid, roomId, internalId, uid, clientId, roomMemberType, now]);
 }
 
+export async function removeRoomMember(
+  pgClient: PoolClient,
+  clientId: string,
+  internalId: string
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE room_members 
+    SET "deletedAt" = $3 
+    WHERE "clientId" = $1 AND "internalId" = $2
+    RETURNING id;
+  `;
+
+  return pgClient.query(query, [clientId, internalId, now]);
+}
+
 export function updateRoomPassword(
   pgClient: PoolClient,
   internalId: string,

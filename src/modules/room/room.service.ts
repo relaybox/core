@@ -8,7 +8,12 @@ import { ReducedSession, Session } from '@/types/session.types';
 import { KeyNamespace } from '@/types/state.types';
 import { restoreRoomSubscriptions } from '@/modules/subscription/subscription.service';
 import { Room, RoomMemberType, RoomVisibility } from '@/types/room.types';
-import { ForbiddenError, PasswordRequiredError, ValidationError } from '@/lib/errors';
+import {
+  ForbiddenError,
+  NotFoundError,
+  PasswordRequiredError,
+  ValidationError
+} from '@/lib/errors';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { generateSecret, strongHash } from '@/lib/encryption';
@@ -218,6 +223,24 @@ export async function upsertRoomMember(
     await db.upsertRoomMember(pgClient, roomId, internalId, roomMemberType, appPid, clientId, uid);
   } catch (err: any) {
     logger.error(`Failed to add room owner ${session.uid} to room ${roomId}:`, err);
+    throw err;
+  }
+}
+
+export async function removeRoomMember(
+  logger: Logger,
+  pgClient: PoolClient,
+  clientId: string,
+  internalId: string
+): Promise<string> {
+  logger.debug(`Removing room member`, { internalId, clientId });
+
+  try {
+    const { rows: members } = await db.removeRoomMember(pgClient, clientId, internalId);
+
+    return members[0].id;
+  } catch (err: any) {
+    logger.error(`Failed to remove room member ${internalId}:`, err);
     throw err;
   }
 }

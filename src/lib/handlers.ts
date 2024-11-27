@@ -25,8 +25,9 @@ import { handler as roomCreateHandler } from '@/handlers/room/create';
 import { handler as roomJoinHandler } from '@/handlers/room/join';
 import { handler as roomLeaveHandler } from '@/handlers/room/leave';
 import { handler as roomPublishHandler } from '@/handlers/room/publish';
-import { handler as roomPasswordUpdateHandler } from '@/handlers/room/update-password';
-import { handler as roomMemberAddHandler } from '@/handlers/room/add-member';
+import { handler as roomPasswordUpdateHandler } from '@/handlers/room/password-update';
+import { handler as roomMemberAddHandler } from '@/handlers/room/member-add';
+import { handler as roomMemberRemoveHandler } from '@/handlers/room/member-remove';
 
 export type EventHandler = (
   socket: WebSocket<Session>,
@@ -48,6 +49,7 @@ export function createEventHandlersMap(services: Services): Record<ClientEvent, 
     ),
     [ClientEvent.ROOM_PASSWORD_UPDATE]: roomPasswordUpdateHandler(services),
     [ClientEvent.ROOM_MEMBER_ADD]: roomMemberAddHandler(services),
+    [ClientEvent.ROOM_MEMBER_REMOVE]: roomMemberRemoveHandler(services),
     [ClientEvent.ROOM_SUBSCRIPTION_BIND]: subscriptionBindHandler(services),
     [ClientEvent.ROOM_SUBSCRIPTION_UNBIND]: subscriptionUnbindHandler(services),
     [ClientEvent.ROOM_PRESENCE_SUBSCRIBE]: presenceSubscribeHandler(services),

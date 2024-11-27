@@ -4,6 +4,7 @@ import { PoolClient, QueryResult } from 'pg';
 
 export function getRoomById(
   pgClient: PoolClient,
+  appPid: string,
   roomId: string,
   clientId: string
 ): Promise<QueryResult> {
@@ -20,12 +21,14 @@ export function getRoomById(
       r."salt"
     FROM rooms r
     LEFT JOIN room_members rm ON rm."internalId" = r."id" 
-      AND rm."clientId" = $2
+      AND rm."clientId" = $3
       AND rm."deletedAt" IS NULL
-    WHERE r."roomId" = $1;
+    WHERE r."roomId" = $2
+      AND r."appPid" = $1
+      AND r."deletedAt" IS NULL;
   `;
 
-  return pgClient.query(query, [roomId, clientId]);
+  return pgClient.query(query, [appPid, roomId, clientId]);
 }
 
 export function createRoom(
@@ -88,7 +91,8 @@ export async function upsertRoomMember(
     ) ON CONFLICT ("appPid", "roomId", "uid") 
       DO 
         UPDATE SET "updatedAt" = EXCLUDED."updatedAt" 
-        WHERE room_members.uid = $4;
+        WHERE room_members.uid = $4
+        RETURNING id;
   `;
 
   return pgClient.query(query, [
@@ -102,4 +106,21 @@ export async function upsertRoomMember(
     now,
     now
   ]);
+}
+
+export function updateRoomPassword(
+  pgClient: PoolClient,
+  appPid: string,
+  roomId: string,
+  passwordSaltPair: PasswordSaltPair
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE rooms
+    SET "password" = $3, "salt" = $4
+    WHERE "roomId" = $2 AND "appPid" = $1;
+  `;
+
+  return pgClient.query(query, [appPid, roomId, passwordSaltPair.password, passwordSaltPair.salt]);
 }

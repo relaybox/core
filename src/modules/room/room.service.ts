@@ -137,11 +137,12 @@ export async function getRoomByConnectionId(
 export async function getRoomById(
   logger: Logger,
   pgClient: PoolClient,
+  appPid: string,
   roomId: string,
   clientId: string
 ): Promise<Room | undefined> {
   try {
-    const { rows: rooms } = await db.getRoomById(pgClient, roomId, clientId);
+    const { rows: rooms } = await db.getRoomById(pgClient, appPid, roomId, clientId);
 
     return rooms[0];
   } catch (err: any) {
@@ -306,5 +307,22 @@ export function validateClientPassword(logger: Logger, room: Room, userPassword:
 
   if (!passwordHash || passwordHash !== password) {
     throw new ForbiddenError('Password access denied');
+  }
+}
+
+export async function updateRoomPassword(
+  logger: Logger,
+  pgClient: PoolClient,
+  appPid: string,
+  roomId: string,
+  passwordSaltPair: PasswordSaltPair
+): Promise<void> {
+  logger.debug(`Updating room password`, { roomId });
+
+  try {
+    await db.updateRoomPassword(pgClient, appPid, roomId, passwordSaltPair);
+  } catch (err: any) {
+    logger.error(`Failed to update room password`, { err, roomId });
+    throw err;
   }
 }

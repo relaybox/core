@@ -51,7 +51,7 @@ export function handler({ pgPool, redisClient }: Services) {
     try {
       validateRoomId(roomId);
 
-      let room = await getRoomById(logger, pgClient, roomId, clientId);
+      let room = await getRoomById(logger, pgClient, appPid, roomId, clientId);
 
       if (room) {
         validateRoomAccess(logger, room, session);

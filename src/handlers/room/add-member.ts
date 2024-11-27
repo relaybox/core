@@ -3,23 +3,15 @@ import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
-import {
-  initializeRoom,
-  getRoomById,
-  validateRoomCreatePermissions,
-  validateRoomId,
-  validateRoomVisibility,
-  getPasswordSaltPair
-} from '@/modules/room/room.service';
+import { getRoomById, upsertRoomMember } from '@/modules/room/room.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
-import { ForbiddenError } from '@/lib/errors';
-import { PasswordSaltPair } from '@/types/auth.types';
+import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
 
-const logger = getLogger(ClientEvent.ROOM_CREATE);
+const logger = getLogger(ClientEvent.ROOM_MEMBER_ADD);
 
 export function handler({ pgPool }: Services) {
   return async function (
@@ -27,53 +19,42 @@ export function handler({ pgPool }: Services) {
     data: any,
     res: SocketAckHandler
   ): Promise<void> {
-    let passwordSaltPair = {
-      password: null,
-      salt: null
-    } as PasswordSaltPair;
-
     const session = socket.getUserData();
 
     const { appPid, clientId } = session;
-    const { roomId, visibility: clientVisibility, password: clientPassword } = data;
+    const { roomId } = data;
 
     logger.debug(`Creating room`, { roomId, clientId });
 
     const pgClient = await pgPool!.connect();
 
     try {
-      validateRoomId(roomId);
-      validateRoomVisibility(clientVisibility);
-      validateRoomCreatePermissions(logger, roomId, clientVisibility, session);
-
       const room = await getRoomById(logger, pgClient, appPid, roomId, clientId);
 
-      if (room) {
-        throw new ForbiddenError('Room already exists');
+      if (!room) {
+        throw new NotFoundError('Room not found');
       }
 
-      if (clientVisibility == RoomVisibility.PROTECTED) {
-        passwordSaltPair = getPasswordSaltPair(clientPassword);
+      if (room.visibility !== RoomVisibility.PRIVATE) {
+        throw new ValidationError('Room is not private');
       }
 
-      const createdRoom = await initializeRoom(
+      if (room.memberType !== RoomMemberType.OWNER) {
+        throw new ForbiddenError('Room is not owned by the client');
+      }
+
+      const member = await upsertRoomMember(
         logger,
         pgClient,
         roomId,
-        clientVisibility,
-        RoomMemberType.OWNER,
-        session,
-        passwordSaltPair
+        room.internalId,
+        RoomMemberType.MEMBER,
+        session
       );
 
-      const roomData = {
-        id: roomId,
-        type: createdRoom?.visibility || RoomVisibility.PUBLIC
-      };
+      await enqueueWebhookEvent(logger, WebhookEvent.ROOM_MEMBER_ADD, member, session);
 
-      await enqueueWebhookEvent(logger, WebhookEvent.ROOM_CREATE, roomData, session);
-
-      res(roomData);
+      res(member);
     } catch (err: any) {
       logger.error(`Failed to create room "${roomId}"`, { err, roomId, session });
       res(null, formatErrorResponse(err));

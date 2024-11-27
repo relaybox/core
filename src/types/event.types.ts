@@ -14,6 +14,8 @@ export enum ClientEvent {
   ROOM_PRESENCE_COUNT = 'ds:client:room:presence:count',
   ROOM_METRICS_SUBSCRIBE = 'ds:client:room:metrics:subscribe',
   ROOM_METRICS_UNSUBSCRIBE = 'ds:client:room:metrics:unsubscribe',
+  ROOM_PASSWORD_UPDATE = 'ds:client:room:password:update',
+  ROOM_MEMBER_ADD = 'ds:client:room:member:add',
   AUTH_USER_SUBSCRIBE = 'ds:client:auth:user:subscribe',
   AUTH_USER_UNSUBSCRIBE = 'ds:client:auth:user:unsubscribe',
   AUTH_USER_UNSUBSCRIBE_ALL = 'ds:client:auth:user:unsubscribe:all',

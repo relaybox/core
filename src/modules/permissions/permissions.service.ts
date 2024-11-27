@@ -19,19 +19,25 @@ export function findWildcardMatch(
   const roomParts = roomId.split(':');
 
   for (const key of Object.keys(permissions)) {
-    const keyParts = key.split(':');
     let matches = true;
 
-    for (let i = 0; i < roomParts.length; i++) {
-      const keyPart = keyParts[i] || keyParts[keyParts.length - 1];
+    const keyParts = key.split(':');
 
+    for (let i = 0; i < roomParts.length; i++) {
+      // If keyParts[i] is undefined (e.g., fewer parts in the key), fall back to the last part.
+      // Eg. `room:*` must match `room:one` and `room:one:two`
+      const keyPart = keyParts[i] ?? keyParts[keyParts.length - 1];
+
+      // If `keyPart` doesn't match `roomParts[i]` or its not a wildcard
+      // Break and fail
       if (keyPart !== '*' && keyPart !== roomParts[i]) {
         matches = false;
         break;
       }
     }
 
-    if (matches) {
+    // Only return if the match is valid and doesn't overreach
+    if (matches && keyParts.length <= roomParts.length) {
       return permissions[key];
     }
   }

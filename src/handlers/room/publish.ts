@@ -30,7 +30,6 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
 
     const { appPid, permissions } = session;
     const { roomId, event, data: messageData } = data;
-
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspEvent = getNspEvent(nspRoomId, event);
     const latencyLog = getLatencyLog(createdAt!);
@@ -93,6 +92,7 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
 
       res(extendedMessageData);
     } catch (err: any) {
+      logger.error(`Failed to publish message`, { err, roomId, session });
       res(null, formatErrorResponse(err));
     }
   };

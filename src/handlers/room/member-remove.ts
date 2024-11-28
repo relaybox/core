@@ -23,7 +23,7 @@ export function handler({ pgPool }: Services) {
     const { appPid, clientId } = session;
     const { roomId, clientId: removeClientId } = data;
 
-    logger.debug(`Adding member to private room`, { roomId, clientId });
+    logger.debug(`Removing member from private room`, { roomId, clientId });
 
     const pgClient = await pgPool!.connect();
 
@@ -48,7 +48,7 @@ export function handler({ pgPool }: Services) {
 
       res(member);
     } catch (err: any) {
-      logger.error(`Failed to create room "${roomId}"`, { err, roomId, session });
+      logger.error(`Failed to remove room member from private room`, { err, roomId, session });
       res(null, formatErrorResponse(err));
     } finally {
       pgClient.release();

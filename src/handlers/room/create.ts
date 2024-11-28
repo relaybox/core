@@ -33,7 +33,6 @@ export function handler({ pgPool }: Services) {
     } as PasswordSaltPair;
 
     const session = socket.getUserData();
-
     const { appPid, clientId } = session;
     const { roomId, visibility: clientVisibility, password: clientPassword } = data;
 

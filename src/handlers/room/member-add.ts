@@ -61,7 +61,7 @@ export function handler({ pgPool }: Services) {
 
       res(member);
     } catch (err: any) {
-      logger.error(`Failed to create room "${roomId}"`, { err, roomId, session });
+      logger.error(`Failed to add member to private room`, { err, roomId, session });
       res(null, formatErrorResponse(err));
     } finally {
       pgClient.release();

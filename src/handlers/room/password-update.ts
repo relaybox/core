@@ -20,11 +20,10 @@ export function handler({ pgPool }: Services) {
     res: SocketAckHandler
   ): Promise<void> {
     const session = socket.getUserData();
-
     const { appPid, clientId } = session;
     const { roomId, password: clientPassword } = data;
 
-    logger.debug(`Creating room`, { roomId, clientId });
+    logger.debug(`Updating room password`, { roomId, clientId });
 
     const pgClient = await pgPool!.connect();
 
@@ -56,7 +55,7 @@ export function handler({ pgPool }: Services) {
 
       res(roomData);
     } catch (err: any) {
-      logger.error(`Failed to create room "${roomId}"`, { err, roomId, session });
+      logger.error(`Failed to update room password`, { err, roomId, session });
       res(null, formatErrorResponse(err));
     } finally {
       pgClient.release();

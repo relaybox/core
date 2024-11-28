@@ -94,7 +94,7 @@ export async function handleSocketOpen(
     logger.debug(`Socket connect event, ${connectionId}`, verifiedSession);
 
     await setSessionActive(logger, verifiedSession, socket);
-    await markSessionUserActive(logger, appPid, uid);
+    await markSessionUserActive(logger, connectionId);
     await restoreSession(logger, redisClient, verifiedSession, socket);
     await recordConnnectionEvent(
       logger,

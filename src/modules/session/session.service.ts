@@ -11,14 +11,21 @@ import { WebSocket } from 'uWebSockets.js';
 import { restoreCachedUsers } from '@/modules/user/user.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
-import { getNspJobId } from '@/util/helpers';
+import { getNspJobId, getSoftSessionDeleteJobId } from '@/util/helpers';
 import { ConnectionAuth } from '@/types/auth.types';
 import { Logger } from 'winston';
 
+/**
+ * Grace period for soft session delete
+ */
 const SESSION_INACTIVE_JOB_DELAY_MS = 5000;
 
-// Set to 4x the idle timeout value to ensure session destroy works
-// ...in conjunction with socket heartbeat
+/**
+ * Set to 4x the idle timeout value to ensure session destroy works
+ * in conjunction with socket heartbeat
+ * Essentially, theis means that if a socket misses 4 heartbeats
+ * the session will be destroyed
+ */
 const SESSION_DESTROY_JOB_DELAY_MS = Number(process.env.WS_IDLE_TIMEOUT_MS) * 4;
 
 export async function initializeSession(
@@ -26,7 +33,7 @@ export async function initializeSession(
   connectionAuthParams: ConnectionAuth
 ): Promise<Session> {
   try {
-    const { token, apiKey, clientId, connectionId, uid } = connectionAuthParams;
+    const { token, apiKey, clientId, connectionId } = connectionAuthParams;
 
     const verifiedSession = apiKey
       ? await verifyApiKey(logger, apiKey, clientId, connectionId)
@@ -81,6 +88,14 @@ export async function clearSessionMetrics(
   }
 }
 
+/**
+ * Hard session delete
+ *
+ * Delayed job to destroy a session, including subscriptions, metrics etc.
+ * Updates persistent data store with session status.
+ * Reconnection using the same connectionId within SESSION_DESTROY_JOB_DELAY_MS will
+ * remove the job, effectively cancelling the hard session delete
+ */
 export async function markSessionForDeletion(
   logger: Logger,
   session: Session,
@@ -113,14 +128,21 @@ export async function markSessionForDeletion(
   return sessionQueue.add(SessionJobName.SESSION_DESTROY, jobData, jobConfig);
 }
 
+/**
+ * Soft session delete
+ *
+ * Delayed job to set the user as inactive by connectionId.
+ * Primarily used to update presence sets rlated to user via connectionId.
+ * Removes active member from presence sets and broadcasts the leave event.
+ * Reconnection within SESSION_INACTIVE_JOB_DELAY_MS from
+ * the same connectionId will remove the job and ensure active presence is not affected
+ */
 export async function markSessionUserInactive(
   logger: Logger,
   session: Session,
   instanceId: string | number
 ): Promise<Job> {
   logger.debug('Marking session user as inactive', { session });
-
-  const { appPid, uid } = session;
 
   const reducedSession = getReducedSession(session);
 
@@ -129,7 +151,7 @@ export async function markSessionUserInactive(
     instanceId
   };
 
-  const jobId = getNspJobId(appPid, uid);
+  const jobId = getSoftSessionDeleteJobId(session.connectionId);
 
   const jobConfig = {
     jobId,
@@ -140,6 +162,9 @@ export async function markSessionUserInactive(
   return sessionQueue.add(SessionJobName.SESSION_USER_INACTIVE, jobData, jobConfig);
 }
 
+/**
+ * Cancels a hard session delete job
+ */
 export async function unmarkSessionForDeletion(logger: Logger, connectionId: string): Promise<any> {
   logger.debug('Unmarking session for deletion', { connectionId });
 
@@ -151,18 +176,17 @@ export async function unmarkSessionForDeletion(logger: Logger, connectionId: str
   }
 }
 
-export async function markSessionUserActive(
-  logger: Logger,
-  appPid: string,
-  uid: string
-): Promise<any> {
-  logger.debug('Setting session user as active', { appPid, uid });
+/**
+ * Cancels a soft session delete job
+ */
+export async function markSessionUserActive(logger: Logger, connectionId: string): Promise<any> {
+  logger.debug('Setting session user as active', { connectionId });
 
   try {
-    const jobId = getNspJobId(appPid, uid);
+    const jobId = getSoftSessionDeleteJobId(connectionId);
     await clearDelayedSessionJob(logger, jobId);
   } catch (err) {
-    logger.error(`Failed to delete job with ID ${uid}:`, { err });
+    logger.error(`Failed to delete job with ID _:${connectionId}:`, { err });
     throw err;
   }
 }
@@ -183,6 +207,12 @@ async function clearDelayedSessionJob(logger: Logger, id: string) {
   }
 }
 
+/**
+ * Event recieved from socket ping handler
+ * Keeps the session active by updating the active session cache key ttl
+ * This is used by core session service cron to cleanup dangling sessions
+ * and to keep a log of currently active sessions
+ */
 export function setSessionActive(
   logger: Logger,
   session: Session,
@@ -221,6 +251,15 @@ export function getReducedSession(session: Session, socket?: WebSocket<Session>)
   return reducedSession;
 }
 
+/**
+ * Messgage processed instantly by core session service
+ * to keep a log of all connection state changes
+ *
+ * @param logger
+ * @param session
+ * @param socket
+ * @param connectionEventType either "connect" or "disconnect"
+ */
 export function recordConnnectionEvent(
   logger: Logger,
   session: Session,
@@ -250,19 +289,4 @@ export function recordConnnectionEvent(
     jobData,
     defaultJobConfig
   );
-}
-
-export function enqueueSessionHeartbeat(logger: Logger, session: Session): Promise<Job> {
-  logger.debug('Setting session heartbeat', { session });
-
-  const { permissions, ...rest } = session;
-
-  const timestamp = new Date().toISOString();
-
-  const jobData = {
-    ...rest,
-    timestamp
-  };
-
-  return sessionQueue.add(SessionJobName.SESSION_HEARTBEAT, jobData, defaultJobConfig);
 }

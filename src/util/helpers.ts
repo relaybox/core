@@ -10,6 +10,10 @@ export function getNspJobId(appPid: string, id: string): string {
   return `${appPid}:${id}`;
 }
 
+export function getSoftSessionDeleteJobId(id: string): string {
+  return `_:${id}`;
+}
+
 export function extractRoomId(nspRoomId: string): string {
   const [_, roomId] = nspRoomId.split(/:(.+)/);
   return roomId;

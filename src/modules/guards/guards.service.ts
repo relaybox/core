@@ -19,10 +19,10 @@ export function authenticatedSessionGuard(session: Session): boolean {
 
 export async function activeMemberGuard(
   redisClient: RedisClient,
-  uid: string,
+  connectionId: string,
   nspRoomId: string
 ): Promise<boolean> {
-  const activeMember = await isActiveMember(redisClient, uid, nspRoomId);
+  const activeMember = await isActiveMember(redisClient, connectionId, nspRoomId);
 
   if (!activeMember) {
     throw new Error(`Client not member of presence set for ${nspRoomId}`);

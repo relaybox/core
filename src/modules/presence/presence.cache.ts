@@ -3,10 +3,10 @@ import { RedisClient } from '@/lib/redis';
 
 export function isActiveMember(
   redisClient: RedisClient,
-  uid: string,
+  connectionId: string,
   room: string
 ): Promise<string | undefined> {
-  return redisClient.hGet(`${KeyPrefix.PRESENCE}:${room}:${KeySuffix.MEMBERS}`, uid);
+  return redisClient.hGet(`${KeyPrefix.PRESENCE}:${room}:${KeySuffix.MEMBERS}`, connectionId);
 }
 
 export async function getActiveMembersByRoomId(

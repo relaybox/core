@@ -82,10 +82,10 @@ export function getActiveMemberCount(redisClient: RedisClient, nspRoomId: string
 
 export async function isActiveMember(
   redisClient: RedisClient,
-  uid: string,
+  connectionId: string,
   nspRoomId: string
 ): Promise<boolean> {
-  const activeMember = await cache.isActiveMember(redisClient, uid, nspRoomId);
+  const activeMember = await cache.isActiveMember(redisClient, connectionId, nspRoomId);
 
   return !!activeMember;
 }

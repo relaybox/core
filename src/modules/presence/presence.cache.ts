@@ -9,14 +9,11 @@ export function isActiveMember(
   return redisClient.hGet(`${KeyPrefix.PRESENCE}:${room}:${KeySuffix.MEMBERS}`, connectionId);
 }
 
-export async function getActiveMembersByRoomId(
+export function getActiveMembersByRoomId(
   redisClient: RedisClient,
   nspRoomid: string
-): Promise<any[]> {
-  const members = await redisClient.hGetAll(
-    `${KeyPrefix.PRESENCE}:${nspRoomid}:${KeySuffix.MEMBERS}`
-  );
-  return Object.values(members).map((member) => JSON.parse(member));
+): Promise<{ [x: string]: string }> {
+  return redisClient.hGetAll(`${KeyPrefix.PRESENCE}:${nspRoomid}:${KeySuffix.MEMBERS}`);
 }
 
 export async function getActiveMemberCountByRoomId(

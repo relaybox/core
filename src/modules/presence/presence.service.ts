@@ -72,8 +72,13 @@ export function updateActiveMember(
   return presenceQueue.add(PresenceJobName.PRESENCE_UPDATE, jobData, defaultJobConfig);
 }
 
-export function getActiveMembers(redisClient: RedisClient, nspRoomId: string): Promise<any[]> {
-  return cache.getActiveMembersByRoomId(redisClient, nspRoomId);
+export async function getActiveMembers(
+  redisClient: RedisClient,
+  nspRoomId: string
+): Promise<any[]> {
+  const members = await cache.getActiveMembersByRoomId(redisClient, nspRoomId);
+
+  return Object.values(members).map((member) => JSON.parse(member));
 }
 
 export function getActiveMemberCount(redisClient: RedisClient, nspRoomId: string): Promise<number> {

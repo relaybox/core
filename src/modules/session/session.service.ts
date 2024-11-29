@@ -11,7 +11,7 @@ import { WebSocket } from 'uWebSockets.js';
 import { restoreCachedUsers } from '@/modules/user/user.service';
 import { enqueueWebhookEvent } from '../webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
-import { getNspJobId, getSoftSessionDeleteJobId } from '@/util/helpers';
+import { getSoftSessionDeleteJobId } from '@/util/helpers';
 import { ConnectionAuth } from '@/types/auth.types';
 import { Logger } from 'winston';
 
@@ -131,8 +131,8 @@ export async function markSessionForDeletion(
 /**
  * Soft session delete
  *
- * Delayed job to set the user as inactive by connectionId.
- * Primarily used to update presence sets rlated to user via connectionId.
+ * Delayed job to set the user as inactive.
+ * Primarily used to update presence sets related to user by connectionId.
  * Removes active member from presence sets and broadcasts the leave event.
  * Reconnection within SESSION_INACTIVE_JOB_DELAY_MS from
  * the same connectionId will remove the job and ensure active presence is not affected

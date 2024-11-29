@@ -19,7 +19,7 @@ import { WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { SessionJobName } from '@/modules/session/session.queue';
 import { SocketConnectionEventType } from '@/types/socket.types';
-import { getNspJobId } from '@/util/helpers';
+import { getNspJobId, getSoftSessionDeleteJobId } from '@/util/helpers';
 
 const logger = getLogger('');
 
@@ -273,9 +273,9 @@ describe('session.service', () => {
   });
 
   describe('markSessionUserInactive', () => {
-    const uid = '12345';
+    const connectionId = '12345';
     const instanceId = 'instance-1';
-    const session = getMockSession({ uid });
+    const session = getMockSession({ connectionId });
 
     afterEach(() => {
       vi.resetAllMocks();
@@ -291,7 +291,7 @@ describe('session.service', () => {
 
       await markSessionUserInactive(logger, session, instanceId);
 
-      const jobId = getNspJobId(session.appPid, uid);
+      const jobId = getSoftSessionDeleteJobId(session.connectionId);
 
       expect(mockQueue.add).toHaveBeenCalledWith(
         SessionJobName.SESSION_USER_INACTIVE,
@@ -342,24 +342,23 @@ describe('session.service', () => {
   });
 
   describe('markSessionUserActive', () => {
-    const uid = '12345';
-    const session = getMockSession({ uid });
+    const connectionId = '12345';
+    const session = getMockSession({ connectionId });
 
     afterEach(() => {
       vi.resetAllMocks();
     });
 
-    it('should remove a session destroy job by uid when one is found', async () => {
+    it('should remove a session destroy job by connectionId when one is found', async () => {
       const existingJob = {
         remove: vi.fn()
       };
 
       mockQueue.getJob.mockResolvedValueOnce(existingJob);
 
-      const appPid = session.appPid;
-      const jobId = getNspJobId(appPid, uid);
+      const jobId = getSoftSessionDeleteJobId(connectionId);
 
-      await markSessionUserActive(logger, appPid, uid);
+      await markSessionUserActive(logger, connectionId);
 
       expect(mockQueue.getJob).toHaveBeenCalledWith(jobId);
       expect(existingJob.remove).toHaveBeenCalled();
@@ -370,7 +369,9 @@ describe('session.service', () => {
 
       const appPid = session.appPid;
 
-      await expect(markSessionUserActive(logger, appPid, uid)).rejects.toThrow('Failed to add job');
+      await expect(markSessionUserActive(logger, connectionId)).rejects.toThrow(
+        'Failed to add job'
+      );
     });
   });
 

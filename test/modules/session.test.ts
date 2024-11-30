@@ -19,7 +19,7 @@ import { WebSocket } from 'uWebSockets.js';
 import { getLogger } from '@/util/logger';
 import { SessionJobName } from '@/modules/session/session.queue';
 import { SocketConnectionEventType } from '@/types/socket.types';
-import { getNspJobId, getSoftSessionDeleteJobId } from '@/util/helpers';
+import { getSoftSessionDeleteJobId } from '@/util/helpers';
 
 const logger = getLogger('');
 

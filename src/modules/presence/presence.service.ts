@@ -94,3 +94,17 @@ export async function isActiveMember(
 
   return !!activeMember;
 }
+
+export function dedupeActiveMembers(members: any[] = []): any[] {
+  const dedupedMembers: any[] = [];
+
+  for (const member of members) {
+    const { clientId } = member;
+
+    if (!dedupedMembers.find((m) => m.clientId === clientId)) {
+      dedupedMembers.push(member);
+    }
+  }
+
+  return dedupedMembers;
+}

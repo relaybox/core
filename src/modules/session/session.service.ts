@@ -91,7 +91,7 @@ export async function clearSessionMetrics(
 /**
  * Hard session delete
  *
- * Delayed job to destroy a session, including subscriptions, metrics etc.
+ * Delayed job to destroy a session, including room and user subscriptions etc.
  * Updates persistent data store with session status.
  * Reconnection using the same connectionId within SESSION_DESTROY_JOB_DELAY_MS will
  * remove the job, effectively cancelling the hard session delete

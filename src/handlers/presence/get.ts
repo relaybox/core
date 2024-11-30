@@ -6,7 +6,7 @@ import { SocketAckHandler } from '@/types/socket.types';
 import { formatErrorResponse } from '@/util/format';
 import { getNspRoomId } from '@/util/helpers';
 import { permissionsGuard } from '@/modules/guards/guards.service';
-import { getActiveMembers } from '@/modules/presence/presence.service';
+import { dedupeActiveMembers, getActiveMembers } from '@/modules/presence/presence.service';
 import { getLogger } from '@/util/logger';
 import { ClientEvent } from '@/types/event.types';
 
@@ -28,8 +28,9 @@ export function handler({ redisClient }: Services) {
       permissionsGuard(roomId, DsPermission.PRESENCE, permissions);
 
       const members = await getActiveMembers(redisClient, nspRoomId);
+      const dedupedMembers = dedupeActiveMembers(members);
 
-      res(members || []);
+      res(dedupedMembers || []);
     } catch (err: any) {
       logger.error(`Failed to get presence members`, { roomId, err });
       res(null, formatErrorResponse(err));

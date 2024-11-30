@@ -36,7 +36,7 @@ export function findWildcardMatch(
       }
     }
 
-    // Only return if the match is valid and doesn't overreach
+    // Only return if the match is valid and doesn't over-reach
     if (matches && keyParts.length <= roomParts.length) {
       return permissions[key];
     }

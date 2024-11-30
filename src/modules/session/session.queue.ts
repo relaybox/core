@@ -2,7 +2,6 @@ import { JobsOptions, Queue } from 'bullmq';
 import { connectionOptionsIo } from '@/lib/redis';
 
 const SESSION_QUEUE_NAME = 'session';
-
 const SESSION_QUEUE_PREFIX = 'queue';
 const RETRY_BACKOFF_RATE_MS = 500;
 const RETRY_MAX_ATTEMPTS = 3;

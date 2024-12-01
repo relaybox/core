@@ -18,6 +18,7 @@ import { createEventHandlersMap } from './lib/handlers';
 import { createRouter } from '@/lib/router';
 import { handler as handleClientEvent } from '@/handlers/events/post';
 import { handler as handleHistoryGet } from '@/handlers/history/get';
+import { handler as handleRoomList } from '@/handlers/room/list';
 import { verifyAuthToken } from '@/middleware/auth';
 
 const SERVER_PORT = process.env.SERVER_PORT || 4004;
@@ -48,6 +49,8 @@ app.get(
   '/history/:roomId/messages',
   pipe(verifyAuthToken(logger, services), handleHistoryGet(services))
 );
+
+app.get('/rooms', pipe(verifyAuthToken(logger, services), handleRoomList(services)));
 
 app.ws('/*', {
   maxLifetime: WS_MAX_LIFETIME_MINS,

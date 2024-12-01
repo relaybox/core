@@ -1,5 +1,6 @@
 import { PasswordSaltPair } from '@/types/auth.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
+import { getPaginatedQuery } from '@/util/pg-query';
 import { PoolClient, QueryResult } from 'pg';
 
 export function getRoomById(
@@ -143,4 +144,23 @@ export function updateRoomPassword(
   `;
 
   return pgClient.query(query, [internalId, passwordSaltPair.password, passwordSaltPair.salt]);
+}
+
+export async function getRoomsByClientId(
+  pgClient: PoolClient,
+  appPid: string,
+  clientId: string,
+  offset: number = 0,
+  limit: number = 10
+): Promise<QueryResult> {
+  console.log(clientId, appPid);
+  const query = `
+    SELECT * FROM room_members
+    WHERE "clientId" = $1
+      AND "appPid" = $2
+      AND "deletedAt" IS NULL
+    ORDER BY "createdAt" DESC
+  `;
+
+  return getPaginatedQuery(pgClient, query, offset, limit, [clientId, appPid]);
 }

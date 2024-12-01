@@ -366,3 +366,22 @@ export async function updateRoomPassword(
     throw err;
   }
 }
+
+export async function getRoomsByClientId(
+  logger: Logger,
+  pgClient: PoolClient,
+  appPid: string,
+  clientId: string,
+  offset?: number,
+  limit?: number
+): Promise<Room[]> {
+  logger.debug(`Getting rooms by client id`, { clientId });
+
+  try {
+    const { rows: rooms } = await db.getRoomsByClientId(pgClient, appPid, clientId, offset, limit);
+    return rooms;
+  } catch (err: any) {
+    logger.error(`Failed to get rooms by client id`, { err, clientId });
+    throw err;
+  }
+}

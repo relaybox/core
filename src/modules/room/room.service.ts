@@ -379,7 +379,7 @@ export async function getRoomsByClientId(
 
   try {
     const { rows: rooms } = await db.getRoomsByClientId(pgClient, appPid, clientId, offset, limit);
-    return rooms;
+    return rooms[0];
   } catch (err: any) {
     logger.error(`Failed to get rooms by client id`, { err, clientId });
     throw err;

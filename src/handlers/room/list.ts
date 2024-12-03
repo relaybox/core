@@ -13,7 +13,7 @@ export function handler({ pgPool }: Services): HttpMiddleware {
 
     try {
       const { appPid, clientId } = req.auth;
-      let { offset, limit } = req.query;
+      const { offset, limit } = req.query;
 
       const rooms = await getRoomsByClientId(
         logger,

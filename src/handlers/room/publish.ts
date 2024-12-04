@@ -14,6 +14,7 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { getReducedSession } from '@/modules/session/session.service';
 import { addMessageToCache, enqueueHistoryMessage } from '@/modules/history/history.service';
+import { enqueueIntellectEvent } from '@/modules/intellect/intellect.service';
 
 const logger = getLogger(ClientEvent.PUBLISH);
 
@@ -29,7 +30,7 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
     logger.debug(`Client publish event`, { session });
 
     const { appPid, permissions } = session;
-    const { roomId, event, data: messageData } = data;
+    const { roomId, event, data: messageData, opts: clientPublishOpts } = data;
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspEvent = getNspEvent(nspRoomId, event);
     const latencyLog = getLatencyLog(createdAt!);
@@ -89,6 +90,10 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         session,
         webhookFilterAttributes
       );
+
+      if (clientPublishOpts.intellect?.input) {
+        await enqueueIntellectEvent(logger, appPid, roomId, clientPublishOpts.intellect);
+      }
 
       res(extendedMessageData);
     } catch (err: any) {

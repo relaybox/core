@@ -74,9 +74,15 @@ export function updateActiveMember(
 
 export async function getActiveMembers(
   redisClient: RedisClient,
-  nspRoomId: string
+  nspRoomId: string,
+  limit: number = 10
 ): Promise<any[]> {
-  const members = await cache.getActiveMembersByRoomId(redisClient, nspRoomId);
+  const connectionIds = await cache.getActiveConnectionIds(redisClient, nspRoomId, limit - 1);
+  const members = await cache.getActiveMembersByConnectionIds(
+    redisClient,
+    nspRoomId,
+    connectionIds
+  );
 
   return Object.values(members).map((member) => JSON.parse(member));
 }

@@ -3,14 +3,14 @@ import { WebSocket } from 'uWebSockets.js';
 import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { formatErrorResponse, formatUserSubscription } from '@/util/format';
-import { bindUserSubscription, pushUserSubscription } from '@/modules/user/user.service';
+import { removeUserSubscription, unbindUserSubscription } from '@/modules/user/user.service';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { getNspClientId } from '@/util/helpers';
 import { KeyNamespace } from '@/types/state.types';
 import { ClientEvent } from '@/types/event.types';
 import { getLogger } from '@/util/logger';
 
-const logger = getLogger(ClientEvent.AUTH_USER_STATUS_UPDATE);
+const logger = getLogger(ClientEvent.AUTH_USER_UNSUBSCRIBE);
 
 export function handler({ redisClient }: Services) {
   return async function (
@@ -23,7 +23,7 @@ export function handler({ redisClient }: Services) {
     const { connectionId } = session;
     const { subscriptionId: clientId, event } = data;
 
-    logger.debug('Creating user subscription', {
+    logger.debug('Removing user subscription', {
       clientId
     });
 
@@ -32,7 +32,7 @@ export function handler({ redisClient }: Services) {
     const userRoutingKey = ChannelManager.getRoutingKey(nspClientId);
 
     try {
-      await bindUserSubscription(
+      await unbindUserSubscription(
         logger,
         redisClient,
         connectionId,
@@ -41,7 +41,7 @@ export function handler({ redisClient }: Services) {
         socket
       );
 
-      await pushUserSubscription(
+      await removeUserSubscription(
         logger,
         redisClient,
         connectionId,
@@ -52,7 +52,7 @@ export function handler({ redisClient }: Services) {
 
       res(subscription);
     } catch (err: any) {
-      logger.error(`Failed to bind user subscription`, {
+      logger.error(`Failed to remove user subscription`, {
         session,
         nspClientId,
         event,

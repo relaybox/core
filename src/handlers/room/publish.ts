@@ -82,8 +82,6 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         llmInputPath: clientPublishOpts.intellect.inputPath
       };
 
-      console.log(persistedMessageData);
-
       await addMessageToCache(logger, redisClient, persistedMessageData);
       await enqueueHistoryMessage(logger, publisher, persistedMessageData);
       await enqueueWebhookEvent(
@@ -94,8 +92,8 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         webhookFilterAttributes
       );
 
-      if (clientPublishOpts.intellect?.input) {
-        await enqueueIntellectEvent(logger, appPid, roomId, session, clientPublishOpts.intellect);
+      if (clientPublishOpts.intellect?.inputPath) {
+        await enqueueIntellectEvent(logger, persistedMessageData);
       }
 
       res(extendedMessageData);

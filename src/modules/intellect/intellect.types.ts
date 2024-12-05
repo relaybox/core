@@ -1,4 +1,4 @@
-import { Session } from '@/types/session.types';
+import { ReducedSession, Session } from '@/types/session.types';
 
 export interface IntellectPublishOptions {
   appPid: string;
@@ -10,6 +10,9 @@ export interface IntellectPublishOptions {
 }
 
 export interface IntellectPayloadOptions extends IntellectPublishOptions {
+  id: string;
+  timestamp: string;
   appPid: string;
   roomId: string;
+  session: ReducedSession;
 }

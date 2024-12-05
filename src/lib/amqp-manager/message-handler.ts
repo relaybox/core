@@ -22,6 +22,8 @@ export default class MessageHandler {
 
     const { nspRoomId, event, data, requestId, session, latencyLog, service } = msg.body;
 
+    console.log(msg);
+
     try {
       this.emitAndLogMetrics(event, data, nspRoomId, requestId, session, latencyLog);
       this.emitAndLogMetrics(

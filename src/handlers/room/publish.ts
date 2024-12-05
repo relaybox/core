@@ -92,7 +92,7 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
       );
 
       if (clientPublishOpts.intellect?.input) {
-        await enqueueIntellectEvent(logger, appPid, roomId, clientPublishOpts.intellect);
+        await enqueueIntellectEvent(logger, appPid, roomId, session, clientPublishOpts.intellect);
       }
 
       res(extendedMessageData);

@@ -89,7 +89,7 @@ export async function handleSocketOpen(
 ): Promise<void> {
   try {
     const verifiedSession = socket.getUserData();
-    const { appPid, uid, connectionId, clientId } = verifiedSession;
+    const { uid, connectionId, clientId } = verifiedSession;
 
     logger.debug(`Socket connect event, ${connectionId}`, verifiedSession);
 

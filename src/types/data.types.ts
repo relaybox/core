@@ -15,4 +15,5 @@ export interface PersistedMessage {
   roomId: string;
   event: string;
   message?: Message;
+  llmInputPath?: string;
 }

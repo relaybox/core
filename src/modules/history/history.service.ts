@@ -102,9 +102,13 @@ export async function addMessageToCache(
 
   try {
     const message = persistedMessage.message;
-    const messageData = message.data;
     const timestamp = message.data.timestamp;
     const key = `${KeyPrefix.HISTORY}:buffer:${message.nspRoomId}`;
+
+    const messageData = {
+      ...message.data,
+      llmInputPath: persistedMessage.llmInputPath
+    };
 
     await cache.setCachedMessage(redisClient, key, messageData, timestamp);
   } catch (err: unknown) {

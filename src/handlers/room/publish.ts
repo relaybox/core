@@ -78,8 +78,11 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         appPid,
         roomId,
         event,
-        message: processedMessageData
+        message: processedMessageData,
+        llmInputPath: clientPublishOpts.intellect.inputPath
       };
+
+      console.log(persistedMessageData);
 
       await addMessageToCache(logger, redisClient, persistedMessageData);
       await enqueueHistoryMessage(logger, publisher, persistedMessageData);

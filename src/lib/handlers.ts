@@ -28,6 +28,9 @@ import { handler as roomPublishHandler } from '@/handlers/room/publish';
 import { handler as roomPasswordUpdateHandler } from '@/handlers/room/password-update';
 import { handler as roomMemberAddHandler } from '@/handlers/room/member-add';
 import { handler as roomMemberRemoveHandler } from '@/handlers/room/member-remove';
+import { handler as intellectSubscribeHandler } from '@/handlers/intellect/subscribe';
+import { handler as intellectUnsubscribeHandler } from '@/handlers/intellect/unsubscribe';
+// import { handler as intellectunUnsubscribeAllHandler } from '@/handlers/intellect/unsubscribe-all';
 
 export type EventHandler = (
   socket: WebSocket<Session>,
@@ -66,6 +69,8 @@ export function createEventHandlersMap(services: Services): Record<ClientEvent, 
     [ClientEvent.ROOM_PRESENCE_COUNT]: presenceCountHandler(services),
     [ClientEvent.ROOM_METRICS_SUBSCRIBE]: metricsSubscribeHandler(services),
     [ClientEvent.ROOM_METRICS_UNSUBSCRIBE]: metricsUnsubscribeHandler(services),
+    [ClientEvent.ROOM_INTELLECT_SUBSCRIBE]: intellectSubscribeHandler(services),
+    [ClientEvent.ROOM_INTELLECT_UNSUBSCRIBE]: intellectUnsubscribeHandler(services),
     [ClientEvent.AUTH_USER_SUBSCRIBE]: userSubscribeHandler(services),
     [ClientEvent.AUTH_USER_UNSUBSCRIBE]: userUnsubscribeHandler(services),
     [ClientEvent.AUTH_USER_UNSUBSCRIBE_ALL]: userUnsubscribeAllHandler(services),

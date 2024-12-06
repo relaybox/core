@@ -15,6 +15,10 @@ export function formatMetricsSubscription(nspRoomId: string, event: string): str
   return `${nspRoomId}:${PLATFORM_RESERVED_NAMESPACE}:${KeyNamespace.METRICS}:${event}`;
 }
 
+export function formatIntellectSubscription(nspRoomId: string, event: string): string {
+  return `${nspRoomId}:${PLATFORM_RESERVED_NAMESPACE}:${KeyNamespace.INTELLECT}:${event}`;
+}
+
 export function formatUserSubscription(nspClientId: string, event: string): string {
   return `${nspClientId}:${PLATFORM_RESERVED_NAMESPACE}:${event}`;
 }

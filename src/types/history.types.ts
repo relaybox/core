@@ -18,12 +18,18 @@ export interface MessageSender {
   user?: AuthUser;
 }
 
+export interface MessageMetadata {
+  humanMessage?: boolean;
+  llmModel?: string;
+}
+
 export interface Message {
   id: string;
   body: any;
   sender: MessageSender;
   timestamp: number;
   event: string;
+  metadata?: MessageMetadata;
 }
 
 export interface HistoryRequestParams {

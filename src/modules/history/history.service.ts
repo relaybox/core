@@ -72,7 +72,7 @@ export function parseMessages(messages: any[]): Message[] {
   }
 
   return messages.map((message) => {
-    const { id, body, user, clientId, connectionId, event } = message;
+    const { id, body, user, clientId, connectionId, event, humanMessage, llmModel } = message;
 
     return {
       id,
@@ -83,7 +83,11 @@ export function parseMessages(messages: any[]): Message[] {
         user
       },
       timestamp: new Date(message.createdAt).getTime(),
-      event
+      event,
+      metadata: {
+        humanMessage,
+        llmModel
+      }
     };
   });
 }

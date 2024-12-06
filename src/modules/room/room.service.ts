@@ -114,6 +114,14 @@ export async function restoreCachedRooms(
               nspRoomId,
               KeyNamespace.METRICS,
               socket
+            ),
+            restoreRoomSubscriptions(
+              logger,
+              redisClient,
+              connectionId,
+              nspRoomId,
+              KeyNamespace.INTELLECT,
+              socket
             )
           ])
         )

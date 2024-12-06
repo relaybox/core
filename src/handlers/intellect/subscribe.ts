@@ -26,7 +26,7 @@ export function handler({ redisClient }: Services) {
     const nspRoomId = getNspRoomId(appPid, roomId);
     const subscription = formatIntellectSubscription(nspRoomId, event);
 
-    logger.debug('Subscribing to intellect', {
+    logger.debug('Subscribing to intellect event', {
       session,
       nspRoomId,
       event,

@@ -33,3 +33,11 @@ export interface RoomMember {
   updatedAt: string;
   deletedAt: string | null;
 }
+
+export interface RoomPrompt {
+  id: string;
+  roomId: string;
+  prompt: string;
+  createdAt: string;
+  updatedAt: string;
+}

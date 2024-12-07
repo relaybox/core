@@ -34,6 +34,9 @@ const services = new Services(app, CONTAINER_HOSTNAME);
 const eventHandlersMap = createEventHandlersMap(services);
 const eventRouter = createRouter(eventHandlersMap);
 
+/**
+ * HTTP Routes
+ */
 app.options('/*', (res: HttpResponse) => {
   const corsReponse = getCorsResponse(res);
   corsReponse.end();
@@ -52,6 +55,9 @@ app.get(
 
 app.get('/rooms', pipe(verifyAuthToken(logger, services), handleRoomList(services)));
 
+/**
+ * Server definition
+ */
 app.ws('/*', {
   maxLifetime: WS_MAX_LIFETIME_MINS,
   idleTimeout: WS_IDLE_TIMEOUT_SECS,
@@ -66,6 +72,9 @@ app.ws('/*', {
   }
 });
 
+/**
+ * Start server
+ */
 services.connect().then((_) => {
   const port = Number(SERVER_PORT);
 
@@ -78,5 +87,8 @@ services.connect().then((_) => {
   });
 });
 
+/**
+ * Process signal listeners
+ */
 process.on('SIGTERM', () => services.disconnect('SIGTERM'));
 process.on('SIGINT', () => services.disconnect('SIGINT'));

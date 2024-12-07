@@ -10,13 +10,13 @@ export async function enqueueIntellectEvent(
   logger.debug(`Enqueuing intellect event`);
 
   try {
-    return intellectQueue.add(
+    return await intellectQueue.add(
       IntellectJobName.INTELLECT_INPUT_BASIC,
       persistedMessage,
       defaultJobConfig
     );
   } catch (err: any) {
-    logger.error(`Failed to enqueue intellect event`, { err });
+    logger.error(`Failed to enqueue intellect event:`, err);
     throw err;
   }
 }

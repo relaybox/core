@@ -93,7 +93,10 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
       );
 
       if (clientPublishOpts.intellect?.inputPath) {
-        await enqueueIntellectEvent(logger, persistedMessageData);
+        await enqueueIntellectEvent(logger, {
+          ...persistedMessageData,
+          ...clientPublishOpts.intellect
+        });
       }
 
       res(extendedMessageData);

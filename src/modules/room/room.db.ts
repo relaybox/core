@@ -11,7 +11,7 @@ export function getRoomById(
 ): Promise<QueryResult> {
   const query = `
     SELECT 
-      r.id as "internalId",
+      r.id,
       r."appPid", 
       r."roomId", 
       r."visibility", 
@@ -21,7 +21,7 @@ export function getRoomById(
       r."password",
       r."salt"
     FROM rooms r
-    LEFT JOIN room_members rm ON rm."internalId" = r."id" 
+    LEFT JOIN room_members rm ON rm."roomUuid" = r."id" 
       AND rm."clientId" = $3
       AND rm."deletedAt" IS NULL
     WHERE r."roomId" = $2
@@ -65,20 +65,20 @@ export function createRoom(
 export async function getRoomMember(
   pgClient: PoolClient,
   clientId: string,
-  internalId: string
+  roomUuid: string
 ): Promise<QueryResult> {
   const query = `
     SELECT * FROM room_members 
-    WHERE "clientId" = $1 AND "internalId" = $2
+    WHERE "clientId" = $1 AND "roomUuid" = $2
   `;
 
-  return await pgClient.query(query, [clientId, internalId]);
+  return await pgClient.query(query, [clientId, roomUuid]);
 }
 
 export async function upsertRoomMember(
   pgClient: PoolClient,
   roomId: string,
-  internalId: string,
+  roomUuid: string,
   roomMemberType: RoomMemberType,
   appPid: string,
   clientId: string,
@@ -88,7 +88,7 @@ export async function upsertRoomMember(
 
   const query = `
     INSERT INTO room_members (
-      "appPid", "roomId", "internalId", uid, "clientId", "memberType", 
+      "appPid", "roomId", "roomUuid", uid, "clientId", "memberType", 
       "createdAt", "updatedAt", "deletedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $7, $8
@@ -104,7 +104,7 @@ export async function upsertRoomMember(
   return pgClient.query(query, [
     appPid,
     roomId,
-    internalId,
+    roomUuid,
     uid,
     clientId,
     roomMemberType,
@@ -116,23 +116,23 @@ export async function upsertRoomMember(
 export async function removeRoomMember(
   pgClient: PoolClient,
   clientId: string,
-  internalId: string
+  roomUuid: string
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const query = `
     UPDATE room_members 
     SET "deletedAt" = $3 
-    WHERE "clientId" = $1 AND "internalId" = $2
+    WHERE "clientId" = $1 AND "roomUuid" = $2
     RETURNING id;
   `;
 
-  return pgClient.query(query, [clientId, internalId, now]);
+  return pgClient.query(query, [clientId, roomUuid, now]);
 }
 
 export function updateRoomPassword(
   pgClient: PoolClient,
-  internalId: string,
+  roomUuid: string,
   passwordSaltPair: PasswordSaltPair
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
@@ -143,7 +143,7 @@ export function updateRoomPassword(
     WHERE "id" = $1;
   `;
 
-  return pgClient.query(query, [internalId, passwordSaltPair.password, passwordSaltPair.salt]);
+  return pgClient.query(query, [roomUuid, passwordSaltPair.password, passwordSaltPair.salt]);
 }
 
 export async function getRoomsByClientId(

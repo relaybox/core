@@ -44,7 +44,7 @@ export function handler({ pgPool }: Services) {
 
       const passwordSaltPair = getPasswordSaltPair(clientPassword);
 
-      await updateRoomPassword(logger, pgClient, room.internalId, passwordSaltPair);
+      await updateRoomPassword(logger, pgClient, room.id, passwordSaltPair);
 
       const roomData = {
         id: roomId,

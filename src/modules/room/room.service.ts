@@ -192,8 +192,8 @@ export async function initializeRoom(
 
     if (rooms.length > 0) {
       room = rooms[0];
-      const internalId = rooms[0].id;
-      await upsertRoomMember(logger, pgClient, roomId, internalId, roomMemberType, session);
+      const roomUuid = rooms[0].id;
+      await upsertRoomMember(logger, pgClient, roomId, roomUuid, roomMemberType, session);
     } else {
       logger.debug(`Room already exists, no further action required`);
     }
@@ -212,7 +212,7 @@ export async function upsertRoomMember(
   logger: Logger,
   pgClient: PoolClient,
   roomId: string,
-  internalId: string,
+  roomUuid: string,
   roomMemberType: RoomMemberType,
   session: ReducedSession
 ): Promise<void> {
@@ -224,7 +224,7 @@ export async function upsertRoomMember(
   try {
     const { appPid, clientId, uid } = session;
 
-    await db.upsertRoomMember(pgClient, roomId, internalId, roomMemberType, appPid, clientId, uid);
+    await db.upsertRoomMember(pgClient, roomId, roomUuid, roomMemberType, appPid, clientId, uid);
   } catch (err: any) {
     logger.error(`Failed to add room owner ${session.uid} to room ${roomId}:`, err);
     throw err;
@@ -235,12 +235,12 @@ export async function removeRoomMember(
   logger: Logger,
   pgClient: PoolClient,
   clientId: string,
-  internalId: string
+  roomUuid: string
 ): Promise<string> {
-  logger.debug(`Removing room member`, { internalId, clientId });
+  logger.debug(`Removing room member`, { roomUuid, clientId });
 
   try {
-    const { rows: existingMembers } = await db.getRoomMember(pgClient, clientId, internalId);
+    const { rows: existingMembers } = await db.getRoomMember(pgClient, clientId, roomUuid);
 
     if (!existingMembers.length) {
       throw new NotFoundError('Room member not found');
@@ -250,11 +250,11 @@ export async function removeRoomMember(
       throw new ForbiddenError('Room member is owner');
     }
 
-    const { rows: members } = await db.removeRoomMember(pgClient, clientId, internalId);
+    const { rows: members } = await db.removeRoomMember(pgClient, clientId, roomUuid);
 
     return members[0].id;
   } catch (err: any) {
-    logger.error(`Failed to remove room member ${internalId}:`, err);
+    logger.error(`Failed to remove room member ${roomUuid}:`, err);
     throw err;
   }
 }
@@ -263,16 +263,16 @@ export async function getRoomMember(
   logger: Logger,
   pgClient: PoolClient,
   clientId: string,
-  internalId: string
+  roomUuid: string
 ): Promise<RoomMember> {
-  logger.debug(`Getting room member ${internalId}:`, { clientId });
+  logger.debug(`Getting room member ${roomUuid}:`, { clientId });
 
   try {
-    const { rows: members } = await db.getRoomMember(pgClient, clientId, internalId);
+    const { rows: members } = await db.getRoomMember(pgClient, clientId, roomUuid);
 
     return members[0];
   } catch (err: any) {
-    logger.error(`Failed to get room member ${internalId}:`, err);
+    logger.error(`Failed to get room member ${roomUuid}:`, err);
     throw err;
   }
 }
@@ -362,15 +362,15 @@ export function validateClientPassword(logger: Logger, room: Room, userPassword:
 export async function updateRoomPassword(
   logger: Logger,
   pgClient: PoolClient,
-  internalId: string,
+  roomUuid: string,
   passwordSaltPair: PasswordSaltPair
 ): Promise<void> {
-  logger.debug(`Updating room password`, { internalId });
+  logger.debug(`Updating room password`, { roomUuid });
 
   try {
-    await db.updateRoomPassword(pgClient, internalId, passwordSaltPair);
+    await db.updateRoomPassword(pgClient, roomUuid, passwordSaltPair);
   } catch (err: any) {
-    logger.error(`Failed to update room password`, { err, internalId });
+    logger.error(`Failed to update room password`, { err, roomUuid });
     throw err;
   }
 }

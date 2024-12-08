@@ -60,14 +60,7 @@ export function handler({ pgPool, redisClient }: Services) {
           validateClientPassword(logger, room, clientPassword);
         }
 
-        await upsertRoomMember(
-          logger,
-          pgClient,
-          roomId,
-          room.internalId,
-          RoomMemberType.MEMBER,
-          session
-        );
+        await upsertRoomMember(logger, pgClient, roomId, room.id, RoomMemberType.MEMBER, session);
       } else {
         room = await initializeRoom(
           logger,

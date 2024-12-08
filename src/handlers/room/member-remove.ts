@@ -42,7 +42,7 @@ export function handler({ pgPool }: Services) {
         throw new ForbiddenError('Room is not owned by the client');
       }
 
-      const member = await removeRoomMember(logger, pgClient, removeClientId, room.internalId);
+      const member = await removeRoomMember(logger, pgClient, removeClientId, room.id);
 
       await enqueueWebhookEvent(logger, WebhookEvent.ROOM_MEMBER_REMOVE, member, session);
 

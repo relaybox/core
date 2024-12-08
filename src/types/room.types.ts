@@ -13,7 +13,7 @@ export interface Room {
   roomId: string;
   visibility: RoomVisibility;
   appPid: string;
-  internalId: string;
+  id: string;
   createdAt: string;
   memberCreatedAt: string;
   memberType: RoomMemberType;
@@ -28,7 +28,7 @@ export interface RoomMember {
   uid: string;
   clientId: string;
   memberType: RoomMemberType;
-  internalId: string;
+  roomUuid: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;

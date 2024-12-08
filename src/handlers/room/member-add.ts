@@ -52,7 +52,7 @@ export function handler({ pgPool }: Services) {
         logger,
         pgClient,
         roomId,
-        room.internalId,
+        room.id,
         RoomMemberType.MEMBER,
         addMemberSession
       );

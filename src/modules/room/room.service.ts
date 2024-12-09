@@ -281,7 +281,11 @@ export function validateRoomAccess(logger: Logger, room: Room, session: Session)
   logger.debug(`Evaluating room access`, { session });
 
   const { permissions } = session;
-  const { visibility, roomId, memberCreatedAt } = room;
+  const { visibility, roomId, memberCreatedAt, memberDeletedAt } = room;
+
+  if (memberDeletedAt) {
+    throw new ForbiddenError('Room access denied');
+  }
 
   if (visibility === RoomVisibility.PRIVATE) {
     permissionsGuard(roomId, DsPermission.PRIVACY, permissions);

@@ -34,9 +34,9 @@ export function handler({ pgPool }: Services) {
         throw new NotFoundError('Room not found');
       }
 
-      if (room.visibility !== RoomVisibility.PRIVATE) {
-        throw new ValidationError('Room is not private');
-      }
+      // if (room.visibility !== RoomVisibility.PRIVATE) {
+      //   throw new ValidationError('Room is not private');
+      // }
 
       if (room.memberType !== RoomMemberType.OWNER) {
         throw new ForbiddenError('Room is not owned by the client');

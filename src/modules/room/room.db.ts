@@ -18,8 +18,8 @@ export function getRoomById(
       r."createdAt", 
       rm."createdAt" AS "memberCreatedAt",
       rm."memberType" AS "memberType",
-      r."password",
-      r."salt"
+      r.password,
+      r.salt
     FROM rooms r
     LEFT JOIN room_members rm ON rm."roomUuid" = r."id" 
       AND rm."clientId" = $3

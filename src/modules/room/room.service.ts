@@ -231,6 +231,23 @@ export async function upsertRoomMember(
   }
 }
 
+export async function updateRoomMemberType(
+  logger: Logger,
+  pgClient: PoolClient,
+  roomUuid: string,
+  clientId: string,
+  roomMemberType: RoomMemberType
+): Promise<void> {
+  logger.debug(`Updating room member ${roomMemberType} in room ${roomUuid}`);
+
+  try {
+    await db.updateRoomMemberType(pgClient, roomUuid, clientId, roomMemberType);
+  } catch (err: any) {
+    logger.error(`Failed to update room member type:`, err);
+    throw err;
+  }
+}
+
 export async function removeRoomMember(
   logger: Logger,
   pgClient: PoolClient,

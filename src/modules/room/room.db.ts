@@ -113,6 +113,24 @@ export async function upsertRoomMember(
   ]);
 }
 
+export function updateRoomMemberType(
+  pgClient: PoolClient,
+  roomUuid: string,
+  clientId: string,
+  roomMemberType: RoomMemberType
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE room_members 
+    SET "memberType" = $3, "updatedAt" = $4
+    WHERE "clientId" = $2 AND "roomUuid" = $1
+    RETURNING id;
+  `;
+
+  return pgClient.query(query, [roomUuid, clientId, roomMemberType, now]);
+}
+
 export async function removeRoomMember(
   pgClient: PoolClient,
   clientId: string,

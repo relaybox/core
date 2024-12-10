@@ -10,7 +10,7 @@ import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType } from '@/types/room.types';
 import { ForbiddenError, NotFoundError } from '@/lib/errors';
-import { getUserByClientId } from '@/modules/auth/auth.service';
+import { getUserByClientIdOrUsername } from '@/modules/auth/auth.service';
 
 const logger = getLogger(ClientEvent.ROOM_MEMBER_ADD);
 
@@ -21,8 +21,8 @@ export function handler({ pgPool }: Services) {
     res: SocketAckHandler
   ): Promise<void> {
     const session = socket.getUserData();
-    const { appPid, clientId } = session;
-    const { roomId, clientId: addClientId } = data;
+    const { appPid, appId, clientId } = session;
+    const { roomId, clientId: clientIdOrUsername } = data;
 
     logger.debug(`Adding member to private room`, { roomId, clientId });
 
@@ -39,7 +39,7 @@ export function handler({ pgPool }: Services) {
         throw new ForbiddenError('Room is not owned by the client');
       }
 
-      const user = await getUserByClientId(logger, pgClient, addClientId);
+      const user = await getUserByClientIdOrUsername(logger, pgClient, appId, clientIdOrUsername);
 
       if (!user) {
         throw new NotFoundError('User not found');
@@ -47,8 +47,8 @@ export function handler({ pgPool }: Services) {
 
       const addMemberSession = {
         appPid,
-        clientId: addClientId,
-        uid: addClientId
+        clientId: user.clientId,
+        uid: user.clientId
       } as ReducedSession;
 
       const member = await upsertRoomMember(

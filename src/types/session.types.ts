@@ -17,6 +17,7 @@ export interface AuthUser {
 
 export interface Session {
   uid: string;
+  appId: string;
   appPid: string;
   keyId: string;
   clientId: string;

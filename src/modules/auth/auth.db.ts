@@ -35,3 +35,30 @@ export function getUserByClientId(pgClient: PoolClient, clientId: string): Promi
 
   return pgClient.query(query, [clientId]);
 }
+
+export function getUserByClientIdOrUsername(
+  pgClient: PoolClient,
+  appId: string,
+  clientIdOrUsername: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT 
+      id, 
+      "appId", 
+      "blockedAt", 
+      "clientId", 
+      "createdAt", 
+      "firstName", 
+      "lastName", 
+      "isOnline", 
+      "lastOnline", 
+      "orgId", 
+      "updatedAt", 
+      "username"
+    FROM authentication_users
+    WHERE "appId" = $1 
+      AND ("clientId" = $2 OR "username" = $2);
+  `;
+
+  return pgClient.query(query, [appId, clientIdOrUsername]);
+}

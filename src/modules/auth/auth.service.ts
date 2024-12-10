@@ -144,6 +144,23 @@ export async function getUserByClientId(
   return rows[0];
 }
 
+export async function getUserByClientIdOrUsername(
+  logger: Logger,
+  pgClient: PoolClient,
+  appId: string,
+  clientIdOrUsername: string
+): Promise<any> {
+  logger.debug(`Getting user by client id or username ${clientIdOrUsername}`);
+
+  const { rows } = await db.getUserByClientIdOrUsername(pgClient, appId, clientIdOrUsername);
+
+  if (!rows.length) {
+    return null;
+  }
+
+  return rows[0];
+}
+
 export async function verifySignature(
   providedPayload: any,
   providedSignature: string,

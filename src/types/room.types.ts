@@ -6,6 +6,7 @@ export enum RoomVisibility {
 
 export enum RoomMemberType {
   OWNER = 'owner',
+  ADMIN = 'admin',
   MEMBER = 'member'
 }
 

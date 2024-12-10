@@ -3,7 +3,7 @@ import { Session } from '@/types/session.types';
 import { SocketAckHandler } from '@/types/socket.types';
 import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
-import { getRoomById, removeRoomMember } from '@/modules/room/room.service';
+import { getRoomById, removeRoomMember, roomActionPermitted } from '@/modules/room/room.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
@@ -34,7 +34,7 @@ export function handler({ pgPool }: Services) {
         throw new NotFoundError('Room not found');
       }
 
-      if (room.memberType !== RoomMemberType.OWNER) {
+      if (!roomActionPermitted(room.memberType, RoomMemberType.ADMIN)) {
         throw new ForbiddenError('Room is not owned by the client');
       }
 

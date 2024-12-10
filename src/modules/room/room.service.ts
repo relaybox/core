@@ -414,3 +414,14 @@ export async function getRoomsByClientId(
     throw err;
   }
 }
+
+export function roomActionPermitted(
+  memberType: RoomMemberType,
+  requiredMemberType: RoomMemberType
+): boolean {
+  if (memberType === RoomMemberType.OWNER) {
+    return true;
+  }
+
+  return requiredMemberType === RoomMemberType.ADMIN && memberType !== RoomMemberType.MEMBER;
+}

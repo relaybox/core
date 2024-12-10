@@ -8,6 +8,7 @@ import { Logger } from 'winston';
 import { KeyPrefix, KeySuffix } from '@/types/state.types';
 import * as cache from '@/modules/guards/guards.cache';
 import { ForbiddenError } from '@/lib/errors';
+import { RoomMemberType } from '@/types/room.types';
 
 export function authenticatedSessionGuard(session: Session): boolean {
   if (!session.clientId) {

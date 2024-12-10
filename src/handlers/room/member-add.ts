@@ -8,8 +8,9 @@ import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/types/webhook.types';
 import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
-import { RoomMemberType, RoomVisibility } from '@/types/room.types';
-import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors';
+import { RoomMemberType } from '@/types/room.types';
+import { ForbiddenError, NotFoundError } from '@/lib/errors';
+import { getUserByClientId } from '@/modules/auth/auth.service';
 
 const logger = getLogger(ClientEvent.ROOM_MEMBER_ADD);
 
@@ -34,12 +35,14 @@ export function handler({ pgPool }: Services) {
         throw new NotFoundError('Room not found');
       }
 
-      if (room.visibility !== RoomVisibility.PRIVATE) {
-        throw new ValidationError('Room is not private');
-      }
-
       if (room.memberType !== RoomMemberType.OWNER) {
         throw new ForbiddenError('Room is not owned by the client');
+      }
+
+      const user = await getUserByClientId(logger, pgClient, addClientId);
+
+      if (!user) {
+        throw new NotFoundError('User not found');
       }
 
       const addMemberSession = {

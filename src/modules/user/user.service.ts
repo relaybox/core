@@ -3,9 +3,10 @@ import { KeyNamespace, KeyPrefix } from '@/types/state.types';
 import { Logger } from 'winston';
 import * as cache from './user.cache';
 import { WebSocket } from 'uWebSockets.js';
-import { Session } from '@/types/session.types';
+import { AuthUser, Session } from '@/types/session.types';
 import ChannelManager from '@/lib/amqp-manager/channel-manager';
 import { getNspClientId } from '@/util/helpers';
+import { PoolClient } from 'pg';
 
 function getUserSubscriptionKeyName(connectionId: string, nspClientId?: string): string {
   return `${KeyPrefix.CONNECTION}:${connectionId}:${nspClientId}`;

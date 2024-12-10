@@ -87,41 +87,26 @@ export async function restoreCachedRooms(
     logger.debug(`Restoring session, rooms (${rooms?.length})`, { uid, rooms });
 
     if (rooms && rooms.length > 0) {
+      const subscriptions = [
+        KeyNamespace.SUBSCRIPTIONS,
+        KeyNamespace.PRESENCE,
+        KeyNamespace.METRICS,
+        KeyNamespace.INTELLECT
+      ];
+
       await Promise.all(
         rooms.map(async (nspRoomId) =>
           Promise.all([
             joinRoom(logger, redisClient, session, nspRoomId, socket),
-            restoreRoomSubscriptions(
-              logger,
-              redisClient,
-              connectionId,
-              nspRoomId,
-              KeyNamespace.SUBSCRIPTIONS,
-              socket
-            ),
-            restoreRoomSubscriptions(
-              logger,
-              redisClient,
-              connectionId,
-              nspRoomId,
-              KeyNamespace.PRESENCE,
-              socket
-            ),
-            restoreRoomSubscriptions(
-              logger,
-              redisClient,
-              connectionId,
-              nspRoomId,
-              KeyNamespace.METRICS,
-              socket
-            ),
-            restoreRoomSubscriptions(
-              logger,
-              redisClient,
-              connectionId,
-              nspRoomId,
-              KeyNamespace.INTELLECT,
-              socket
+            ...subscriptions.map((subscription: KeyNamespace) =>
+              restoreRoomSubscriptions(
+                logger,
+                redisClient,
+                connectionId,
+                nspRoomId,
+                subscription,
+                socket
+              )
             )
           ])
         )
@@ -168,6 +153,7 @@ export async function initializeRoom(
   logger: Logger,
   pgClient: PoolClient,
   roomId: string,
+  roomName: string | null,
   visibility: RoomVisibility = RoomVisibility.PUBLIC,
   roomMemberType: RoomMemberType = RoomMemberType.OWNER,
   session: ReducedSession,
@@ -185,6 +171,7 @@ export async function initializeRoom(
     const { rows: rooms } = await db.createRoom(
       pgClient,
       roomId,
+      roomName,
       visibility,
       appPid,
       passwordSaltPair

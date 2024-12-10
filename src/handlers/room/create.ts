@@ -34,7 +34,7 @@ export function handler({ pgPool }: Services) {
 
     const session = socket.getUserData();
     const { appPid, clientId } = session;
-    const { roomId, visibility: clientVisibility, password: clientPassword } = data;
+    const { roomId, roomName, visibility: clientVisibility, password: clientPassword } = data;
 
     logger.debug(`Creating room`, { roomId, clientId });
 
@@ -59,6 +59,7 @@ export function handler({ pgPool }: Services) {
         logger,
         pgClient,
         roomId,
+        roomName,
         clientVisibility,
         RoomMemberType.OWNER,
         session,

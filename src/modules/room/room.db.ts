@@ -14,6 +14,7 @@ export function getRoomById(
       r.id,
       r."appPid", 
       r."roomId", 
+      r."roomName", 
       r."visibility", 
       r."createdAt", 
       rm."createdAt" AS "memberCreatedAt",
@@ -35,6 +36,7 @@ export function getRoomById(
 export function createRoom(
   pgClient: PoolClient,
   roomId: string,
+  roomName: string | null,
   visibility: RoomVisibility,
   appPid: string,
   passwordSaltPair: PasswordSaltPair
@@ -43,18 +45,18 @@ export function createRoom(
 
   const query = `
     INSERT INTO rooms (
-      "appPid", "roomId", "visibility", 
-      "password", "salt", "createdAt", "updatedAt"
+      "appPid", "roomId", "roomName", "visibility", "password", "salt", "createdAt", "updatedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $6
+      $1, $2, $3, $4, $5, $6, $7, $7
     ) ON CONFLICT ("appPid", "roomId") 
       DO NOTHING 
-      RETURNING id, "roomId", "visibility";
+      RETURNING id, "roomId", "roomName", "visibility";
   `;
 
   return pgClient.query(query, [
     appPid,
     roomId,
+    roomName,
     visibility,
     passwordSaltPair.password,
     passwordSaltPair.salt,

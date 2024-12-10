@@ -46,44 +46,22 @@ export function handler({ redisClient }: Services) {
         roomId
       };
 
+      const subscriptions = [
+        KeyNamespace.SUBSCRIPTIONS,
+        KeyNamespace.PRESENCE,
+        KeyNamespace.METRICS,
+        KeyNamespace.INTELLECT
+      ];
+
       await Promise.all([
         leaveRoom(logger, redisClient, session, nspRoomId, socket),
         leaveRoom(logger, redisClient, session, nspRoomRoutingKey, socket),
         removeActiveMember(uid, nspRoomId, presenceSubsciption, session, presenceLeaveMessage),
-        unbindAllSubscriptions(
-          logger,
-          redisClient,
-          connectionId,
-          nspRoomId,
-          KeyNamespace.SUBSCRIPTIONS,
-          socket
-        ),
-        unbindAllSubscriptions(
-          logger,
-          redisClient,
-          connectionId,
-          nspRoomId,
-          KeyNamespace.PRESENCE,
-          socket
-        ),
-        unbindAllSubscriptions(
-          logger,
-          redisClient,
-          connectionId,
-          nspRoomId,
-          KeyNamespace.METRICS,
-          socket
-        ),
-        unbindAllSubscriptions(
-          logger,
-          redisClient,
-          connectionId,
-          nspRoomId,
-          KeyNamespace.INTELLECT,
-          socket
-        ),
         pushRoomLeaveMetrics(uid, nspRoomId, session),
-        enqueueWebhookEvent(logger, WebhookEvent.ROOM_LEAVE, webhookdata, session)
+        enqueueWebhookEvent(logger, WebhookEvent.ROOM_LEAVE, webhookdata, session),
+        ...subscriptions.map((subscription: KeyNamespace) =>
+          unbindAllSubscriptions(logger, redisClient, connectionId, nspRoomId, subscription, socket)
+        )
       ]);
 
       res(nspRoomId);

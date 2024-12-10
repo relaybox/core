@@ -12,6 +12,7 @@ export enum RoomMemberType {
 
 export interface Room {
   roomId: string;
+  roomName: string | null;
   visibility: RoomVisibility;
   appPid: string;
   id: string;

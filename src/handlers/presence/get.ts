@@ -19,7 +19,7 @@ export function handler({ redisClient }: Services) {
     res: SocketAckHandler
   ): Promise<void> {
     const session = socket.getUserData();
-    const { roomId } = data;
+    const { roomId, limit } = data;
     const { appPid, permissions } = session;
 
     const nspRoomId = getNspRoomId(appPid, roomId);
@@ -29,6 +29,12 @@ export function handler({ redisClient }: Services) {
 
       const members = await getActiveMembers(redisClient, nspRoomId);
       const dedupedMembers = dedupeActiveMembers(members);
+
+      if (limit) {
+        const limitedMembers = dedupedMembers.slice(0, limit);
+        res(limitedMembers);
+        return;
+      }
 
       res(dedupedMembers || []);
     } catch (err: any) {

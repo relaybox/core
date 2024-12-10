@@ -36,7 +36,7 @@ export function handler({ pgPool, redisClient }: Services) {
     } as PasswordSaltPair;
 
     const session = socket.getUserData();
-    const { roomId, password: clientPassword } = data;
+    const { roomId, roomName, password: clientPassword } = data;
     const { appPid, clientId } = session;
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
@@ -66,6 +66,7 @@ export function handler({ pgPool, redisClient }: Services) {
           logger,
           pgClient,
           roomId,
+          roomName || null,
           RoomVisibility.PUBLIC,
           RoomMemberType.OWNER,
           session,
@@ -83,7 +84,8 @@ export function handler({ pgPool, redisClient }: Services) {
       const responseData = {
         nspRoomId,
         visibility: room?.visibility || RoomVisibility.PUBLIC,
-        memberType: room?.memberType || RoomMemberType.MEMBER
+        memberType: room?.memberType || RoomMemberType.MEMBER,
+        roomName: room?.roomName || null
       };
 
       res(responseData);

@@ -74,6 +74,14 @@ export function handler({ redisClient }: Services) {
           KeyNamespace.METRICS,
           socket
         ),
+        unbindAllSubscriptions(
+          logger,
+          redisClient,
+          connectionId,
+          nspRoomId,
+          KeyNamespace.INTELLECT,
+          socket
+        ),
         pushRoomLeaveMetrics(uid, nspRoomId, session),
         enqueueWebhookEvent(logger, WebhookEvent.ROOM_LEAVE, webhookdata, session)
       ]);

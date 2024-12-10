@@ -264,7 +264,7 @@ export async function removeRoomMember(
     }
 
     if (existingMembers[0].memberType === RoomMemberType.OWNER) {
-      throw new ForbiddenError('Room member is owner');
+      throw new ForbiddenError('Unable to delete room owner');
     }
 
     const { rows: members } = await db.removeRoomMember(pgClient, clientId, roomUuid);

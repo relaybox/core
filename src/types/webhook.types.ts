@@ -29,6 +29,7 @@ export enum WebhookEvent {
   ROOM_PASSWORD_UPDATE = 'room:password:update',
   ROOM_MEMBER_ADD = 'room:member:add',
   ROOM_MEMBER_REMOVE = 'room:member:remove',
+  ROOM_MEMBER_TYPE = 'room:member:type',
   PRESENCE_JOIN = 'presence:join',
   PRESENCE_LEAVE = 'presence:leave',
   PRESENCE_UPDATE = 'presence:update',

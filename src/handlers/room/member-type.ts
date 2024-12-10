@@ -5,6 +5,7 @@ import { getLogger } from '@/util/logger';
 import { WebSocket } from 'uWebSockets.js';
 import {
   getRoomById,
+  getRoomMember,
   roomActionPermitted,
   updateRoomMemberType
 } from '@/modules/room/room.service';
@@ -14,7 +15,6 @@ import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType } from '@/types/room.types';
 import { ForbiddenError, NotFoundError } from '@/lib/errors';
-import { getUserByClientId } from '@/modules/auth/auth.service';
 
 const logger = getLogger(ClientEvent.ROOM_MEMBER_TYPE);
 
@@ -39,14 +39,22 @@ export function handler({ pgPool }: Services) {
         throw new NotFoundError('Room not found');
       }
 
-      if (!roomActionPermitted(room.memberType, RoomMemberType.ADMIN)) {
-        throw new ForbiddenError('Room is not owned by the client');
+      if (updateMemberType === RoomMemberType.OWNER && room.memberType !== RoomMemberType.OWNER) {
+        throw new ForbiddenError('Operation permitted by owner only');
       }
 
-      const user = await getUserByClientId(logger, pgClient, updateClientId);
+      if (!roomActionPermitted(room.memberType, RoomMemberType.ADMIN)) {
+        throw new ForbiddenError('Operation not permitted');
+      }
+
+      const user = await getRoomMember(logger, pgClient, updateClientId, room.id);
 
       if (!user) {
         throw new NotFoundError('User not found');
+      }
+
+      if (user.memberType === RoomMemberType.OWNER && room.memberType !== RoomMemberType.OWNER) {
+        throw new ForbiddenError('Operation not permitted');
       }
 
       const member = await updateRoomMemberType(
@@ -57,7 +65,7 @@ export function handler({ pgPool }: Services) {
         updateMemberType
       );
 
-      await enqueueWebhookEvent(logger, WebhookEvent.ROOM_MEMBER_ADD, member, session);
+      await enqueueWebhookEvent(logger, WebhookEvent.ROOM_MEMBER_TYPE, member, session);
 
       res(member);
     } catch (err: any) {

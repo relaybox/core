@@ -79,20 +79,22 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         roomId,
         event,
         message: processedMessageData,
-        llmInputPath: clientPublishOpts.intellect.inputPath
+        llmInputPath: clientPublishOpts?.intellect?.inputPath
       };
 
-      await addMessageToCache(logger, redisClient, persistedMessageData);
-      await enqueueHistoryMessage(logger, publisher, persistedMessageData);
-      await enqueueWebhookEvent(
-        logger,
-        WebhookEvent.ROOM_PUBLISH,
-        webhookData,
-        session,
-        webhookFilterAttributes
-      );
+      if (!clientPublishOpts?.transient) {
+        await addMessageToCache(logger, redisClient, persistedMessageData);
+        await enqueueHistoryMessage(logger, publisher, persistedMessageData);
+        await enqueueWebhookEvent(
+          logger,
+          WebhookEvent.ROOM_PUBLISH,
+          webhookData,
+          session,
+          webhookFilterAttributes
+        );
+      }
 
-      if (clientPublishOpts.intellect?.inputPath) {
+      if (clientPublishOpts?.intellect?.inputPath) {
         await enqueueIntellectEvent(logger, {
           ...persistedMessageData,
           ...clientPublishOpts.intellect

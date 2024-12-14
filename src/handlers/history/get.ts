@@ -28,7 +28,7 @@ export function handler({ pgPool, redisClient }: Services): HttpMiddleware {
       const roomId = req.params[0];
 
       const { appPid, keyId, permissions: userPermissions } = req.auth;
-      const { start, end, order, limit, lastItemId } = parseRequestQueryParams(req);
+      const { event, start, end, order, limit, lastItemId } = parseRequestQueryParams(req);
 
       if (limit > HISTORY_MAX_LIMIT) {
         throw new BadRequestError(`Limit must be less than ${HISTORY_MAX_LIMIT}`);
@@ -74,7 +74,7 @@ export function handler({ pgPool, redisClient }: Services): HttpMiddleware {
         lastItemId
       );
 
-      const nextPageToken = getNextPageToken(logger, mergedItems, start, end, order, limit);
+      const nextPageToken = getNextPageToken(logger, mergedItems, event, start, end, order, limit);
 
       res.cork(() =>
         getSuccessResponse(res, {

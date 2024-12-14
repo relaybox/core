@@ -19,6 +19,7 @@ export const NEXT_PAGE_TOKEN_ENCODING = 'base64';
 export function parseRequestQueryParams(req: ParsedHttpRequest): HistoryRequestParams {
   const tokenParams = decodeNextPageToken(req.query.nextPageToken || '');
 
+  const event = tokenParams?.event || req.query.event || null;
   const lastItemId = tokenParams?.lastItemId || null;
   const start = tokenParams?.start || Number(req.query.start) || null;
   const end = tokenParams?.end || Number(req.query.end) || null;
@@ -26,6 +27,7 @@ export function parseRequestQueryParams(req: ParsedHttpRequest): HistoryRequestP
   const limit = tokenParams?.limit || Number(req.query.limit) || HISTORY_MAX_LIMIT;
 
   return {
+    event,
     lastItemId,
     start,
     end,
@@ -193,6 +195,7 @@ export function getMergedItems(
 export function getNextPageToken(
   logger: Logger,
   items: Message[],
+  event: string | null,
   start: number | null,
   end: number | null,
   order: QueryOrder,
@@ -208,6 +211,7 @@ export function getNextPageToken(
     const lastItem = items[items.length - 1];
 
     const tokenData = {
+      event,
       start: order === QueryOrder.ASC ? lastItem.timestamp : start,
       end: order === QueryOrder.DESC ? lastItem.timestamp : end,
       order,

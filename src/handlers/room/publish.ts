@@ -94,7 +94,7 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         );
       }
 
-      if (clientPublishOpts?.intellect?.inputPath) {
+      if (clientPublishOpts?.intellect?.enabled) {
         await enqueueIntellectEvent(logger, {
           ...persistedMessageData,
           ...clientPublishOpts.intellect

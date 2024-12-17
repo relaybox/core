@@ -1,4 +1,3 @@
-import { getLogger } from '@/util/logger';
 import { Session } from '@/types/session.types';
 import { request } from '@/util/request';
 import { Logger } from 'winston';

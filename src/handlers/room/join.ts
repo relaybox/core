@@ -68,7 +68,7 @@ export function handler({ pgPool, redisClient }: Services) {
           roomId,
           roomName || null,
           RoomVisibility.PUBLIC,
-          RoomMemberType.OWNER,
+          RoomMemberType.MEMBER,
           session,
           passwordSaltPair
         );

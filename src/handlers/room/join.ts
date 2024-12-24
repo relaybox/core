@@ -82,6 +82,7 @@ export function handler({ pgPool, redisClient }: Services) {
       ]);
 
       const responseData = {
+        uuid: room?.id,
         nspRoomId,
         visibility: room?.visibility || RoomVisibility.PUBLIC,
         memberType: room?.memberType || RoomMemberType.MEMBER,

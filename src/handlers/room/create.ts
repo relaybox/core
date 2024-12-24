@@ -68,6 +68,7 @@ export function handler({ pgPool }: Services) {
 
       const roomData = {
         id: roomId,
+        uuid: createdRoom?.id,
         visibility: createdRoom?.visibility || RoomVisibility.PUBLIC
       };
 

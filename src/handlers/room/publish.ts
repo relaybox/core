@@ -30,7 +30,7 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
     logger.debug(`Client publish event`, { session });
 
     const { appPid, permissions } = session;
-    const { roomId, event, data: messageData, opts: clientPublishOpts } = data;
+    const { roomId, uuid: roomUuid, event, data: messageData, opts: clientPublishOpts } = data;
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspEvent = getNspEvent(nspRoomId, event);
     const latencyLog = getLatencyLog(createdAt!);
@@ -77,6 +77,7 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
       const persistedMessageData = {
         appPid,
         roomId,
+        roomUuid,
         event,
         message: processedMessageData,
         llmInputPath: clientPublishOpts?.intellect?.inputPath

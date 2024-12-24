@@ -7,6 +7,9 @@ import { HttpResponse } from 'uWebSockets.js';
 
 const logger = getLogger('room-list');
 
+const DEFAULT_RESULTS_OFFSET = 0;
+const DEFAULT_RESULTS_LIMIT = 10;
+
 export function handler({ pgPool }: Services): HttpMiddleware {
   return async (res: HttpResponse, req: ParsedHttpRequest) => {
     const pgClient = await pgPool!.connect();
@@ -20,8 +23,8 @@ export function handler({ pgPool }: Services): HttpMiddleware {
         pgClient,
         appPid,
         clientId,
-        Number(offset || 0),
-        Number(limit || 10)
+        Number(offset || DEFAULT_RESULTS_OFFSET),
+        Number(limit || DEFAULT_RESULTS_LIMIT)
       );
 
       res.cork(() => getSuccessResponse(res, rooms));

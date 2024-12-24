@@ -91,9 +91,9 @@ export async function clearSessionMetrics(
 /**
  * Hard session delete
  *
- * Delayed job to destroy a session, including room and user subscriptions etc.
+ * Delayed job to destroy a session, including room and user subscriptions.
  * Updates persistent data store with session status.
- * Reconnection using the same connectionId within SESSION_DESTROY_JOB_DELAY_MS will
+ * Reconnection using the same connectionId within SESSION_DESTROY_JOB_DELAY_MS milliseconds will
  * remove the job, effectively cancelling the hard session delete
  */
 export async function markSessionForDeletion(
@@ -134,7 +134,7 @@ export async function markSessionForDeletion(
  * Delayed job to set the user as inactive.
  * Primarily used to update presence sets related to user by connectionId.
  * Removes active member from presence sets and broadcasts the leave event.
- * Reconnection within SESSION_INACTIVE_JOB_DELAY_MS from
+ * Reconnection within SESSION_INACTIVE_JOB_DELAY_MS milliseconds from
  * the same connectionId will remove the job and ensure active presence is not affected
  */
 export async function markSessionUserInactive(

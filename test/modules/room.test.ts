@@ -178,7 +178,16 @@ describe('room.service', async () => {
         socket
       );
 
-      expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledTimes(6);
+      expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledWith(
+        logger,
+        redisClient,
+        session.connectionId,
+        'room1',
+        KeyNamespace.INTELLECT,
+        socket
+      );
+
+      expect(mockSubscriptionService.restoreRoomSubscriptions).toHaveBeenCalledTimes(8);
       expect(mockRoomRepository.setRoomJoin).toHaveBeenCalledTimes(2);
       expect(socket.subscribe).toHaveBeenCalledTimes(2);
     });

@@ -43,7 +43,7 @@ export type EventHandler = (
 export function createEventHandlersMap(services: Services): Record<ClientEvent, EventHandler> {
   return {
     [ClientEvent.ROOM_CREATE]: compose(rateLimitMiddleware(services), roomCreateHandler(services)),
-    [ClientEvent.ROOM_JOIN]: roomJoinHandler(services),
+    [ClientEvent.ROOM_JOIN]: compose(rateLimitMiddleware(services), roomJoinHandler(services)),
     [ClientEvent.ROOM_LEAVE]: roomLeaveHandler(services),
     [ClientEvent.PUBLISH]: compose(
       sizeLimitMiddleware,

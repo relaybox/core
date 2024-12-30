@@ -21,6 +21,8 @@ import { formatErrorResponse } from '@/util/format';
 import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { PasswordSaltPair } from '@/types/auth.types';
+import { permissionsGuard } from '@/modules/guards/guards.service';
+import { DsPermission } from '@/types/permissions.types';
 
 const logger = getLogger(ClientEvent.ROOM_JOIN);
 
@@ -37,7 +39,7 @@ export function handler({ pgPool, redisClient }: Services) {
 
     const session = socket.getUserData();
     const { roomId, roomName, password: clientPassword } = data;
-    const { appPid, clientId } = session;
+    const { appPid, clientId, permissions } = session;
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
     const webhookdata = {
@@ -54,6 +56,7 @@ export function handler({ pgPool, redisClient }: Services) {
       let room = await getRoomById(logger, pgClient, appPid, roomId, clientId);
 
       if (room) {
+        permissionsGuard(roomId, DsPermission.JOIN, permissions);
         validateRoomAccess(logger, room, session);
 
         if (room.visibility == RoomVisibility.PROTECTED) {
@@ -62,6 +65,8 @@ export function handler({ pgPool, redisClient }: Services) {
 
         await upsertRoomMember(logger, pgClient, roomId, room.id, RoomMemberType.MEMBER, session);
       } else {
+        permissionsGuard(roomId, DsPermission.CREATE, permissions);
+
         room = await initializeRoom(
           logger,
           pgClient,

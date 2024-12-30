@@ -1,6 +1,8 @@
 export const DS_PERMISSIONS_WILDCARD = '*';
 
 export enum DsPermission {
+  CREATE = 'create',
+  JOIN = 'join',
   SUBSCRIBE = 'subscribe',
   PUBLISH = 'publish',
   PRESENCE = 'presence',

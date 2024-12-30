@@ -18,6 +18,8 @@ import { ClientEvent } from '@/types/event.types';
 import { RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { ForbiddenError } from '@/lib/errors';
 import { PasswordSaltPair } from '@/types/auth.types';
+import { permissionsGuard } from '@/modules/guards/guards.service';
+import { DsPermission } from '@/types/permissions.types';
 
 const logger = getLogger(ClientEvent.ROOM_CREATE);
 
@@ -33,7 +35,7 @@ export function handler({ pgPool }: Services) {
     } as PasswordSaltPair;
 
     const session = socket.getUserData();
-    const { appPid, clientId } = session;
+    const { appPid, clientId, permissions } = session;
     const { roomId, roomName, visibility: clientVisibility, password: clientPassword } = data;
 
     logger.debug(`Creating room`, { roomId, clientId });
@@ -41,6 +43,15 @@ export function handler({ pgPool }: Services) {
     const pgClient = await pgPool!.connect();
 
     try {
+      /**
+       * Auth token permissions, top level room join access
+       * Overridden only by signed request from client's server
+       */
+      permissionsGuard(roomId, DsPermission.CREATE, permissions);
+
+      /**
+       * Request level permissions
+       */
       validateRoomId(roomId);
       validateRoomVisibility(clientVisibility);
       validateRoomCreatePermissions(logger, roomId, clientVisibility, session);

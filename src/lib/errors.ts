@@ -57,6 +57,13 @@ export class TokenError extends Error {
   }
 }
 
+export class TokenExpiredError extends Error {
+  constructor(message: string, public details?: any) {
+    super(message);
+    this.name = 'TokenExpiredError';
+  }
+}
+
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);

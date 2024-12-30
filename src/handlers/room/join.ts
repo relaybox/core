@@ -23,7 +23,8 @@ import { RoomMemberType, RoomVisibility } from '@/types/room.types';
 import { PasswordSaltPair } from '@/types/auth.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
-import { getSecretKey, verifySignature } from '@/modules/auth/auth.service';
+import { getSecretKey } from '@/modules/auth/auth.service';
+import { verifyAuthToken } from '@/lib/token';
 
 const logger = getLogger(ClientEvent.ROOM_JOIN);
 
@@ -39,7 +40,7 @@ export function handler({ pgPool, redisClient }: Services) {
     } as PasswordSaltPair;
 
     const session = socket.getUserData();
-    const { roomId, roomName, password: clientPassword, signature: clientSignature } = data;
+    const { roomId, roomName, password: clientPassword, accessToken } = data;
     const { appPid, clientId, permissions, keyId } = session;
     const nspRoomId = getNspRoomId(appPid, roomId);
     const nspRoomRoutingKey = ChannelManager.getRoutingKey(nspRoomId);
@@ -66,7 +67,7 @@ export function handler({ pgPool, redisClient }: Services) {
 
         if (room.visibility == RoomVisibility.AUTHORIZED) {
           const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
-          await verifySignature(data, clientSignature, secretKey);
+          verifyAuthToken(accessToken, secretKey);
         }
 
         await upsertRoomMember(logger, pgClient, roomId, room.id, RoomMemberType.MEMBER, session);

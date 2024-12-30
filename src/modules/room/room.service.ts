@@ -351,16 +351,16 @@ export function getPasswordSaltPair(password: string): PasswordSaltPair {
   };
 }
 
-export function validateClientPassword(logger: Logger, room: Room, userPassword: string): void {
+export function validateClientPassword(logger: Logger, room: Room, clientPassword: string): void {
   logger.debug(`Validating user password, ${room.roomId}`);
 
   const { password, salt } = room;
 
-  if (!password || !salt || !userPassword) {
+  if (!password || !salt || !clientPassword) {
     throw new PasswordRequiredError('Password required');
   }
 
-  const passwordHash = strongHash(userPassword, salt);
+  const passwordHash = strongHash(clientPassword, salt);
 
   if (!passwordHash || passwordHash !== password) {
     throw new ForbiddenError('Password access denied');

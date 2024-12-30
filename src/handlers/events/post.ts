@@ -46,9 +46,10 @@ export function handler({ pgPool, redisClient, amqpManager, publisher }: Service
       await verifySignature(body, signature, secretKey);
 
       const { event, roomId, data, timestamp, clientId } = JSON.parse(body);
-      const verifiedTimestamp = verifyTimestamp(timestamp, MAX_TIMESTAMP_DIFF_SECS);
-      const permissions = await getPermissions(logger, pgClient, keyId);
 
+      const verifiedTimestamp = verifyTimestamp(timestamp, MAX_TIMESTAMP_DIFF_SECS);
+
+      const permissions = await getPermissions(logger, pgClient, keyId);
       permissionsGuard(roomId, DsPermission.PUBLISH, permissions);
 
       const user = clientId ? await getUserByClientId(logger, pgClient, clientId) : null;
@@ -109,9 +110,7 @@ export function handler({ pgPool, redisClient, amqpManager, publisher }: Service
 
       return;
     } finally {
-      if (pgClient) {
-        pgClient.release();
-      }
+      pgClient.release();
     }
   };
 }

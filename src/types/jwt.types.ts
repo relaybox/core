@@ -22,4 +22,5 @@ export interface ClientJwtPayload extends JwtPayload {
   clientId?: string | string[];
   tokenType: string;
   timestamp: string;
+  roomId?: string;
 }

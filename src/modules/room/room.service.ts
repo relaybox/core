@@ -18,6 +18,8 @@ import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { generateSecret, strongHash } from '@/lib/encryption';
 import { PasswordSaltPair } from '@/types/auth.types';
+import { verifyAuthToken } from '@/lib/token';
+import { ClientJwtPayload } from '@/types/jwt.types';
 
 export async function joinRoom(
   logger: Logger,
@@ -411,4 +413,21 @@ export function roomActionPermitted(
   }
 
   return requiredMemberType === RoomMemberType.ADMIN && memberType !== RoomMemberType.MEMBER;
+}
+
+export async function verifyRoomAccessToken(
+  logger: Logger,
+  roomId: string,
+  token: string,
+  secretKey: string
+): Promise<ClientJwtPayload> {
+  logger.debug(`Verifying room access token`);
+
+  const payload = verifyAuthToken(token, secretKey) as ClientJwtPayload;
+
+  if (payload.roomId !== roomId) {
+    throw new ForbiddenError('Room access denied');
+  }
+
+  return payload;
 }

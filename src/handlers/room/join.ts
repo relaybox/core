@@ -12,7 +12,8 @@ import {
   joinRoom,
   upsertRoomMember,
   validateRoomId,
-  validateClientPassword
+  validateClientPassword,
+  verifyRoomAccessToken
 } from '@/modules/room/room.service';
 import { pushRoomJoinMetrics } from '@/modules/metrics/metrics.service';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
@@ -24,7 +25,6 @@ import { PasswordSaltPair } from '@/types/auth.types';
 import { permissionsGuard } from '@/modules/guards/guards.service';
 import { DsPermission } from '@/types/permissions.types';
 import { getSecretKey } from '@/modules/auth/auth.service';
-import { verifyAuthToken } from '@/lib/token';
 
 const logger = getLogger(ClientEvent.ROOM_JOIN);
 
@@ -61,13 +61,13 @@ export function handler({ pgPool, redisClient }: Services) {
         permissionsGuard(roomId, DsPermission.JOIN, permissions);
         validateRoomAccess(logger, room, session);
 
-        if (room.visibility == RoomVisibility.PROTECTED) {
+        if (room.visibility === RoomVisibility.PROTECTED) {
           validateClientPassword(logger, room, clientPassword);
         }
 
-        if (room.visibility == RoomVisibility.AUTHORIZED) {
+        if (room.visibility === RoomVisibility.AUTHORIZED) {
           const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
-          verifyAuthToken(accessToken, secretKey);
+          verifyRoomAccessToken(logger, roomId, accessToken, secretKey);
         }
 
         await upsertRoomMember(logger, pgClient, roomId, room.id, RoomMemberType.MEMBER, session);

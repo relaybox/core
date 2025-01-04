@@ -67,7 +67,6 @@ export function handler({ redisClient }: Services) {
       res(nspRoomId);
     } catch (err: any) {
       logger.error(`Failed to leave room "${roomId}"`, { err, roomId, session });
-
       res(null, formatErrorResponse(err));
     }
   };

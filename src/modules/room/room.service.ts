@@ -415,12 +415,12 @@ export function roomActionPermitted(
   return requiredMemberType === RoomMemberType.ADMIN && memberType !== RoomMemberType.MEMBER;
 }
 
-export async function verifyRoomAccessToken(
+export function verifyRoomAccessToken(
   logger: Logger,
   roomId: string,
   token: string,
   secretKey: string
-): Promise<ClientJwtPayload> {
+): ClientJwtPayload {
   logger.debug(`Verifying room access token`);
 
   const payload = verifyAuthToken(token, secretKey) as ClientJwtPayload;

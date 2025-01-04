@@ -48,6 +48,7 @@ export function handler({ redisClient }: Services) {
 
     try {
       authenticatedSessionGuard(session);
+
       await roomMemberGuard(logger, redisClient, connectionId, nspRoomId);
 
       await Promise.all([

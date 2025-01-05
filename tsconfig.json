@@ -11,7 +11,7 @@
     "lib": ["esnext"],
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "node",
     "strictPropertyInitialization": false,
     "baseUrl": "./",
     "outDir": "build",

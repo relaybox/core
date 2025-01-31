@@ -34,11 +34,6 @@ export function handler({ pgPool, redisClient }: Services) {
     data: any,
     res: SocketAckHandler
   ): Promise<void> {
-    let passwordSaltPair = {
-      password: null,
-      salt: null
-    } as PasswordSaltPair;
-
     const session = socket.getUserData();
     const { roomId, roomName, password: clientPassword, accessToken } = data;
     const { appPid, clientId, permissions, keyId } = session;
@@ -73,6 +68,11 @@ export function handler({ pgPool, redisClient }: Services) {
         await upsertRoomMember(logger, pgClient, roomId, room.id, RoomMemberType.MEMBER, session);
       } else {
         permissionsGuard(roomId, DsPermission.CREATE, permissions);
+
+        const passwordSaltPair = {
+          password: null,
+          salt: null
+        } as PasswordSaltPair;
 
         room = await initializeRoom(
           logger,

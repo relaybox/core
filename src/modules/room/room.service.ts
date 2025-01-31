@@ -30,6 +30,8 @@ export async function joinRoom(
 ): Promise<void> {
   const { uid, connectionId } = session;
 
+  setSocketSubscription(logger, socket, nspRoomId);
+
   logger.info(`Joining room ${nspRoomId}`, { uid, connectionId });
 
   try {
@@ -50,13 +52,72 @@ export async function leaveRoom(
 ): Promise<void> {
   const { uid, connectionId } = session;
 
-  logger.info(`Leaving room ${nspRoomId}`, { uid, connectionId });
+  const remainingSubscriptionsCount = unsetSocketSubscription(logger, socket, nspRoomId);
+
+  if (remainingSubscriptionsCount > 0) {
+    logger.debug(`Remaining subscriptions for ${uid}`, { remainingSubscriptionsCount });
+    return;
+  }
+
+  logger.debug(`Leaving room ${nspRoomId}`, { uid, connectionId });
 
   try {
     await cache.setRoomLeave(redisClient, connectionId, nspRoomId);
     socket.unsubscribe(nspRoomId);
   } catch (err: any) {
     logger.error(`Failed to leave room`, { err, uid, connectionId });
+    throw err;
+  }
+}
+
+export function setSocketSubscription(
+  logger: Logger,
+  socket: WebSocket<Session>,
+  key: string
+): void {
+  logger.debug(`Setting socket subscription`, { key });
+
+  try {
+    if (!socket.getUserData().subscriptions) {
+      socket.getUserData().subscriptions = new Map();
+    }
+
+    const subscriptions = socket.getUserData().subscriptions;
+    const subscriptionCount = subscriptions?.get(key) || 0;
+    subscriptions?.set(key, subscriptionCount + 1);
+  } catch (err: any) {
+    logger.error(`Failed to set socket subscription`, { err });
+    throw err;
+  }
+}
+
+export function unsetSocketSubscription(
+  logger: Logger,
+  socket: WebSocket<Session>,
+  key: string
+): number {
+  logger.debug(`Unsetting socket subscription`, { key });
+
+  try {
+    const subscriptions = socket.getUserData().subscriptions;
+
+    if (!subscriptions || !subscriptions.has(key)) {
+      return 0;
+    }
+
+    const subscriptionCount = subscriptions?.get(key) ?? 0;
+
+    if (subscriptionCount <= 1) {
+      subscriptions.delete(key);
+      return 0;
+    }
+
+    const newSubscriptionCount = subscriptionCount - 1;
+    subscriptions?.set(key, newSubscriptionCount);
+
+    return newSubscriptionCount;
+  } catch (err: any) {
+    logger.error(`Failed to unset socket subscription`, { err });
     throw err;
   }
 }

@@ -30,19 +30,21 @@ export async function joinRoom(
 ): Promise<void> {
   const { uid, connectionId } = session;
 
-  setSocketSubscription(logger, socket, nspRoomId);
-
   logger.info(`Joining room ${nspRoomId}`, { uid, connectionId });
 
   try {
     await cache.setRoomJoin(redisClient, connectionId, nspRoomId);
-    socket.subscribe(nspRoomId);
+    setSocketSubscription(logger, socket, nspRoomId);
   } catch (err: any) {
     logger.error(`Failed to join room`, { err, uid, connectionId });
     throw err;
   }
 }
 
+/**
+ * Sockets can belong to rooms of the same name multiple times (hashed rooms)
+ * Set the socket subscription object (memory) to hold a map of the rooms
+ */
 export async function leaveRoom(
   logger: Logger,
   redisClient: RedisClient,
@@ -52,18 +54,17 @@ export async function leaveRoom(
 ): Promise<void> {
   const { uid, connectionId } = session;
 
-  const remainingSubscriptionsCount = unsetSocketSubscription(logger, socket, nspRoomId);
-
-  if (remainingSubscriptionsCount > 0) {
-    logger.debug(`Remaining subscriptions for ${uid}`, { remainingSubscriptionsCount });
-    return;
-  }
-
-  logger.debug(`Leaving room ${nspRoomId}`, { uid, connectionId });
-
   try {
+    const remainingSubscriptionsCount = unsetSocketSubscription(logger, socket, nspRoomId);
+
+    if (remainingSubscriptionsCount > 0) {
+      logger.debug(`Remaining subscriptions for ${uid}`, { remainingSubscriptionsCount });
+      return;
+    }
+
+    logger.debug(`Leaving room ${nspRoomId}`, { uid, connectionId });
+
     await cache.setRoomLeave(redisClient, connectionId, nspRoomId);
-    socket.unsubscribe(nspRoomId);
   } catch (err: any) {
     logger.error(`Failed to leave room`, { err, uid, connectionId });
     throw err;
@@ -85,6 +86,8 @@ export function setSocketSubscription(
     const subscriptions = socket.getUserData().subscriptions;
     const subscriptionCount = subscriptions?.get(key) || 0;
     subscriptions?.set(key, subscriptionCount + 1);
+
+    socket.subscribe(key);
   } catch (err: any) {
     logger.error(`Failed to set socket subscription`, { err });
     throw err;
@@ -105,10 +108,11 @@ export function unsetSocketSubscription(
       return 0;
     }
 
-    const subscriptionCount = subscriptions?.get(key) ?? 0;
+    const subscriptionCount = subscriptions.get(key) ?? 0;
 
     if (subscriptionCount <= 1) {
       subscriptions.delete(key);
+      socket.unsubscribe(key);
       return 0;
     }
 

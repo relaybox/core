@@ -27,6 +27,7 @@ export interface Session {
   connectionId: string;
   socketId: string;
   user?: AuthUser;
+  subscriptions?: Map<string, number>;
 }
 
 export interface ReducedSession {

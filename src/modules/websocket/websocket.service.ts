@@ -57,7 +57,11 @@ export function handleConnectionUpgrade(
 
   initializeSession(logger, connectionAuthParams)
     .then((verifiedSession: Session) => {
+      /**
+       * Extend session with custom socketId and subscriptions map
+       */
       verifiedSession.socketId = uuid();
+      verifiedSession.subscriptions = new Map();
 
       if (!upgradeAborted.aborted) {
         res.upgrade(

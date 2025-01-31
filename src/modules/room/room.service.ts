@@ -85,6 +85,7 @@ export function setSocketSubscription(
 
     const subscriptions = socket.getUserData().subscriptions;
     const subscriptionCount = subscriptions?.get(key) || 0;
+
     subscriptions?.set(key, subscriptionCount + 1);
 
     socket.subscribe(key);

@@ -13,6 +13,13 @@ export interface AuthUser {
   blockedAt: string | null;
   firstName?: string | null;
   lastName?: string | null;
+  identities: AuthUserIdentity[];
+}
+
+export interface AuthUserIdentity {
+  id: string;
+  provider: string;
+  providerId: string;
 }
 
 export interface Session {

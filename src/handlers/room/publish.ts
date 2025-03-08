@@ -95,13 +95,6 @@ export function handler({ redisClient, publisher, amqpManager }: Services) {
         );
       }
 
-      if (clientPublishOpts?.intellect?.enabled) {
-        await enqueueIntellectEvent(logger, {
-          ...persistedMessageData,
-          ...clientPublishOpts.intellect
-        });
-      }
-
       res(extendedMessageData);
     } catch (err: any) {
       logger.error(`Failed to publish message`, { err, roomId, session });

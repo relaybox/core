@@ -45,7 +45,8 @@ export function handler({ pgPool, redisClient, amqpManager, publisher }: Service
 
       await verifySignature(body, signature, secretKey);
 
-      const { event, roomId, data, timestamp, clientId } = JSON.parse(body);
+      const { event, roomId, data, timestamp, options } = JSON.parse(body);
+      const { clientId, transient } = options ?? {};
 
       const verifiedTimestamp = verifyTimestamp(timestamp, MAX_TIMESTAMP_DIFF_SECS);
 
@@ -92,8 +93,10 @@ export function handler({ pgPool, redisClient, amqpManager, publisher }: Service
         message: processedMessageData
       };
 
-      await addMessageToCache(logger, redisClient, persistedMessageData);
-      await enqueueHistoryMessage(logger, publisher, persistedMessageData);
+      if (!transient) {
+        await addMessageToCache(logger, redisClient, persistedMessageData);
+        await enqueueHistoryMessage(logger, publisher, persistedMessageData);
+      }
 
       res.cork(() =>
         getSuccessResponse(res, {
